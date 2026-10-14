@@ -33,7 +33,8 @@ Status: draft spec for the first prototype. Every number here lives in
 - At 0, **after the move has fully resolved**, a row of 6 shells rises from the bottom
   and pushes everything up by one. The countdown resets to the current level's interval.
 - Interval: 8 at level 1, down 1 per level, minimum 4.
-- Shell colours come from the same seeded RNG and are visible faintly through the glass.
+- Shell colours come from a second generator derived from the same seed, so rising rows
+  never change which orbs you are dealt. They are visible faintly through the glass.
 
 ## Scoring
 - Group of n orbs: `10n + 15(n−4)(n−3)` → 4 = 40, 5 = 80, 6 = 150, 7 = 250.
