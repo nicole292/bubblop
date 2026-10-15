@@ -1,0 +1,205 @@
+import 'package:flutter/animation.dart' show Curves;
+import 'package:pop_core/pop_core.dart';
+
+import 'phase_queue.dart';
+import 'timings.dart';
+import 'visual_orb.dart';
+
+/// The on-screen copy of the board. It changes only by playing the events
+/// that the rules produce, so once every phase has finished it matches the
+/// rules board exactly (checked in test/board_scene_test.dart).
+class BoardScene {
+  BoardScene(this.columns, this.rows)
+      : _grid = List<VisualOrb?>.filled(columns * rows, null);
+
+  final int columns;
+  final int rows;
+  final List<VisualOrb?> _grid;
+
+  /// Called when points should be added to the displayed score.
+  void Function(int points)? onPoints;
+
+  /// Called for short announcements such as "Chain ×3".
+  void Function(String text)? onBanner;
+
+  /// Called when the game-over moment has been shown.
+  void Function()? onGameOver;
+
+  int? shakeColumn;
+  double shakeTime = 0;
+
+  Iterable<VisualOrb> get orbs => _grid.whereType<VisualOrb>();
+
+  VisualOrb? _at(int col, int row) => _grid[row * columns + col];
+  void _put(int col, int row, VisualOrb? orb) => _grid[row * columns + col] = orb;
+
+  /// Cosmetic timers that do not block the event queue.
+  void update(double dt) {
+    for (final orb in orbs) {
+      if (orb.squash > 0) orb.squash = (orb.squash - dt).clamp(0, Timings.squash);
+    }
+    if (shakeTime > 0) shakeTime = (shakeTime - dt).clamp(0, Timings.shake);
+  }
+
+  /// Feedback for an illegal drop (full column).
+  void shake(int column) {
+    shakeColumn = column;
+    shakeTime = Timings.shake;
+  }
+
+  /// The scene as a rules [Board], for checking that the two agree.
+  Board toBoard() {
+    final board = Board(columns, rows);
+    for (var i = 0; i < _grid.length; i++) {
+      board.set(i % columns, i ~/ columns, _grid[i]?.cell);
+    }
+    return board;
+  }
+
+  List<Phase> phasesFor(GameEvent event) => switch (event) {
+        OrbDropped() => [_drop(event)],
+        ChainStep() => _chain(event),
+        RowRose() => [_rise(event)],
+        BoardCleared(:final bonus) => [
+            Phase(0, onStart: () {
+              onBanner?.call('Board clear! +$bonus');
+              onPoints?.call(bonus);
+            }),
+          ],
+        LevelUp(:final level) => [
+            Phase(0, onStart: () => onBanner?.call('Level $level')),
+          ],
+        GameOver() => [
+            Phase(Timings.gameOverDelay, onEnd: () => onGameOver?.call()),
+          ],
+      };
+
+  Phase _drop(OrbDropped e) {
+    final startRow = rows + 0.2;
+    late VisualOrb orb;
+    return Phase(
+      Timings.drop(startRow - e.row),
+      onStart: () {
+        orb = VisualOrb(Cell.orb(e.color), e.column.toDouble(), startRow);
+        _put(e.column, e.row, orb);
+      },
+      onUpdate: (t) => orb.row = _lerp(startRow, e.row.toDouble(), Curves.easeIn.transform(t)),
+      onEnd: () => orb.squash = Timings.squash,
+    );
+  }
+
+  List<Phase> _chain(ChainStep e) {
+    final f = Timings.chainFactor(e.step);
+    final popped = [for (final g in e.groups) ...g.cells];
+    var popOrbs = <VisualOrb>[];
+    var crackOrbs = <VisualOrb>[];
+
+    return [
+      Phase(
+        Timings.highlight * f,
+        onStart: () {
+          popOrbs = [for (final p in popped) ?_at(p.col, p.row)];
+          if (e.step > 1) onBanner?.call('Chain ×${e.step}');
+        },
+        onUpdate: (t) {
+          for (final o in popOrbs) {
+            o.scale = 1 + 0.15 * t;
+            o.glow = t;
+          }
+        },
+      ),
+      Phase(
+        Timings.pop * f,
+        onStart: () {
+          crackOrbs = [for (final p in e.cracked.keys) ?_at(p.col, p.row)];
+        },
+        onUpdate: (t) {
+          for (final o in popOrbs) {
+            o.scale = 1.15 * (1 - Curves.easeIn.transform(t));
+            o.alpha = 1 - t;
+          }
+          for (final o in crackOrbs) {
+            if (o.cell.kind == CellKind.shell) {
+              o.reveal = t;
+            } else {
+              o.alpha = 1 - t;
+              o.scale = 1 - 0.4 * t;
+            }
+          }
+        },
+        onEnd: () {
+          for (final p in popped) {
+            _put(p.col, p.row, null);
+          }
+          e.cracked.forEach((p, cell) {
+            final orb = _at(p.col, p.row);
+            if (cell.kind == CellKind.shell && orb != null) {
+              orb
+                ..cell = Cell.orb(cell.color)
+                ..reveal = 0;
+            } else {
+              _put(p.col, p.row, null);
+            }
+          });
+          onPoints?.call(e.points);
+        },
+      ),
+      if (e.falls.isNotEmpty) _fall(e.falls, Timings.gravity * f),
+    ];
+  }
+
+  Phase _fall(List<Fall> falls, double duration) {
+    final moving = <(VisualOrb, Fall)>[];
+    return Phase(
+      duration,
+      onStart: () {
+        // Falls are listed bottom-up per column, so each target is free.
+        for (final f in falls) {
+          final orb = _at(f.column, f.fromRow);
+          if (orb == null) continue;
+          _put(f.column, f.fromRow, null);
+          _put(f.column, f.toRow, orb);
+          moving.add((orb, f));
+        }
+      },
+      onUpdate: (t) {
+        final k = Curves.easeIn.transform(t);
+        for (final (orb, f) in moving) {
+          orb.row = _lerp(f.fromRow.toDouble(), f.toRow.toDouble(), k);
+        }
+      },
+      onEnd: () {
+        for (final (orb, _) in moving) {
+          orb.squash = Timings.squash;
+        }
+      },
+    );
+  }
+
+  Phase _rise(RowRose e) {
+    final moving = <(VisualOrb, int)>[];
+    return Phase(
+      Timings.rowRise,
+      onStart: () {
+        for (var col = 0; col < columns; col++) {
+          for (var row = rows - 1; row > 0; row--) {
+            _put(col, row, _at(col, row - 1));
+          }
+          _put(col, 0, VisualOrb(e.row[col], col.toDouble(), -1));
+        }
+        for (var i = 0; i < _grid.length; i++) {
+          final orb = _grid[i];
+          if (orb != null) moving.add((orb, i ~/ columns));
+        }
+      },
+      onUpdate: (t) {
+        final k = Curves.easeOut.transform(t);
+        for (final (orb, row) in moving) {
+          orb.row = row - 1 + k;
+        }
+      },
+    );
+  }
+
+  static double _lerp(double a, double b, double t) => a + (b - a) * t;
+}

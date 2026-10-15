@@ -1,16 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-void main() {
-  runApp(const MainApp());
+import 'game/palette.dart';
+import 'ui/game_screen.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  runApp(const PopApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class PopApp extends StatelessWidget {
+  const PopApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+    return MaterialApp(
+      title: 'Project POP',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: Palette.background,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Palette.orbs[3],
+          brightness: Brightness.dark,
+        ),
+      ),
+      home: const GameScreen(),
     );
   }
 }

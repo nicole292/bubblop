@@ -23,7 +23,27 @@ Check with `flutter doctor`.
 cd C:\dev\project_pop\packages\pop_core
 dart test
 
-# Run the game on Windows
+# App tests (layout, animation playback matches rules, stats)
 cd C:\dev\project_pop\app
+flutter test
+
+# Run the game on Windows
 flutter run -d windows
+
+# Run on the Android emulator
+flutter emulators --launch Medium_Phone_API_37.0
+flutter run -d emulator-5554
+```
+While `flutter run` is active: `r` hot-reloads code changes, `R` restarts, `q` quits.
+
+## App structure (`app/lib`)
+```
+main.dart              app entry, portrait lock, theme
+game/pop_game.dart     connects rules to screen: input → rules → event phases
+game/board_scene.dart  on-screen board, changed only by playing rule events
+game/phase_queue.dart  timed animation steps (fast-forwards on early input)
+game/board_component.dart, orb_painter.dart   drawing (greybox for now)
+game/board_layout.dart cell ↔ pixel conversion
+game/session_stats.dart shells-vs-stones experiment numbers
+ui/                    Flutter HUD, banners, game-over panel, debug bar
 ```
