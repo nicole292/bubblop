@@ -1,0 +1,26 @@
+# Codemagic CI (codemagic.io). Lets us build iOS without owning a Mac.
+# See docs/release.md, step 4.
+
+workflows:
+  ios-check:
+    name: iOS build check (tests + unsigned iOS build)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: 3.47.7
+      xcode: latest
+    scripts:
+      - name: Rules tests
+        working_directory: packages/pop_core
+        script: dart pub get && dart test
+      - name: App packages
+        working_directory: app
+        script: flutter pub get
+      - name: App analysis and tests
+        working_directory: app
+        script: flutter analyze && flutter test
+      - name: Build iOS (no code signing)
+        working_directory: app
+        script: flutter build ios --release --no-codesign
+    artifacts:
+      - app/build/ios/iphoneos/*.app
