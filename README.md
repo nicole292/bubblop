@@ -10,6 +10,8 @@ docs/                rules.md, art-direction.md, decisions/, known-bugs.md
 ```
 
 ## Setup (Windows)
+- **Windows Developer Mode ON** (Settings → System → For developers). Needed to build
+  plugins (audio, storage) for Windows. Android builds work without it.
 - Flutter SDK at `C:\dev\flutter` (on the user PATH)
 - Visual Studio 2022 with "Desktop development with C++" (for Windows builds)
 - Android Studio (Android SDK, emulator, command-line tools)
