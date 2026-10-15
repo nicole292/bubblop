@@ -119,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 }
 
-/// "POP!" in chunky letters, one ball colour each, bouncing in turn, with
+/// "Bubblop" in chunky letters, one ball colour each, bouncing in turn, with
 /// balls bobbing around it.
 class _Logo extends StatelessWidget {
   const _Logo({required this.clock, required this.sprites});
@@ -127,7 +127,7 @@ class _Logo extends StatelessWidget {
   final Animation<double> clock;
   final OrbSprites? sprites;
 
-  static const _letters = ['P', 'O', 'P', '!'];
+  static const _letters = ['B', 'u', 'b', 'b', 'l', 'o', 'p'];
 
   @override
   Widget build(BuildContext context) {
@@ -157,9 +157,9 @@ class _Logo extends StatelessWidget {
                 children: [
                   for (var i = 0; i < _letters.length; i++)
                     Transform.translate(
-                      offset: Offset(0, -math.max(0, math.sin(t * 2 - i * 0.7)) * 12),
+                      offset: Offset(0, -math.max(0, math.sin(t * 2 - i * 0.55)) * 10),
                       child: Transform.rotate(
-                        angle: (i.isEven ? -1 : 1) * 0.06,
+                        angle: (i.isEven ? -1 : 1) * 0.05,
                         child: _Letter(_letters[i], Palette.balls[i % Palette.balls.length]),
                       ),
                     ),
@@ -180,19 +180,19 @@ class _Letter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const size = 96.0;
+    const size = 68.0;
     return Stack(
       children: [
         // Soft drop shadow, chunky white outline, then the coloured face.
         Transform.translate(
-          offset: const Offset(0, 6),
+          offset: const Offset(0, 5),
           child: Text(letter, style: PopType.of(size, 1000, color: const Color(0x403A2D9E))),
         ),
         Text(letter,
             style: PopType.of(size, 1000,
                 foreground: Paint()
                   ..style = PaintingStyle.stroke
-                  ..strokeWidth = 14
+                  ..strokeWidth = 11
                   ..strokeJoin = StrokeJoin.round
                   ..color = Colors.white)),
         Text(letter, style: PopType.of(size, 1000, color: color)),

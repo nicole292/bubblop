@@ -1,4 +1,4 @@
-package com.projectpop.project_pop
+package com.bubblop.game
 
 import io.flutter.embedding.android.FlutterActivity
 

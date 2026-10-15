@@ -16,7 +16,7 @@ val keyProperties = Properties().apply {
 val hasReleaseKey = keyProperties.getProperty("storeFile") != null
 
 android {
-    namespace = "com.projectpop.project_pop"
+    namespace = "com.bubblop.game"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -26,9 +26,9 @@ android {
     }
 
     defaultConfig {
-        // Placeholder until the final name is chosen. The application ID can
-        // never change after the first Google Play upload (docs/release.md).
-        applicationId = "com.projectpop.project_pop"
+        // Permanent: the application ID can never change after the first
+        // Google Play upload (docs/release.md).
+        applicationId = "com.bubblop.game"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml.

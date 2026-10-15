@@ -1,8 +1,8 @@
 # Privacy Policy
 
-**[GAME NAME]** · Effective date: [DATE]
+**Bubblop** · Effective date: [DATE]
 
-[GAME NAME] is a puzzle game. We built it so that it does not need any of your personal
+Bubblop is a puzzle game. We built it so that it does not need any of your personal
 information.
 
 ## What we collect

@@ -1,9 +1,9 @@
 # Store listing (draft)
 
-Replace **[GAME NAME]** once the name is final. Character limits are Google Play's.
+Character limits are Google Play's.
 
 ## Title (30)
-[GAME NAME]: Drop & Pop Puzzle
+Bubblop: Drop & Pop Puzzle
 
 ## Short description (80)
 Drop colourful balls, pop 4 in a row and set off huge chain reactions!
@@ -11,7 +11,7 @@ Drop colourful balls, pop 4 in a row and set off huge chain reactions!
 ## Full description (4000)
 Drop. Match. Chain!
 
-[GAME NAME] is a bright, satisfying puzzle game you can play with one thumb. Drop balls
+Bubblop is a bright, satisfying puzzle game you can play with one thumb. Drop balls
 into the board, connect 4 of the same colour to pop them, and watch the board come
 alive with confetti.
 

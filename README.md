@@ -1,6 +1,7 @@
-# Project POP
+# Bubblop
 
-A one-thumb chain-reaction puzzle game for iOS and Android (codename).
+A one-thumb chain-reaction puzzle game for iOS and Android (codename during development: Project POP).
+App ID: `com.bubblop.game`.
 
 ## Layout
 ```

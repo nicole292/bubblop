@@ -26,7 +26,7 @@ class PopApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'POP!',
+      title: 'Bubblop',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
