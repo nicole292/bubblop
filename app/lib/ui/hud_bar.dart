@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../game/hud_state.dart';
 import '../game/palette.dart';
+import 'orb_icon.dart';
+import 'type.dart';
 
-const _numbers = TextStyle(fontFeatures: [FontFeature.tabularFigures()]);
-
-/// Score, upcoming orbs and the rising-row countdown.
+/// Score, upcoming orbs and the rising-row countdown. Sizes itself to its
+/// content; the board sits directly beneath it.
 class HudBar extends StatelessWidget {
   const HudBar({super.key, required this.hud, required this.onRestart});
 
@@ -15,49 +16,48 @@ class HudBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+      padding: const EdgeInsets.fromLTRB(20, 8, 12, 6),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const _Label('SCORE'),
-                    Text('${hud.score}',
-                        style: _numbers.copyWith(
-                            fontSize: 30, fontWeight: FontWeight.w700, color: Palette.text)),
-                    Text('Best ${hud.best} · Level ${hud.level}',
-                        style: _numbers.copyWith(fontSize: 12, color: Palette.textDim)),
+                    Text('SCORE', style: PopType.label),
+                    const SizedBox(height: 2),
+                    Text('${hud.score}', style: PopType.score),
                   ],
                 ),
               ),
               _Queue(queue: hud.queue),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               IconButton(
                 tooltip: 'Restart',
+                visualDensity: VisualDensity.compact,
                 onPressed: onRestart,
-                icon: const Icon(Icons.refresh, color: Palette.textDim),
+                icon: const Icon(Icons.refresh_rounded, color: Palette.textDim),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          _Pressure(left: hud.pressure, max: hud.pressureMax),
+          Row(
+            children: [
+              Text(
+                'Best ${hud.best}  ·  Level ${hud.level}',
+                style: PopType.small,
+              ),
+              const Spacer(),
+              _Pressure(left: hud.pressure, max: hud.pressureMax),
+            ],
+          ),
         ],
       ),
     );
   }
-}
-
-class _Label extends StatelessWidget {
-  const _Label(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Text(text,
-      style: const TextStyle(
-          fontSize: 11, letterSpacing: 1.5, color: Palette.textDim, fontWeight: FontWeight.w600));
 }
 
 class _Queue extends StatelessWidget {
@@ -67,35 +67,27 @@ class _Queue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const _Label('NEXT'),
+        Text('NEXT', style: PopType.label),
         const SizedBox(height: 4),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             for (var i = 0; i < queue.length; i++)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
-                child: _Dot(color: Palette.orbs[queue[i]], size: i == 0 ? 30 : 20),
+                padding: const EdgeInsets.only(left: 6),
+                child: Opacity(
+                  opacity: i == 0 ? 1 : 0.8,
+                  child: OrbIcon(color: queue[i], size: i == 0 ? 34 : 22),
+                ),
               ),
           ],
         ),
       ],
     );
   }
-}
-
-class _Dot extends StatelessWidget {
-  const _Dot({required this.color, required this.size});
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      );
 }
 
 /// One pip per drop until the next row rises; filled pips are drops left.
@@ -108,19 +100,21 @@ class _Pressure extends StatelessWidget {
   Widget build(BuildContext context) {
     final urgent = left <= 2;
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const _Label('RISE IN'),
-        const SizedBox(width: 10),
+        Text('RISE', style: PopType.label),
+        const SizedBox(width: 8),
         for (var i = 0; i < max; i++)
-          Container(
-            width: 14,
-            height: 6,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: 12,
+            height: 5,
             margin: const EdgeInsets.only(right: 4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(3),
               color: i < left
                   ? (urgent ? Palette.danger : Palette.text)
-                  : Palette.laneB,
+                  : Palette.pipEmpty,
             ),
           ),
       ],

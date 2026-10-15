@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../game/palette.dart';
+import 'type.dart';
 
 /// Briefly shows [text] each time [id] changes, then fades it out.
 class BannerText extends StatefulWidget {
@@ -48,11 +48,11 @@ class _BannerTextState extends State<BannerText> with SingleTickerProviderStateM
               scale: scale,
               child: Text(
                 widget.text!,
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  color: Palette.text,
-                  shadows: [Shadow(blurRadius: 12, color: Color(0xAA000000))],
+                style: PopType.banner.copyWith(
+                  shadows: const [
+                    Shadow(blurRadius: 16, color: Color(0xCC000000)),
+                    Shadow(blurRadius: 24, color: Color(0x663FA9F5)),
+                  ],
                 ),
               ),
             ),

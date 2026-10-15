@@ -25,6 +25,11 @@ class BoardScene {
   /// Called when the game-over moment has been shown.
   void Function()? onGameOver;
 
+  /// Visual-effect hooks (particles, light). They never change the scene.
+  void Function(PoppedGroup group, int step)? onGroupPopped;
+  void Function(CellPos pos, Cell cell)? onCracked;
+  void Function(int column, int row)? onLanded;
+
   int? shakeColumn;
   double shakeTime = 0;
 
@@ -84,7 +89,10 @@ class BoardScene {
         _put(e.column, e.row, orb);
       },
       onUpdate: (t) => orb.row = _lerp(startRow, e.row.toDouble(), Curves.easeIn.transform(t)),
-      onEnd: () => orb.squash = Timings.squash,
+      onEnd: () {
+        orb.squash = Timings.squash;
+        onLanded?.call(e.column, e.row);
+      },
     );
   }
 
@@ -112,6 +120,10 @@ class BoardScene {
         Timings.pop * f,
         onStart: () {
           crackOrbs = [for (final p in e.cracked.keys) ?_at(p.col, p.row)];
+          for (final g in e.groups) {
+            onGroupPopped?.call(g, e.step);
+          }
+          e.cracked.forEach((p, cell) => onCracked?.call(p, cell));
         },
         onUpdate: (t) {
           for (final o in popOrbs) {

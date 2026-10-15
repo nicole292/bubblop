@@ -11,8 +11,20 @@ void main() {
       expect(area.contains(layout.rect.topLeft), isTrue);
       expect(layout.rect.right, lessThanOrEqualTo(size.width));
       expect(layout.rect.bottom, lessThanOrEqualTo(size.height));
-      // Room for the held orb above the board.
-      expect(layout.rect.top, greaterThanOrEqualTo(layout.cell));
+      // Room for the held orb above the board and the tray below it.
+      expect(layout.rect.top, greaterThanOrEqualTo(layout.cell * BoardLayout.headroomCells));
+      expect(layout.trayCenterY + layout.cell * 0.37, lessThanOrEqualTo(size.height));
+    });
+  }
+
+  for (final width in const [320.0, 390.0, 430.0, 1200.0]) {
+    test('preferredHeight gives a full-width board with no spare height at $width', () {
+      final height = BoardLayout.preferredHeight(width, columns: 6, rows: 10);
+      final layout = BoardLayout(Size(width, height), columns: 6, rows: 10);
+      final expectedCell = ((width - BoardLayout.padding * 2) / 6).clamp(0.0, BoardLayout.maxCell);
+      expect(layout.cell, closeTo(expectedCell, 0.001));
+      expect(layout.rect.top - layout.cell * BoardLayout.headroomCells,
+          closeTo(BoardLayout.padding, 0.5));
     });
   }
 

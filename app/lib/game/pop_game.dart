@@ -4,8 +4,11 @@ import 'package:flame/components.dart' show Vector2;
 import 'package:flame/game.dart' show FlameGame;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:pop_core/pop_core.dart';
 
+import '../render/orb_sprites.dart';
+import '../render/particles.dart';
 import 'board_component.dart';
 import 'board_layout.dart';
 import 'board_scene.dart';
@@ -30,14 +33,21 @@ class PopGame extends FlameGame {
   final phases = PhaseQueue();
   final stats = SessionStats();
   final hud = ValueNotifier(const HudState());
+  final particles = ParticleSystem();
 
   BoardLayout? layout;
+  OrbSprites? sprites;
 
   /// Column the player is aiming at, or null when not touching.
   int? aimColumn;
 
+  /// Board light that flares on pops and grows with chain length (0–1).
+  double boardLight = 0;
+  Color boardLightColor = Palette.orbs[3];
+
+  /// Transparent: the screen's background gradient shows through.
   @override
-  Color backgroundColor() => Palette.background;
+  Color backgroundColor() => const Color(0x00000000);
 
   @override
   Future<void> onLoad() async {
@@ -47,24 +57,30 @@ class PopGame extends FlameGame {
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    layout = BoardLayout(Size(size.x, size.y),
-        columns: _config.columns, rows: _config.rows);
+    _relayout();
+  }
+
+  @override
+  void onRemove() {
+    sprites?.dispose();
+    super.onRemove();
   }
 
   @override
   void update(double dt) {
     super.update(dt);
     phases.update(dt);
-    scene.update(dt * phases.speed);
+    final scaled = dt * phases.speed;
+    scene.update(scaled);
+    particles.update(scaled);
+    boardLight = math.max(0, boardLight - scaled * 2.2);
   }
 
   /// Starts a fresh round; a new [config] switches experiment mode.
   void restart({RulesConfig? config}) {
     if (config != null) {
       _config = config;
-      final size = this.size;
-      layout = BoardLayout(Size(size.x, size.y),
-          columns: _config.columns, rows: _config.rows);
+      _relayout();
     }
     phases.clear();
     _startRound();
@@ -102,6 +118,20 @@ class PopGame extends FlameGame {
     _publishRulesState();
   }
 
+  void _relayout() {
+    if (!hasLayout) return;
+    final next = BoardLayout(Size(size.x, size.y),
+        columns: _config.columns, rows: _config.rows);
+    final radius = next.cell * 0.44;
+    if (sprites == null || (sprites!.radius - radius).abs() > 0.5) {
+      sprites?.dispose();
+      final ratio = WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
+      sprites = OrbSprites.bake(radius, ratio);
+    }
+    layout = next;
+    particles.cell = next.cell;
+  }
+
   void _startRound() {
     rules = Game(seed: math.Random().nextInt(1 << 31), config: _config);
     scene = BoardScene(_config.columns, _config.rows)
@@ -113,11 +143,38 @@ class PopGame extends FlameGame {
       }
       ..onGameOver = () {
         hud.value = hud.value.copyWith(isOver: true, best: stats.bestScore);
-      };
+      }
+      ..onGroupPopped = _popEffects
+      ..onCracked = _crackEffects;
     aimColumn = null;
+    boardLight = 0;
     stats.startRound(_config);
     hud.value = HudState(best: stats.bestScore, bannerId: hud.value.bannerId);
     _publishRulesState();
+  }
+
+  /// Sparks per orb, one ring per group; the board light grows with the
+  /// chain so long chains feel bigger without extra clutter.
+  void _popEffects(PoppedGroup group, int step) {
+    final layout = this.layout;
+    if (layout == null) return;
+    final color = Palette.orbs[group.color];
+    var sum = Offset.zero;
+    for (final p in group.cells) {
+      final at = layout.center(p.col.toDouble(), p.row.toDouble());
+      sum += at;
+      particles.burst(at, color, count: step > 1 ? 7 : 5);
+    }
+    final centroid = sum / group.cells.length.toDouble();
+    particles.ring(centroid, color, to: 1.1 + 0.25 * math.min(step, 4));
+    boardLight = math.min(1.0, math.max(boardLight, 0.25 + 0.25 * (step - 1)));
+    boardLightColor = color;
+  }
+
+  void _crackEffects(CellPos pos, Cell cell) {
+    final layout = this.layout;
+    if (layout == null || cell.kind != CellKind.shell) return;
+    particles.shards(layout.center(pos.col.toDouble(), pos.row.toDouble()));
   }
 
   /// Values the HUD can show immediately (they are not animated).

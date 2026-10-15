@@ -20,7 +20,8 @@ class PopApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: Palette.background,
+        fontFamily: 'Sora',
+        scaffoldBackgroundColor: Palette.backgroundTop,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Palette.orbs[3],
           brightness: Brightness.dark,
