@@ -17,12 +17,14 @@ class RulesConfig {
     this.matchSize = 4,
     this.startColors = 4,
     this.maxColors = 5,
-    this.extraColorLevel = 4,
+    this.extraColorLevel = 5,
     this.orbsPerLevel = 30,
     this.startPressure = 8,
     this.minPressure = 4,
     this.previewLength = 3,
     this.risingRowKind = RisingRowKind.shells,
+    this.chainRelief = 0,
+    this.levelsPerPressureStep = 2,
   });
 
   final int columns;
@@ -48,8 +50,15 @@ class RulesConfig {
 
   final RisingRowKind risingRowKind;
 
-  int pressureInterval(int level) =>
-      math.max(minPressure, startPressure - (level - 1));
+  /// Drops added back to the countdown by a chain of 2+ steps, never above
+  /// the current interval. 0 turns it off.
+  final int chainRelief;
+
+  /// The countdown shortens by one every [levelsPerPressureStep] levels.
+  final int levelsPerPressureStep;
+
+  int pressureInterval(int level) => math.max(
+      minPressure, startPressure - (level - 1) ~/ levelsPerPressureStep);
 
   int colorsForLevel(int level) =>
       level >= extraColorLevel ? maxColors : startColors;
@@ -60,6 +69,9 @@ class RulesConfig {
     int? startPressure,
     int? minPressure,
     RisingRowKind? risingRowKind,
+    int? chainRelief,
+    int? levelsPerPressureStep,
+    int? extraColorLevel,
   }) {
     return RulesConfig(
       columns: columns,
@@ -67,12 +79,14 @@ class RulesConfig {
       matchSize: matchSize ?? this.matchSize,
       startColors: startColors,
       maxColors: maxColors,
-      extraColorLevel: extraColorLevel,
+      extraColorLevel: extraColorLevel ?? this.extraColorLevel,
       orbsPerLevel: orbsPerLevel ?? this.orbsPerLevel,
       startPressure: startPressure ?? this.startPressure,
       minPressure: minPressure ?? this.minPressure,
       previewLength: previewLength,
       risingRowKind: risingRowKind ?? this.risingRowKind,
+      chainRelief: chainRelief ?? this.chainRelief,
+      levelsPerPressureStep: levelsPerPressureStep ?? this.levelsPerPressureStep,
     );
   }
 }

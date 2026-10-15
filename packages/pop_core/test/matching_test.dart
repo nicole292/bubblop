@@ -111,6 +111,44 @@ void main() {
       expect(game.board.at(5, 1), const Cell.shell(r));
     });
 
+    test('a 3-step chain fed by a cracked shell scores 1×, 4×, 9×', () {
+      // Found by search: dropping B completes the bottom row, which cracks
+      // the green shell and sets off two more steps.
+      final game = gameOn('''
+        GG....
+        YRR...
+        RgGR..
+        RBBB..
+      ''', queue: [b]);
+      final steps = stepsOf(game.drop(4));
+      expect(steps.map((s) => s.step), [1, 2, 3]);
+      expect(steps[0].cracked.values.single, const Cell.shell(g));
+      expect(steps.map((s) => s.points), [40 + 5, 40 * 4, 40 * 9]);
+      expect(game.score, 45 + 160 + 360);
+    });
+
+    test('a shell touching several popped orbs cracks once and scores once', () {
+      final game = gameOn('''
+        .r....
+        RRR..B
+      ''', queue: [r]);
+      final step = stepsOf(game.drop(3)).single;
+      expect(step.cracked, hasLength(1));
+      expect(step.points, 40 + 5);
+    });
+
+    test('shells and stones fall with gravity like orbs', () {
+      final game = gameOn('''
+        .#....
+        .y....
+        .B....
+        RRR..B
+      ''', queue: [r]);
+      final step = stepsOf(game.drop(3)).single;
+      expect(step.cracked, isEmpty, reason: 'only the B orb touches the pop');
+      expect(bottom(game, 3), '.#....\n.y....\n.B...B');
+    });
+
     test('gravity reports every fall', () {
       final game = gameOn('''
         Y.....

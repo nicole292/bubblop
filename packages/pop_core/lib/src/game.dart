@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'board.dart';
 import 'cell.dart';
 import 'color_bag.dart';
@@ -44,6 +46,7 @@ class Game {
     while (_queue.length < config.previewLength) {
       _queue.add(_nextColor());
     }
+    _nextRow = _generateRow();
   }
 
   final int seed;
@@ -60,6 +63,7 @@ class Game {
   int _orbsCleared = 0;
   int _moves = 0;
   late int _pressure;
+  late List<Cell> _nextRow;
   bool _isOver = false;
 
   /// A copy of the board; changing it does not affect the game.
@@ -71,6 +75,10 @@ class Game {
 
   /// Drops remaining until the next row rises.
   int get pressure => _pressure;
+
+  /// The row that will rise next, left to right. Shown to the player so
+  /// they can plan around its colours.
+  List<Cell> get nextRow => List.unmodifiable(_nextRow);
   bool get isOver => _isOver;
 
   /// The current orb first, then the upcoming ones.
@@ -118,6 +126,10 @@ class Game {
       events.add(LevelUp(_level));
     }
 
+    final interval = config.pressureInterval(_level);
+    if (steps.length >= 2 && config.chainRelief > 0) {
+      _pressure = math.min(_pressure + config.chainRelief, interval);
+    }
     _pressure--;
     if (_pressure <= 0) {
       _pressure = config.pressureInterval(_level);
@@ -149,14 +161,21 @@ class Game {
     return false;
   }
 
-  List<Cell> _raiseRow() {
+  /// Rows are generated one rise ahead so [nextRow] can be shown. A level-up
+  /// therefore affects the row after the one already previewed.
+  List<Cell> _generateRow() {
     final colorCount = config.colorsForLevel(_level);
-    final newRow = [
+    return [
       for (var c = 0; c < config.columns; c++)
         config.risingRowKind == RisingRowKind.shells
             ? Cell.shell(_rowRandom.nextInt(colorCount))
             : const Cell.stone(),
     ];
+  }
+
+  List<Cell> _raiseRow() {
+    final newRow = _nextRow;
+    _nextRow = _generateRow();
     for (var c = 0; c < config.columns; c++) {
       for (var r = config.rows - 1; r > 0; r--) {
         _board.set(c, r, _board.at(c, r - 1));

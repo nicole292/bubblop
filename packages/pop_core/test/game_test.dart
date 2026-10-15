@@ -110,11 +110,65 @@ void main() {
           greaterThan(events.lastIndexWhere((e) => e is ChainStep)));
     });
 
-    test('pressure interval shrinks with level but not below the minimum', () {
+    test('pressure interval shrinks every 2 levels, not below the minimum', () {
       const config = RulesConfig();
-      expect(config.pressureInterval(1), 8);
-      expect(config.pressureInterval(3), 6);
-      expect(config.pressureInterval(20), 4);
+      expect([for (var l = 1; l <= 9; l++) config.pressureInterval(l)],
+          [8, 8, 7, 7, 6, 6, 5, 5, 4]);
+      expect(config.pressureInterval(30), 4);
+    });
+
+    test('the risen row is exactly the previewed row', () {
+      final game = gameOn('', queue: [r, y, g], config: fast);
+      final preview = game.nextRow;
+      game.drop(0);
+      game.drop(1);
+      final rose = game.drop(2).events.whereType<RowRose>().single;
+      expect(rose.row, preview);
+      expect(game.nextRow, isNot(same(preview)));
+      expect(game.nextRow, hasLength(6));
+    });
+
+    test('rising rows are deterministic for a seed', () {
+      List<List<Cell>> rows(int seed) {
+        final game = Game(seed: seed, config: fast);
+        final seen = <List<Cell>>[];
+        for (var i = 0; i < 12 && !game.isOver; i++) {
+          final rose = game.drop(i % 6).events.whereType<RowRose>();
+          seen.addAll(rose.map((e) => e.row));
+        }
+        return seen;
+      }
+
+      expect(rows(77), rows(77));
+      expect(rows(77), isNotEmpty);
+    });
+
+    test('chain relief adds drops back after a chain, capped at the interval', () {
+      const relief = RulesConfig(chainRelief: 1);
+      final game = gameOn('''
+        .RRR..
+        RGGG.B
+      ''', queue: [y, g], config: relief);
+      game.drop(5);
+      expect(game.pressure, 7);
+      game.drop(4); // 2-step chain: +1 then −1 for the drop (6 without relief)
+      expect(game.pressure, 7);
+
+      final capped = gameOn('''
+        .RRR..
+        RGGG.B
+      ''', queue: [g], config: relief);
+      capped.drop(4);
+      expect(capped.pressure, 7, reason: 'cannot exceed the interval of 8');
+    });
+
+    test('chain relief is off by default', () {
+      final game = gameOn('''
+        .RRR..
+        RGGG.B
+      ''', queue: [g]);
+      game.drop(4);
+      expect(game.pressure, 7);
     });
   });
 
@@ -167,8 +221,8 @@ void main() {
 
     test('a fifth colour is dealt from the extra-colour level', () {
       const config = RulesConfig();
-      expect(config.colorsForLevel(3), 4);
-      expect(config.colorsForLevel(4), 5);
+      expect(config.colorsForLevel(4), 4);
+      expect(config.colorsForLevel(5), 5);
     });
 
     test('a restart is just a new Game: same seed, fresh state', () {

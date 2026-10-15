@@ -1,4 +1,4 @@
-# Project POP — Gameplay Rules (v0.1)
+# Project POP — Gameplay Rules (v0.2)
 
 Status: draft spec for the first prototype. Every number here lives in
 `RulesConfig` (packages/pop_core) so it can be tuned without code changes.
@@ -16,7 +16,7 @@ Status: draft spec for the first prototype. Every number here lives in
 - The current orb plus the next 2 are visible.
 - Colours come from a shuffled **bag** (each active colour ×2 per bag).
 - All randomness comes from a single seeded RNG, so the same seed always produces the same game.
-- Start with 4 colours; the 5th joins at level 4.
+- Start with 4 colours; the 5th joins at level 5.
 
 ## Resolving a move (deterministic)
 1. The orb lands in the lowest empty cell of the chosen column.
@@ -32,7 +32,11 @@ Status: draft spec for the first prototype. Every number here lives in
 - A countdown starts at 8 pips. Every drop ticks it by 1.
 - At 0, **after the move has fully resolved**, a row of 6 shells rises from the bottom
   and pushes everything up by one. The countdown resets to the current level's interval.
-- Interval: 8 at level 1, down 1 per level, minimum 4.
+- Interval: 8 at level 1, down 1 every **2** levels, minimum 4 (8, 8, 7, 7, 6, 6, 5, 5, 4…).
+- **The next row is visible** before it rises, so its shell colours can be planned for.
+  Rows are generated one rise ahead; a level-up affects the row after the previewed one.
+- Optional `chainRelief` (off by default): a 2+ step chain adds drops back to the
+  countdown, capped at the interval.
 - Shell colours come from a second generator derived from the same seed, so rising rows
   never change which orbs you are dealt. They are visible faintly through the glass.
 
@@ -45,7 +49,7 @@ Status: draft spec for the first prototype. Every number here lives in
 
 ## Levels
 - Level up every 30 orbs cleared.
-- Colour 5 is introduced at level 4.
+- Colour 5 is introduced at level 5.
 
 ## Game over
 - A rising row would push any cell above row 9 → game over.
@@ -67,3 +71,17 @@ A debug toggle switches risen rows between **Shells** (crack → reveal colour) 
 **Stones** (grey blocks that vanish when hit). Compare longest chain, % of chains that
 involve a revealed shell, moves survived, and subjective strategy/fun ratings (1–5).
 Keep shells only if they clearly win.
+
+**Result (2026-10-15): shells win.** Playtest: shells 4/5 strategy, 4/5 fun; stones 2/5, 2/5.
+Simulation (500 games, greedy bot): shells produce ~6× more chains than stones, and
+~83% of chains are fed by a cracked shell. Shells are the default; stones stay as a
+debug toggle for comparison only.
+
+## Balance notes (v0.2)
+Run `dart run tool/simulate.dart` in packages/pop_core to compare configurations.
+- v0.1 stacked two difficulty jumps at level 4 (5th colour + interval 5); the median
+  bot game ended there. v0.2 halves the pressure ramp and moves colour 5 to level 5:
+  median game 85 → 103 moves, with the same pop and chain rates.
+- 3-match pops on ~44% of moves (vs ~28%) and keeps the board emptier; likely less
+  planning. 4-match stays the default; 3-match stays a debug toggle for playtests.
+- Chain relief had no measurable effect for the bot; left off to keep the rules simple.
