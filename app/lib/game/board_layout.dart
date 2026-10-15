@@ -5,7 +5,9 @@ import 'dart:ui';
 ///
 /// Vertical stack: headroom (held orb) → board → tray (next rising row).
 class BoardLayout {
-  factory BoardLayout(Size area, {required int columns, required int rows}) {
+  /// [offset] is where [area] starts on the game canvas.
+  factory BoardLayout(Size area,
+      {required int columns, required int rows, Offset offset = Offset.zero}) {
     final cell = math.min(
       math.min(
         (area.width - padding * 2) / columns,
@@ -15,10 +17,11 @@ class BoardLayout {
     );
     final width = cell * columns;
     final stack = cell * (rows + headroomCells + trayCells);
-    final origin = Offset(
-      (area.width - width) / 2,
-      (area.height - stack) / 2 + cell * headroomCells,
-    );
+    final origin = offset +
+        Offset(
+          (area.width - width) / 2,
+          (area.height - stack) / 2 + cell * headroomCells,
+        );
     return BoardLayout._(columns, rows, cell, origin);
   }
 

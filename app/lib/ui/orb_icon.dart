@@ -1,29 +1,38 @@
 import 'package:flutter/widgets.dart';
 
-import '../render/orb_material.dart';
+import '../render/orb_sprites.dart';
 
-/// A glass orb drawn with the same material as the board, for the HUD.
+/// A glass orb for the HUD, drawn from the same baked sprites as the board
+/// (one image draw). Drawing the vector material here instead cost ~8 ms of
+/// raster time per frame, because the HUD is redrawn every frame on top of
+/// the game canvas.
 class OrbIcon extends StatelessWidget {
-  const OrbIcon({super.key, required this.color, required this.size});
+  const OrbIcon({super.key, required this.sprites, required this.color, required this.size});
 
+  final OrbSprites? sprites;
   final int color;
   final double size;
 
   @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: Size.square(size), painter: _OrbPainter(color));
+  Widget build(BuildContext context) => CustomPaint(
+        size: Size.square(size),
+        painter: sprites == null ? null : _OrbPainter(sprites!, color),
+      );
 }
 
 class _OrbPainter extends CustomPainter {
-  _OrbPainter(this.color);
+  _OrbPainter(this.sprites, this.color);
+  final OrbSprites sprites;
   final int color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.translate(size.width / 2, size.height / 2);
-    paintGlassOrb(canvas, size.width / 2, color);
+    // Sprites are baked with padding around the orb; scale so the orb
+    // itself fills [size].
+    final scale = size.width / (sprites.radius * 2);
+    sprites.draw(canvas, sprites.orb(color), size.center(Offset.zero), sx: scale, sy: scale);
   }
 
   @override
-  bool shouldRepaint(_OrbPainter old) => old.color != color;
+  bool shouldRepaint(_OrbPainter old) => old.sprites != sprites || old.color != color;
 }

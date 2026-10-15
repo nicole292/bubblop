@@ -20,6 +20,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  shaders:
+    - shaders/orb.frag
   fonts:
     # Sora, SIL Open Font License 1.1 (assets/fonts/Sora-OFL.txt).
     # Variable font: weights are set with FontVariation('wght', …), see ui/type.dart.

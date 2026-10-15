@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pop_core/pop_core.dart';
 
 import '../game/palette.dart';
 import '../game/pop_game.dart';
+import 'type.dart';
 
-/// PROTOTYPE ONLY: switches experiment modes and shows session stats.
-/// Removed before release.
+/// PROTOTYPE ONLY: switches the 4/3-match experiment and shows session
+/// stats. Removed before release. (Stones are no longer offered in the game;
+/// RisingRowKind.stones remains in pop_core for simulations only.)
 class DebugBar extends StatelessWidget {
   const DebugBar({super.key, required this.game});
 
@@ -17,46 +18,33 @@ class DebugBar extends StatelessWidget {
     final config = game.config;
     return SizedBox(
       height: height,
-      child: Opacity(
-        opacity: 0.75,
-        child: Center(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              children: [
-                const Text('DEV', style: TextStyle(fontSize: 10, color: Palette.textDim, letterSpacing: 1.5)),
-                const SizedBox(width: 8),
-                for (final kind in RisingRowKind.values)
-                  _choice(kind.name, config.risingRowKind == kind,
-                      () => game.restart(config: config.copyWith(risingRowKind: kind))),
-                const SizedBox(width: 6),
-                for (final size in [4, 3])
-                  _choice('$size-match', config.matchSize == size,
-                      () => game.restart(config: config.copyWith(matchSize: size))),
-                TextButton(
-                  onPressed: () => _showStats(context),
-                  child: const Text('Stats', style: TextStyle(fontSize: 12)),
-                ),
-              ],
-            ),
-          ),
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('DEV', style: PopType.of(9.5, 700, color: Palette.textDim.withValues(alpha: 0.6), spacing: 1.6)),
+          const SizedBox(width: 10),
+          for (final size in [4, 3])
+            _choice('$size-match', config.matchSize == size,
+                () => game.restart(config: config.copyWith(matchSize: size))),
+          _choice('Stats', false, () => _showStats(context)),
+        ],
       ),
     );
   }
 
-  static const height = 44.0;
+  static const height = 36.0;
 
-  Widget _choice(String label, bool selected, VoidCallback onSelected) => Padding(
-        padding: const EdgeInsets.only(right: 4),
-        child: ChoiceChip(
-          label: Text(label, style: const TextStyle(fontSize: 11)),
-          selected: selected,
-          showCheckmark: false,
-          visualDensity: VisualDensity.compact,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          onSelected: selected ? null : (_) => onSelected(),
+  Widget _choice(String label, bool selected, VoidCallback onTap) => TextButton(
+        onPressed: selected ? null : onTap,
+        style: TextButton.styleFrom(
+          minimumSize: const Size(0, 28),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: Text(
+          label,
+          style: PopType.of(11, selected ? 700 : 500,
+              color: selected ? Palette.text.withValues(alpha: 0.75) : Palette.textDim.withValues(alpha: 0.6)),
         ),
       );
 
@@ -65,7 +53,7 @@ class DebugBar extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Palette.boardTop,
+        backgroundColor: Palette.bezelMid,
         title: const Text('Session stats'),
         content: SelectableText(report,
             style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),

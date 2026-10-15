@@ -48,6 +48,37 @@ void main() {
     }
   });
 
+  test('load shows a pre-filled board exactly, including shells', () {
+    final board = Board.parse('''
+      GG....
+      YRR...
+      RgGR..
+      RBBB..
+    ''');
+    final scene = BoardScene(6, 10)..load(board);
+    expect(scene.toBoard().toPicture(), board.toPicture());
+  });
+
+  test('a pre-filled board plays through to the same picture', () {
+    final rules = Game(
+      seed: 1,
+      board: Board.parse('''
+        GG....
+        YRR...
+        RgGR..
+        RBBB..
+      '''),
+      scriptedQueue: [3],
+    );
+    final scene = BoardScene(6, 10)..load(rules.board);
+    final phases = PhaseQueue();
+    for (final e in rules.drop(4).events) {
+      phases.addAll(scene.phasesFor(e));
+    }
+    phases.update(1000);
+    expect(scene.toBoard().toPicture(), rules.board.toPicture());
+  });
+
   for (final kind in RisingRowKind.values) {
     group('${kind.name}:', () {
       // Fast levelling so level-ups, faster pressure and colour 5 all occur.

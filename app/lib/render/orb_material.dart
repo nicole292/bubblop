@@ -184,6 +184,23 @@ void paintStone(Canvas canvas, double r) {
   );
 }
 
+/// The colour's symbol as if set inside the glass: a soft inner glow, a lit
+/// face and a shadowed upper lip (light comes from the top-left).
+void paintInnerGlyph(Canvas canvas, double r, int colorIndex) {
+  final base = Palette.orbs[colorIndex];
+  final s = r * 0.33;
+  final path = glyphPath(colorIndex, s).shift(Offset(r * 0.02, r * 0.05));
+  canvas.drawPath(
+    path,
+    Paint()
+      ..color = const Color(0x73FFFFFF)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.3),
+  );
+  canvas.drawPath(path.shift(Offset(0, -s * 0.09)),
+      Paint()..color = _shift(base, -0.36).withValues(alpha: 0.75));
+  canvas.drawPath(path, Paint()..color = Color.lerp(base, const Color(0xFFFFFFFF), 0.8)!.withValues(alpha: 0.88));
+}
+
 /// One symbol per colour so colour is never the only cue:
 /// coral ●, saffron ▲, mint ■, azure ◆, orchid ✦.
 void paintGlyph(Canvas canvas, double size, int colorIndex,

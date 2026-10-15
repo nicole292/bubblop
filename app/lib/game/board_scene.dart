@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/animation.dart' show Curves;
 import 'package:pop_core/pop_core.dart';
 
@@ -26,7 +28,8 @@ class BoardScene {
   void Function()? onGameOver;
 
   /// Visual-effect hooks (particles, light). They never change the scene.
-  void Function(PoppedGroup group, int step)? onGroupPopped;
+  /// [onStepPopped] fires as a chain step's groups burst.
+  void Function(ChainStep step)? onStepPopped;
   void Function(CellPos pos, Cell cell)? onCracked;
   void Function(int column, int row)? onLanded;
 
@@ -42,6 +45,7 @@ class BoardScene {
   void update(double dt) {
     for (final orb in orbs) {
       if (orb.squash > 0) orb.squash = (orb.squash - dt).clamp(0, Timings.squash);
+      if (orb.flash > 0) orb.flash = (orb.flash - dt).clamp(0, Timings.revealFlash);
     }
     if (shakeTime > 0) shakeTime = (shakeTime - dt).clamp(0, Timings.shake);
   }
@@ -50,6 +54,17 @@ class BoardScene {
   void shake(int column) {
     shakeColumn = column;
     shakeTime = Timings.shake;
+  }
+
+  /// Shows [board] immediately, without animation (round start, or a board
+  /// that does not start empty).
+  void load(Board board) {
+    for (var row = 0; row < rows; row++) {
+      for (var col = 0; col < columns; col++) {
+        final cell = board.at(col, row);
+        _put(col, row, cell == null ? null : VisualOrb(cell, col.toDouble(), row.toDouble()));
+      }
+    }
   }
 
   /// The scene as a rules [Board], for checking that the two agree.
@@ -107,22 +122,40 @@ class BoardScene {
         Timings.highlight * f,
         onStart: () {
           popOrbs = [for (final p in popped) ?_at(p.col, p.row)];
-          if (e.step > 1) onBanner?.call('Chain ×${e.step}');
+          crackOrbs = [];
+          final poppedSet = popped.toSet();
+          for (final p in e.cracked.keys) {
+            final orb = _at(p.col, p.row);
+            if (orb == null) continue;
+            crackOrbs.add(orb);
+            // Cracks start on the side facing the orb that broke it.
+            for (final (dc, dr, angle) in const [
+              (-1, 0, math.pi),
+              (1, 0, 0.0),
+              (0, -1, math.pi / 2),
+              (0, 1, -math.pi / 2),
+            ]) {
+              if (poppedSet.contains((col: p.col + dc, row: p.row + dr))) {
+                orb.crackAngle = angle;
+                break;
+              }
+            }
+          }
         },
         onUpdate: (t) {
           for (final o in popOrbs) {
             o.scale = 1 + 0.15 * t;
             o.glow = t;
           }
+          for (final o in crackOrbs) {
+            if (o.cell.kind == CellKind.shell) o.crack = t;
+          }
         },
       ),
       Phase(
         Timings.pop * f,
         onStart: () {
-          crackOrbs = [for (final p in e.cracked.keys) ?_at(p.col, p.row)];
-          for (final g in e.groups) {
-            onGroupPopped?.call(g, e.step);
-          }
+          onStepPopped?.call(e);
           e.cracked.forEach((p, cell) => onCracked?.call(p, cell));
         },
         onUpdate: (t) {
@@ -148,7 +181,9 @@ class BoardScene {
             if (cell.kind == CellKind.shell && orb != null) {
               orb
                 ..cell = Cell.orb(cell.color)
-                ..reveal = 0;
+                ..reveal = 0
+                ..crack = 0
+                ..flash = Timings.revealFlash;
             } else {
               _put(p.col, p.row, null);
             }

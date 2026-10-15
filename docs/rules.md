@@ -77,6 +77,10 @@ Simulation (500 games, greedy bot): shells produce ~6× more chains than stones,
 ~83% of chains are fed by a cracked shell. Shells are the default; stones stay as a
 debug toggle for comparison only.
 
+**Update (2026-10-15):** stones are removed from the playable game (user decision: less fun
+and less strategic). `RisingRowKind.stones` stays in pop_core only so the simulator can
+keep comparing against it. Revisit only for a genuinely different mechanic.
+
 ## Balance notes (v0.2)
 Run `dart run tool/simulate.dart` in packages/pop_core to compare configurations.
 - v0.1 stacked two difficulty jumps at level 4 (5th colour + interval 5); the median

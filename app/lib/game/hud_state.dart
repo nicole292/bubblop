@@ -10,6 +10,9 @@ class HudState {
     this.banner,
     this.bannerId = 0,
     this.isOver = false,
+    this.longestChain = 0,
+    this.moves = 0,
+    this.spritesVersion = 0,
   });
 
   /// Displayed score: grows as each chain step finishes animating.
@@ -24,12 +27,19 @@ class HudState {
   final int pressure;
   final int pressureMax;
 
-  /// Short announcement ("Chain ×3"); [bannerId] changes each time.
+  /// Short announcement ("Board clear!"); [bannerId] changes each time.
   final String? banner;
   final int bannerId;
 
   /// True once the game-over moment has finished animating.
   final bool isOver;
+
+  /// Round summary for the results panel.
+  final int longestChain;
+  final int moves;
+
+  /// Bumped when orb sprites are rebaked, so HUD icons redraw.
+  final int spritesVersion;
 
   HudState copyWith({
     int? score,
@@ -41,6 +51,9 @@ class HudState {
     String? banner,
     int? bannerId,
     bool? isOver,
+    int? longestChain,
+    int? moves,
+    int? spritesVersion,
   }) {
     return HudState(
       score: score ?? this.score,
@@ -52,6 +65,9 @@ class HudState {
       banner: banner ?? this.banner,
       bannerId: bannerId ?? this.bannerId,
       isOver: isOver ?? this.isOver,
+      longestChain: longestChain ?? this.longestChain,
+      moves: moves ?? this.moves,
+      spritesVersion: spritesVersion ?? this.spritesVersion,
     );
   }
 }
