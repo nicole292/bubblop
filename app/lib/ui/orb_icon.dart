@@ -30,7 +30,7 @@ class _OrbPainter extends CustomPainter {
     // Sprites are baked with padding around the orb; scale so the orb
     // itself fills [size].
     final scale = size.width / (sprites.radius * 2);
-    sprites.draw(canvas, sprites.orb(color), size.center(Offset.zero), sx: scale, sy: scale);
+    sprites.draw(canvas, sprites.ball(color), size.center(Offset.zero), sx: scale, sy: scale);
   }
 
   @override

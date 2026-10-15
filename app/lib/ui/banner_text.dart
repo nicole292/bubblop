@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../game/palette.dart';
 import 'type.dart';
 
 /// Briefly shows [text] each time [id] changes, then fades it out.
@@ -46,14 +47,20 @@ class _BannerTextState extends State<BannerText> with SingleTickerProviderStateM
             opacity: opacity,
             child: Transform.scale(
               scale: scale,
-              child: Text(
-                widget.text!,
-                style: PopType.banner.copyWith(
-                  shadows: const [
-                    Shadow(blurRadius: 16, color: Color(0xCC000000)),
-                    Shadow(blurRadius: 24, color: Color(0x663FA9F5)),
-                  ],
-                ),
+              // White letters with a purple outline, like the board labels.
+              child: Stack(
+                children: [
+                  Text(
+                    widget.text!,
+                    style: PopType.of(32, 900,
+                        foreground: Paint()
+                          ..style = PaintingStyle.stroke
+                          ..strokeWidth = 7
+                          ..strokeJoin = StrokeJoin.round
+                          ..color = Palette.accent),
+                  ),
+                  Text(widget.text!, style: PopType.banner),
+                ],
               ),
             ),
           );

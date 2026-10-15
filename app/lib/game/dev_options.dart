@@ -15,7 +15,7 @@ abstract final class DevOptions {
 
   static bool get isBench => benchSeconds > 0;
 
-  /// POP_SKIP=bg,blur,floor,fx,board : turns layers off to find what costs
+  /// POP_SKIP=bg,board,fx,orbs,dock,hud : turns layers off to find what costs
   /// raster time (profiling only).
   static const _skip = String.fromEnvironment('POP_SKIP');
   static bool skip(String layer) => _skip.split(',').contains(layer);

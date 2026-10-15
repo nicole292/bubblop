@@ -159,9 +159,11 @@ class BoardScene {
           e.cracked.forEach((p, cell) => onCracked?.call(p, cell));
         },
         onUpdate: (t) {
+          // Balloon pop: puff up a little and vanish quickly.
           for (final o in popOrbs) {
-            o.scale = 1.15 * (1 - Curves.easeIn.transform(t));
-            o.alpha = 1 - t;
+            o.scale = 1.15 + 0.3 * Curves.easeOut.transform(t);
+            o.alpha = (1 - t * 1.8).clamp(0.0, 1.0);
+            o.glow = (1 - t * 1.8).clamp(0.0, 1.0);
           }
           for (final o in crackOrbs) {
             if (o.cell.kind == CellKind.shell) {

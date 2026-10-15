@@ -21,7 +21,7 @@ class DebugBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('DEV', style: PopType.of(9.5, 700, color: Palette.textDim.withValues(alpha: 0.6), spacing: 1.6)),
+          Text('DEV', style: PopType.of(9.5, 900, color: Colors.white.withValues(alpha: 0.55), spacing: 1.6)),
           const SizedBox(width: 10),
           for (final size in [4, 3])
             _choice('$size-match', config.matchSize == size,
@@ -43,8 +43,8 @@ class DebugBar extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: PopType.of(11, selected ? 700 : 500,
-              color: selected ? Palette.text.withValues(alpha: 0.75) : Palette.textDim.withValues(alpha: 0.6)),
+          style: PopType.of(11, selected ? 900 : 700,
+              color: Colors.white.withValues(alpha: selected ? 0.9 : 0.55)),
         ),
       );
 
@@ -53,7 +53,7 @@ class DebugBar extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Palette.bezelMid,
+        backgroundColor: Palette.card,
         title: const Text('Session stats'),
         content: SelectableText(report,
             style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),

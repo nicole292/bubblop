@@ -21,10 +21,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   shaders:
-    - shaders/orb.frag
+    - shaders/ball.frag
   fonts:
-    # Sora, SIL Open Font License 1.1 (assets/fonts/Sora-OFL.txt).
+    # Nunito, SIL Open Font License 1.1 (assets/fonts/Nunito-OFL.txt).
     # Variable font: weights are set with FontVariation('wght', …), see ui/type.dart.
-    - family: Sora
+    - family: Nunito
       fonts:
-        - asset: assets/fonts/Sora-Variable.ttf
+        - asset: assets/fonts/Nunito-Variable.ttf

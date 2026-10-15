@@ -6,8 +6,8 @@ import '../render/orb_sprites.dart';
 import 'orb_icon.dart';
 import 'type.dart';
 
-/// Score, upcoming orbs, level and the rising-row countdown, in glass panels
-/// that match the board. Sizes itself to its content.
+/// Score, next balls, level and the rising-row countdown on clean white
+/// cards. Sizes itself to its content.
 class HudBar extends StatelessWidget {
   const HudBar({super.key, required this.hud, required this.sprites, required this.onRestart});
 
@@ -27,7 +27,7 @@ class HudBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: GlassPanel(
+                  child: WhiteCard(
                     padding: const EdgeInsets.fromLTRB(16, 10, 14, 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,19 +37,19 @@ class HudBar extends StatelessWidget {
                           children: [
                             Text('SCORE', style: PopType.label),
                             const Spacer(),
-                            const Icon(Icons.emoji_events_rounded, size: 13, color: Palette.gold),
-                            const SizedBox(width: 4),
-                            Text('${hud.best}', style: PopType.of(12, 600, color: Palette.gold, numbers: true)),
+                            const Icon(Icons.emoji_events_rounded, size: 15, color: Palette.gold),
+                            const SizedBox(width: 3),
+                            Text('${hud.best}', style: PopType.of(13, 900, color: Palette.gold, numbers: true)),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         _CountingScore(value: hud.score),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
-                GlassPanel(
+                WhiteCard(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -57,7 +57,6 @@ class HudBar extends StatelessWidget {
                       Text('NEXT', style: PopType.label),
                       const SizedBox(height: 6),
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           for (var i = 0; i < hud.queue.length; i++)
                             Padding(
@@ -72,16 +71,16 @@ class HudBar extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             children: [
-              _Chip(label: 'LEVEL ${hud.level}'),
+              _LevelPill(level: hud.level),
               const SizedBox(width: 12),
-              Text('RISE', style: PopType.label),
+              Text('RISE', style: PopType.onSky),
               const SizedBox(width: 8),
               _Pips(left: hud.pressure, max: hud.pressureMax),
               const Spacer(),
-              _RoundButton(icon: Icons.refresh_rounded, tooltip: 'Restart', onPressed: onRestart),
+              _RoundButton(tooltip: 'Restart', onPressed: onRestart),
             ],
           ),
         ],
@@ -90,9 +89,9 @@ class HudBar extends StatelessWidget {
   }
 }
 
-/// A translucent glass panel with a lit top edge, used across the HUD.
-class GlassPanel extends StatelessWidget {
-  const GlassPanel({super.key, required this.child, this.padding = const EdgeInsets.all(12), this.radius = 18});
+/// The shared card style: solid white, rounded, with a soft coloured shadow.
+class WhiteCard extends StatelessWidget {
+  const WhiteCard({super.key, required this.child, this.padding = const EdgeInsets.all(12), this.radius = 20});
 
   final Widget child;
   final EdgeInsets padding;
@@ -100,56 +99,17 @@ class GlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return Container(
+      padding: padding,
       decoration: BoxDecoration(
+        color: Palette.card,
         borderRadius: BorderRadius.circular(radius),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Palette.panelTop, Palette.panelBottom],
-        ),
-        border: Border.all(color: Palette.panelBorder),
-        boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 16, offset: Offset(0, 6))],
+        boxShadow: const [BoxShadow(color: Palette.cardShadow, blurRadius: 14, offset: Offset(0, 5))],
       ),
-      child: Stack(
-        children: [
-          // Lit top edge.
-          Positioned(
-            left: radius * 0.6,
-            right: radius * 0.6,
-            top: 0,
-            height: 1.2,
-            child: const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  Color(0x00FFFFFF),
-                  Color(0x80DDE3FF),
-                  Color(0x00FFFFFF),
-                ]),
-              ),
-            ),
-          ),
-          Padding(padding: padding, child: child),
-        ],
-      ),
+      child: child,
     );
   }
 }
-
-/// White fading to pale lavender, drawn by the text itself (no extra layer).
-final _scoreStyle = TextStyle(
-  fontFamily: 'Sora',
-  fontSize: PopType.score.fontSize,
-  fontVariations: PopType.score.fontVariations,
-  fontFeatures: PopType.score.fontFeatures,
-  height: PopType.score.height,
-  foreground: Paint()
-    ..shader = const LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [Color(0xFFFFFFFF), Color(0xFFC7CFFF)],
-    ).createShader(const Rect.fromLTWH(0, 4, 0, 34)),
-);
 
 /// The score rolls up to its new value instead of jumping.
 class _CountingScore extends StatelessWidget {
@@ -162,12 +122,12 @@ class _CountingScore extends StatelessWidget {
       tween: Tween(end: value.toDouble()),
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeOutCubic,
-      builder: (context, v, _) => Text('${v.round()}', style: _scoreStyle),
+      builder: (context, v, _) => Text('${v.round()}', style: PopType.score),
     );
   }
 }
 
-/// A recessed socket holding a glass orb, matching the board's dock.
+/// A soft round socket holding a ball, matching the board's dock.
 class _Socket extends StatelessWidget {
   const _Socket({required this.sprites, required this.color, required this.size});
   final OrbSprites? sprites;
@@ -179,43 +139,37 @@ class _Socket extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          center: Alignment(0, -0.3),
-          colors: [Palette.socketInner, Color(0xFF151C46)],
-        ),
-        border: Border.fromBorderSide(BorderSide(color: Palette.socketRim)),
-      ),
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: Palette.socket),
       alignment: Alignment.center,
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 180),
+        duration: const Duration(milliseconds: 220),
+        switchInCurve: Curves.easeOutBack,
         transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-        child: OrbIcon(key: ValueKey('$color-$size'), sprites: sprites, color: color, size: size * 0.84),
+        child: OrbIcon(key: ValueKey('$color-$size'), sprites: sprites, color: color, size: size * 0.82),
       ),
     );
   }
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label});
-  final String label;
+class _LevelPill extends StatelessWidget {
+  const _LevelPill({required this.level});
+  final int level;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
+        color: Palette.accent,
         borderRadius: BorderRadius.circular(20),
-        color: const Color(0x331F2860),
-        border: Border.all(color: Palette.panelBorder),
+        boxShadow: const [BoxShadow(color: Color(0x403A2D9E), blurRadius: 6, offset: Offset(0, 2))],
       ),
-      child: Text(label, style: PopType.of(10.5, 700, color: Palette.text, spacing: 1.4)),
+      child: Text('LEVEL $level', style: PopType.onSky),
     );
   }
 }
 
-/// One capsule per drop until the next row rises; lit capsules are drops
+/// One capsule per drop until the next row rises; filled capsules are drops
 /// left. They turn red for the last two.
 class _Pips extends StatelessWidget {
   const _Pips({required this.left, required this.max});
@@ -225,19 +179,19 @@ class _Pips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final urgent = left <= 2;
-    final lit = urgent ? Palette.danger : const Color(0xFFDDE3FF);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < max; i++)
           AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 11,
-            height: 6,
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutBack,
+            width: i < left ? 13 : 9,
+            height: 8,
             margin: const EdgeInsets.only(right: 4),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(3),
-              color: i < left ? lit : Palette.pipEmpty,
+              borderRadius: BorderRadius.circular(4),
+              color: i < left ? (urgent ? Palette.danger : Colors.white) : const Color(0x59FFFFFF),
             ),
           ),
       ],
@@ -246,8 +200,7 @@ class _Pips extends StatelessWidget {
 }
 
 class _RoundButton extends StatelessWidget {
-  const _RoundButton({required this.icon, required this.tooltip, required this.onPressed});
-  final IconData icon;
+  const _RoundButton({required this.tooltip, required this.onPressed});
   final String tooltip;
   final VoidCallback onPressed;
 
@@ -256,19 +209,15 @@ class _RoundButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Material(
-        type: MaterialType.transparency,
-        child: Ink(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0x331F2860),
-            border: Border.all(color: Palette.panelBorder),
-          ),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onPressed,
-            child: Icon(icon, size: 20, color: Palette.textDim),
+        color: Palette.card,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onPressed,
+          child: const SizedBox(
+            width: 38,
+            height: 38,
+            child: Icon(Icons.refresh_rounded, size: 22, color: Palette.ink),
           ),
         ),
       ),

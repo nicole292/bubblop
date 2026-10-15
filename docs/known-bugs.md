@@ -1,23 +1,28 @@
 # Known bugs and limitations
 
 ## Open
-- **Rare frame spikes (47–77 ms)**: 1–2 per 60-second benchmark on Windows. Cause not
-  identified yet (possibly shader warm-up or garbage collection).
+- **Colour is the only cue on a ball** (symbols removed by design decision). This is harder
+  for colour-blind players; consider a colour-blind option in Stage 4 settings.
+- **Rare frame spikes**: at most 1 per 60-second benchmark (up to 41 ms). Cause not
+  identified (possibly shader warm-up or garbage collection).
 - **Performance not measured on a phone.** The numbers below are from the Windows PC's
   integrated GPU. The emulator only runs debug builds, which don't give meaningful timings.
 - **Ghost/landing ring uses the rules board**, which can be one move ahead of the animation
   when the player taps mid-chain. Only visible during fast-forwarded animation.
+- The upper part of the board is empty early in a round.
 - On short or wide screens the board is limited by height and gets side margins.
-- Score text can be wider than its panel above ~10 million (not reachable yet).
+- Score text can be wider than its card above ~10 million (not reachable yet).
 
-## Fixed (2026-10-15, visual redesign)
-- HUD orb icons drawn as vector graphics cost ~8 ms of raster time per frame; they now use
-  the baked sprites.
-- After aiming once, the board bezel and well faded out: a shared paint's alpha was fading
-  later gradient fills. Solid and shader paints are now separate.
-- A pre-filled board (chain demo) was invisible until orbs moved: the scene now loads the
-  starting board.
-- A 3-colour gradient without stops threw during paint and cut every frame short.
+## Fixed (2026-10-15)
+- Bright redesign: the board card was drawn at 33% opacity because the shadow's paint
+  alpha faded the card's gradient. The colour is now reset before shader fills.
+- Old step labels overlapped new ones in chains: they now clear almost immediately.
+- HUD ball icons drawn as vector graphics cost ~8 ms of raster time per frame (dark
+  design); they use the baked sprites.
+- After aiming once, board fills faded out (shared paint alpha); solid and shader paints
+  are now separate.
+- A pre-filled board (chain demo) was invisible until balls moved.
+- A 3-colour gradient without stops threw during paint.
 
 ## Prototype limitations (by design, for now)
 - No sound or haptics yet.
@@ -28,17 +33,19 @@
 ## Performance: measured 2026-10-15
 Windows 11, Intel UHD Graphics 770 (integrated; the display is not on the RTX 4060),
 profile build, window 430×900 at 150% scaling. 60 s auto-play benchmark
-(`--profile --dart-define=POP_BENCH=60`): drops every 0.2 s, ~88 chain steps, up to 196
+(`--profile --dart-define=POP_BENCH=60`): drops every 0.2 s, ~80 chain steps, up to 193
 active effects.
 
-| | avg | p50 | p90 | p99 | frames > 16.7 ms |
+| Raster (GPU) per frame | avg | p50 | p90 | p99 | frames > 16.7 ms |
 |---|---|---|---|---|---|
-| Before HUD fix: raster | 13.7 ms | 13.5 | 17.5 | 20.8 | 533 of 3598 |
-| After HUD fix: raster (2 runs) | 5.6 ms | 5.6 | 6.9 | 8.6–9.0 | 1–2 of ~3620 |
-| UI thread (build) | 0.7 ms | 0.7 | 0.9 | 1.1 | 0 |
+| Dark design, before HUD fix | 13.7 ms | 13.5 | 17.5 | 20.8 | 533 of 3598 |
+| Dark design, after HUD fix | 5.6 ms | 5.6 | 6.9 | 8.6–9.0 | 1–2 of ~3620 |
+| **Bright design (2 runs)** | **2.8 ms** | 2.8 | 3.6–3.7 | 4.5 | 0–1 of ~3640 |
 
-## Verified 2026-10-15
-- Windows: shader orbs, background, board, dock, HUD, aiming, pops, a 3-step chain with a
-  cracked shell (chain demo), the game-over panel, and restart.
+UI thread (build) for the bright design: 0.9 ms average, 2.0 ms p99, 0 frames over budget.
+
+## Verified 2026-10-15 (bright design)
+- Windows: balls, shells, board, dock, HUD, aiming, pops, a 3-step chain with a cracked
+  shell (chain demo), the round-over card, and restart. No errors in the run log.
 - Android emulator (API 37, 1080×2400, debug build): the shader renders, layout, the chain
   demo plays, no Flutter errors in the log.

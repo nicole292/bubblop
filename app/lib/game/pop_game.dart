@@ -42,7 +42,7 @@ class PopGame extends FlameGame {
   final stats = SessionStats();
   final hud = ValueNotifier(const HudState());
   final effects = Effects();
-  final background = NightBackground();
+  final background = SkyBackground();
 
   BoardLayout? layout;
   OrbSprites? sprites;
@@ -53,9 +53,9 @@ class PopGame extends FlameGame {
   /// Column the player is aiming at, or null when not touching.
   int? aimColumn;
 
-  /// Board light that flares on pops and grows with chain length (0–1).
+  /// Board border pulse on pops, stronger with chain length (0–1).
   double boardLight = 0;
-  Color boardLightColor = Palette.orbs[3];
+  Color boardLightColor = Palette.balls[3];
 
   /// Screen shake for big chains: amplitude in pixels, decays quickly.
   double shake = 0;
@@ -72,7 +72,7 @@ class PopGame extends FlameGame {
   double _benchNextDrop = 0;
 
   @override
-  Color backgroundColor() => Palette.backgroundTop;
+  Color backgroundColor() => Palette.skyTop;
 
   @override
   Future<void> onLoad() async {
@@ -210,9 +210,7 @@ class PopGame extends FlameGame {
       hud.value = hud.value.copyWith(spritesVersion: hud.value.spritesVersion + 1);
     }
     layout = next;
-    effects
-      ..cell = next.cell
-      ..sprites = sprites;
+    effects.cell = next.cell;
   }
 
   void _startRound() {
@@ -258,62 +256,59 @@ class PopGame extends FlameGame {
     var total = 0;
     for (final g in e.groups) {
       final n = g.cells.length;
+      final color = Palette.balls[g.color];
       final intensity = ((1 + 0.22 * (n - 4)) * (1 + 0.45 * (step - 1))).clamp(1.0, 3.4);
       var sum = Offset.zero;
       for (final p in g.cells) {
         final at = _at(p);
         sum += at;
-        effects
-          ..flash(at, g.color, size: 1.5 + 0.3 * intensity, strength: 0.9)
-          ..sparks(at, g.color, count: (3 + 2.5 * intensity).round(), power: intensity)
-          ..motes(at, g.color, count: 1);
+        effects.confetti(at, color, count: (4 + 2.5 * intensity).round(), power: intensity);
       }
       final center = sum / n.toDouble();
       stepCenter += sum;
       total += n;
-      effects.ring(center, g.color, to: 1.0 + 0.3 * math.sqrt(n) + 0.35 * (step - 1), strength: 0.9);
-      if (step > 1) effects.ring(center, -1, from: 0.2, to: 0.8 + 0.25 * step, life: 0.3, strength: 0.6);
-      boardLightColor = Palette.orbs[g.color];
+      effects
+        ..ring(center, color, to: 0.9 + 0.25 * math.sqrt(n) + 0.3 * (step - 1), width: 0.16 + 0.03 * step)
+        ..sparkles(center, count: 1 + step, spread: 0.5 + 0.1 * math.sqrt(n), color: Palette.gold);
+      boardLightColor = color;
     }
     stepCenter = stepCenter / total.toDouble();
 
-    // Chain payoff: light runs from the previous burst to this one, and the
-    // step number appears where it happened.
     // Older step labels make way for the new ones.
     effects.fadeLabels();
+    // Chain payoff: a sparkle trail from the previous burst to this one, and
+    // a bouncy step badge where it happened.
     if (step > 1 && _lastStepCenter != null) {
-      final color = e.groups.first.color;
+      final color = Palette.balls[e.groups.first.color];
       effects
-        ..beam(_lastStepCenter!, stepCenter, color)
-        ..label(stepCenter.translate(0, -layout!.cell * 0.55), '×$step', Palette.orbs[color],
-            size: 0.62 + 0.08 * math.min(step, 5), life: 0.9, rise: 0.6);
+        ..trail(_lastStepCenter!, stepCenter, Palette.gold)
+        ..label(stepCenter.translate(0, -layout!.cell * 0.6), '×$step', color,
+            size: 0.66 + 0.08 * math.min(step, 5), life: 0.9, rise: 0.6);
     }
-    effects.label(stepCenter.translate(0, layout!.cell * 0.15), '+${e.points}', Palette.text,
-        size: 0.36 + 0.03 * math.min(step, 5), life: 0.8, rise: 1.1);
+    effects.label(stepCenter.translate(0, layout!.cell * 0.15), '+${e.points}', Palette.ink,
+        size: 0.4 + 0.03 * math.min(step, 5), life: 0.8, rise: 1.0);
     _lastStepCenter = stepCenter;
 
-    boardLight = math.min(1.0, 0.35 + 0.22 * (step - 1) + 0.05 * (total - 4));
-    if (step >= 3) shake = math.min(7, 2.0 * (step - 2) + 1);
+    boardLight = math.min(1.0, 0.45 + 0.2 * (step - 1) + 0.05 * (total - 4));
+    if (step >= 3) shake = math.min(6, 1.5 * (step - 2) + 1);
   }
 
+  /// A shell's bubble pops: droplets, a ring in the freed ball's colour.
   void _crackEffects(CellPos pos, Cell cell) {
     if (layout == null || cell.kind != CellKind.shell) return;
     final at = _at(pos);
     effects
-      ..shards(at)
-      ..flash(at, -1, size: 1.4, life: 0.22, strength: 0.8)
-      ..flash(at, cell.color, size: 2.0, life: 0.45, strength: 0.7)
-      ..ring(at, -1, from: 0.25, to: 0.75, life: 0.28, strength: 0.8)
-      ..sparks(at, cell.color, count: 4, power: 0.8);
+      ..puff(at, count: 8, spread: 0.55, size: 0.11, color: const Color(0xFFC7D0FF))
+      ..ring(at, Palette.balls[cell.color], from: 0.3, to: 0.85, life: 0.32, width: 0.12)
+      ..sparkles(at, count: 2, spread: 0.4, color: Palette.gold);
   }
 
   void _landEffects(int column, int row) {
     if (layout == null) return;
-    // A soft puff of light where the orb settles; a new move starts a new
-    // chain, so the beam has nothing to connect back to.
+    // A new move starts a new chain, so the trail has nothing to link back to.
     _lastStepCenter = null;
-    final at = layout!.center(column.toDouble(), row - 0.45);
-    effects.flash(at, -1, size: 0.9, life: 0.18, strength: 0.25);
+    final at = layout!.center(column.toDouble(), row - 0.42);
+    effects.puff(at, count: 4, spread: 0.25, size: 0.06, color: const Color(0xFFCBD3FF));
   }
 
   /// Values the HUD can show immediately (they are not animated).

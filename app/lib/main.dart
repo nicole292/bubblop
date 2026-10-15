@@ -19,13 +19,10 @@ class PopApp extends StatelessWidget {
       title: 'Project POP',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.dark,
-        fontFamily: 'Sora',
-        scaffoldBackgroundColor: Palette.backgroundTop,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Palette.orbs[3],
-          brightness: Brightness.dark,
-        ),
+        brightness: Brightness.light,
+        fontFamily: 'Nunito',
+        scaffoldBackgroundColor: Palette.skyTop,
+        colorScheme: ColorScheme.fromSeed(seedColor: Palette.accent),
       ),
       home: const GameScreen(),
     );
