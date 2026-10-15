@@ -137,7 +137,7 @@ class _Logo extends StatelessWidget {
         final t = clock.value * math.pi * 2;
         return SizedBox(
           height: 190,
-          width: 320,
+          width: 340,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -152,18 +152,25 @@ class _Logo extends StatelessWidget {
                   offset: Offset(x, y + math.sin(t * 2 + phase) * 6),
                   child: OrbIcon(sprites: sprites, color: color, size: size),
                 ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < _letters.length; i++)
-                    Transform.translate(
-                      offset: Offset(0, -math.max(0, math.sin(t * 2 - i * 0.55)) * 10),
-                      child: Transform.rotate(
-                        angle: (i.isEven ? -1 : 1) * 0.05,
-                        child: _Letter(_letters[i], Palette.balls[i % Palette.balls.length]),
-                      ),
-                    ),
-                ],
+              // Scales the word down to fit narrow screens instead of overflowing.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < _letters.length; i++)
+                        Transform.translate(
+                          offset: Offset(0, -math.max(0, math.sin(t * 2 - i * 0.55)) * 10),
+                          child: Transform.rotate(
+                            angle: (i.isEven ? -1 : 1) * 0.05,
+                            child: _Letter(_letters[i], Palette.balls[i % Palette.balls.length]),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

@@ -54,15 +54,19 @@ class _BigButtonState extends State<BigButton> {
           ],
         ),
         alignment: Alignment.center,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (widget.icon != null) ...[
-              Icon(widget.icon, color: Colors.white, size: widget.height * 0.42),
-              const SizedBox(width: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.icon != null) ...[
+                Icon(widget.icon, color: Colors.white, size: widget.height * 0.42),
+                const SizedBox(width: 8),
+              ],
+              Text(widget.label, style: PopType.of(widget.height * 0.34, 900, color: Colors.white, spacing: 0.3)),
             ],
-            Text(widget.label, style: PopType.of(widget.height * 0.34, 900, color: Colors.white, spacing: 0.3)),
-          ],
+          ),
         ),
       ),
     );
@@ -88,15 +92,22 @@ class SoftButton extends StatelessWidget {
         child: SizedBox(
           height: 52,
           width: double.infinity,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, color: Palette.ink, size: 22),
-                const SizedBox(width: 8),
-              ],
-              Text(label, style: PopType.of(17, 900)),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            // Shrinks the label on narrow screens instead of overflowing.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, color: Palette.ink, size: 22),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(label, style: PopType.of(17, 900)),
+                ],
+              ),
+            ),
           ),
         ),
       ),

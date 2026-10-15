@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Bubblop** · Effective date: [DATE]
+**Bubblop** · Effective date: October 16, 2026
 
 Bubblop is a puzzle game. We built it so that it does not need any of your personal
 information.
@@ -28,4 +28,4 @@ If a future version adds features that handle data (for example optional ads), t
 will be updated before that version is released, and the app's store listing will say so.
 
 ## Contact
-Questions: [CONTACT EMAIL]
+Questions: bubblop.game@gmail.com
