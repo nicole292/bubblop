@@ -47,6 +47,30 @@ class Game {
       _queue.add(_nextColor());
     }
     _nextRow = _generateRow();
+    // A fresh round (no board given) starts with some rows already risen.
+    if (board == null) {
+      for (var i = 0; i < config.startRows; i++) {
+        _raiseRow();
+      }
+      _placeOpenRows();
+    }
+  }
+
+  /// Lays [RulesConfig.startOpenRows] rows of ordinary balls on top, retrying
+  /// colours until no group is already complete.
+  void _placeOpenRows() {
+    final colorCount = config.colorsForLevel(_level);
+    for (var r = 0; r < config.startOpenRows; r++) {
+      for (var col = 0; col < config.columns; col++) {
+        final row = _board.height(col);
+        if (row >= config.rows) continue;
+        for (var attempt = 0; attempt < 12; attempt++) {
+          _board.set(col, row, Cell.orb(_rowRandom.nextInt(colorCount)));
+          if (findGroups(_board, config.matchSize).isEmpty) break;
+        }
+        if (findGroups(_board, config.matchSize).isNotEmpty) _board.set(col, row, null);
+      }
+    }
   }
 
   final int seed;

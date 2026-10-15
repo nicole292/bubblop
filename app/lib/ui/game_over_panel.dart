@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../game/hud_state.dart';
 import '../game/palette.dart';
+import 'buttons.dart';
 import 'type.dart';
 
 /// Round result on a white card that bounces in, with a big Play again.
 class GameOverPanel extends StatelessWidget {
-  const GameOverPanel({super.key, required this.hud, required this.onPlayAgain});
+  const GameOverPanel({super.key, required this.hud, required this.onPlayAgain, required this.onHome});
 
   final HudState hud;
   final VoidCallback onPlayAgain;
+  final VoidCallback onHome;
 
   @override
   Widget build(BuildContext context) {
-    final isBest = hud.score > 0 && hud.score >= hud.best;
+    final isBest = hud.newBest;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 420),
@@ -75,7 +77,9 @@ class GameOverPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 22),
-            _PlayButton(onPressed: onPlayAgain),
+            BigButton(label: 'Play again', icon: Icons.replay_rounded, onPressed: onPlayAgain),
+            const SizedBox(height: 10),
+            SoftButton(label: 'Home', icon: Icons.home_rounded, onPressed: onHome),
           ],
         ),
       ),
@@ -96,48 +100,4 @@ class _Stat extends StatelessWidget {
           Text(value, style: PopType.of(20, 900, numbers: true)),
         ],
       );
-}
-
-/// A chunky, bouncy pill button: presses down a little when touched.
-class _PlayButton extends StatefulWidget {
-  const _PlayButton({required this.onPressed});
-  final VoidCallback onPressed;
-
-  @override
-  State<_PlayButton> createState() => _PlayButtonState();
-}
-
-class _PlayButtonState extends State<_PlayButton> {
-  bool _down = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _down = true),
-      onTapCancel: () => setState(() => _down = false),
-      onTapUp: (_) {
-        setState(() => _down = false);
-        widget.onPressed();
-      },
-      child: AnimatedScale(
-        scale: _down ? 0.95 : 1,
-        duration: const Duration(milliseconds: 90),
-        child: Container(
-          height: 58,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(29),
-            gradient: const LinearGradient(colors: [Palette.buttonStart, Palette.buttonEnd]),
-            boxShadow: [
-              // A solid darker base gives the button a chunky, pressable edge.
-              const BoxShadow(color: Color(0xFFD9406E), offset: Offset(0, 5)),
-              BoxShadow(color: Palette.buttonEnd.withValues(alpha: 0.4), blurRadius: 16, offset: const Offset(0, 9)),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: Text('Play again', style: PopType.button),
-        ),
-      ),
-    );
-  }
 }

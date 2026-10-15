@@ -17,16 +17,16 @@ void main(List<String> args) {
   final games = args.isEmpty ? 300 : int.parse(args.first);
   final configs = <String, RulesConfig>{
     'shells 4-match (default)': const RulesConfig(),
-    'old ramp (v0.1)': const RulesConfig(levelsPerPressureStep: 1, extraColorLevel: 4),
-    'shells 3-match': const RulesConfig(matchSize: 3),
     'stones 4-match': const RulesConfig(risingRowKind: RisingRowKind.stones),
-    'shells 4-match, pressure 10→5': const RulesConfig(startPressure: 10, minPressure: 5),
-    'shells 4-match, pressure 6→3': const RulesConfig(startPressure: 6, minPressure: 3),
-    'default + chain relief': const RulesConfig(chainRelief: 1),
+    'start with 1 shell row': const RulesConfig(startRows: 1),
+    'start with 2 shell rows': const RulesConfig(startRows: 2),
+    '1 shell + 1 open row': const RulesConfig(startRows: 1, startOpenRows: 1),
+    '1 shell + 2 open rows': const RulesConfig(startRows: 1, startOpenRows: 2),
+    '1 shell + 2 open, pressure 9': const RulesConfig(startRows: 1, startOpenRows: 2, startPressure: 9),
   };
 
   print('Games per config: $games (seeds 1..$games)\n');
-  print('${'config'.padRight(32)}  moves(med)  score(med)  pop%  chain/100  best  fill%  shell-fed%  lvl(med)');
+  print('${'config'.padRight(32)}  moves(med)  score(med)  pop%  chain/100  best  fill%  shell-fed%  lvl(med)  early-pop%');
   configs.forEach((name, config) {
     final r = _run(config, games);
     print('${name.padRight(32)}  '
@@ -37,29 +37,36 @@ void main(List<String> args) {
         '${r.bestChain.toString().padLeft(4)}  '
         '${r.fillPct.toStringAsFixed(0).padLeft(5)}  '
         '${r.shellFedPct.toStringAsFixed(0).padLeft(10)}  '
-        '${r.medianLevel.toString().padLeft(8)}');
+        '${r.medianLevel.toString().padLeft(8)}  '
+        '${r.earlyPopPct.toStringAsFixed(0).padLeft(10)}');
   });
 }
 
 class _Result {
   _Result(this.medianMoves, this.medianScore, this.popPct, this.chainsPer100,
-      this.bestChain, this.fillPct, this.shellFedPct, this.medianLevel);
+      this.bestChain, this.fillPct, this.shellFedPct, this.medianLevel, this.earlyPopPct);
   final int medianMoves, medianScore, bestChain, medianLevel;
   final double popPct, chainsPer100, fillPct, shellFedPct;
+
+  /// Games with a pop within the first 5 moves (the "fun in 10 seconds" test).
+  final double earlyPopPct;
 }
 
 _Result _run(RulesConfig config, int games) {
   final moves = <int>[], scores = <int>[], levels = <int>[];
   var totalMoves = 0, popMoves = 0, chainMoves = 0, shellFed = 0, best = 0;
   var fillSum = 0.0;
+  var earlyPops = 0;
 
   for (var seed = 1; seed <= games; seed++) {
     final game = Game(seed: seed, config: config);
     final bot = math.Random(seed);
+    var poppedEarly = false;
     while (!game.isOver && game.moves < 3000) {
       final result = game.drop(_choose(game, bot));
       final steps = result.events.whereType<ChainStep>().toList();
       if (steps.isNotEmpty) popMoves++;
+      if (steps.isNotEmpty && game.moves <= 5) poppedEarly = true;
       if (steps.length >= 2) {
         chainMoves++;
         if (steps.take(steps.length - 1).any((s) => s.cracked.values.any((c) => c.kind == CellKind.shell))) {
@@ -74,6 +81,7 @@ _Result _run(RulesConfig config, int games) {
       }
       fillSum += filled / (board.columns * board.rows);
     }
+    if (poppedEarly) earlyPops++;
     totalMoves += game.moves;
     moves.add(game.moves);
     scores.add(game.score);
@@ -89,6 +97,7 @@ _Result _run(RulesConfig config, int games) {
     100 * fillSum / totalMoves,
     chainMoves == 0 ? 0 : 100 * shellFed / chainMoves,
     median(levels),
+    100 * earlyPops / games,
   );
 }
 

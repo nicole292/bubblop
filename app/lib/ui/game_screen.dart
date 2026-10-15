@@ -5,30 +5,86 @@ import '../game/board_layout.dart';
 import '../game/dev_options.dart';
 import '../game/hud_state.dart';
 import '../game/pop_game.dart';
+import '../services/haptics.dart';
+import '../services/settings.dart';
+import '../services/sfx.dart';
 import 'banner_text.dart';
 import 'debug_bar.dart';
 import 'game_over_panel.dart';
+import 'hint_bubble.dart';
+import 'home_screen.dart';
 import 'hud_bar.dart';
+import 'pause_menu.dart';
 
-/// The play screen. The game canvas fills the screen (background, board,
-/// effects); the HUD is laid out on top, and an invisible board slot tells
-/// the game where to draw the board. Spare height goes above the HUD so play
-/// stays within thumb reach on tall phones.
+enum _Mode { home, playing, paused }
+
+/// The app's single screen. The game canvas fills it (background, board,
+/// effects); the HUD, menus and hints are laid out on top. An invisible
+/// board slot tells the game where to draw the board.
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+  const GameScreen({super.key, required this.settings, required this.sfx, required this.haptics});
+
+  final Settings settings;
+  final Sfx sfx;
+  final Haptics haptics;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
-  final game = PopGame();
+class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
+  late final game = PopGame(settings: widget.settings, sfx: widget.sfx, haptics: widget.haptics);
   final _stackKey = GlobalKey();
+  _Mode _mode = DevOptions.demo.isNotEmpty || DevOptions.isBench ? _Mode.playing : _Mode.home;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     game.hud.dispose();
     super.dispose();
+  }
+
+  /// Leaving the app mid-round pauses it, so nothing happens unseen.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed && _mode == _Mode.playing && !game.hud.value.isOver) {
+      _pause();
+    }
+  }
+
+  void _tap() {
+    widget.sfx.tap();
+    widget.haptics.tap();
+  }
+
+  void _play({bool? tutorial}) {
+    _tap();
+    game.restart(tutorial: tutorial);
+    game.resumeEngine();
+    setState(() => _mode = _Mode.playing);
+  }
+
+  void _pause() {
+    game.pauseEngine();
+    setState(() => _mode = _Mode.paused);
+  }
+
+  void _resume() {
+    _tap();
+    game.resumeEngine();
+    setState(() => _mode = _Mode.playing);
+  }
+
+  void _home() {
+    _tap();
+    game.resumeEngine();
+    setState(() => _mode = _Mode.home);
   }
 
   @override
@@ -53,7 +109,10 @@ class _GameScreenState extends State<GameScreen> {
                       maintainAnimation: true,
                       maintainState: true,
                       child: RepaintBoundary(
-                        child: HudBar(hud: hud, sprites: game.sprites, onRestart: () => game.restart()),
+                        child: HudBar(hud: hud, sprites: game.sprites, onPause: () {
+                          _tap();
+                          _pause();
+                        }),
                       ),
                     ),
                     Flexible(
@@ -62,7 +121,10 @@ class _GameScreenState extends State<GameScreen> {
                         child: _BoardSlot(game: game, stackKey: _stackKey, hud: hud),
                       ),
                     ),
-                    RepaintBoundary(child: DebugBar(game: game)),
+                    if (DevOptions.showDevBar)
+                      RepaintBoundary(child: DebugBar(game: game))
+                    else
+                      const SizedBox(height: 12),
                   ],
                 ),
               );
@@ -70,10 +132,31 @@ class _GameScreenState extends State<GameScreen> {
           ),
           ValueListenableBuilder<HudState>(
             valueListenable: game.hud,
-            builder: (context, hud, _) => hud.isOver
-                ? GameOverPanel(hud: hud, onPlayAgain: () => game.restart())
+            builder: (context, hud, _) => hud.isOver && _mode == _Mode.playing
+                ? GameOverPanel(hud: hud, onPlayAgain: () => _play(tutorial: false), onHome: _home)
                 : const SizedBox.shrink(),
           ),
+          if (_mode == _Mode.paused)
+            PauseMenu(
+              settings: widget.settings,
+              onResume: _resume,
+              onRestart: () => _play(tutorial: false),
+              onHowToPlay: () => _play(tutorial: true),
+              onHome: _home,
+            ),
+          if (_mode == _Mode.home)
+            Positioned.fill(
+              child: ValueListenableBuilder<HudState>(
+                valueListenable: game.hud,
+                // Rebuilds when sprites are baked so the logo balls appear.
+                builder: (context, _, _) => HomeScreen(
+                  settings: widget.settings,
+                  sprites: game.sprites,
+                  onPlay: () => _play(),
+                  onTap: _tap,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -81,7 +164,8 @@ class _GameScreenState extends State<GameScreen> {
 }
 
 /// Fills the space the board may use, reports it to the game after each
-/// layout, and turns touches into aiming and dropping.
+/// layout, turns touches into aiming and dropping, and hosts banners and
+/// tutorial hints.
 class _BoardSlot extends StatelessWidget {
   const _BoardSlot({required this.game, required this.stackKey, required this.hud});
 
@@ -97,6 +181,8 @@ class _BoardSlot extends StatelessWidget {
       if (box == null || !box.hasSize || stack == null) return;
       game.setBoardArea(box.localToGlobal(Offset.zero, ancestor: stack) & box.size);
     });
+    final hint = hud.hint;
+    final column = hud.hintColumn;
     return SizedBox.expand(
       child: GestureDetector(
         // Tap a column, or drag to aim and release to drop.
@@ -108,9 +194,21 @@ class _BoardSlot extends StatelessWidget {
         onPanUpdate: (d) => game.aimAt(d.localPosition.dx),
         onPanEnd: (_) => game.releaseAim(),
         onPanCancel: game.cancelAim,
-        child: Align(
-          alignment: const Alignment(0, -0.25),
-          child: BannerText(text: hud.banner, id: hud.bannerId),
+        child: Stack(
+          children: [
+            Align(
+              alignment: const Alignment(0, -0.2),
+              child: BannerText(text: hud.banner, id: hud.bannerId),
+            ),
+            if (hint != null)
+              IgnorePointer(
+                child: HintBubble(
+                  text: hint,
+                  top: (game.boardTopInSlot() ?? 40) + 12,
+                  arrowX: column != null && column >= 0 ? game.columnCenterInSlot(column) : null,
+                ),
+              ),
+          ],
         ),
       ),
     );

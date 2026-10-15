@@ -113,7 +113,7 @@ void main() {
     test('pressure interval shrinks every 2 levels, not below the minimum', () {
       const config = RulesConfig();
       expect([for (var l = 1; l <= 9; l++) config.pressureInterval(l)],
-          [8, 8, 7, 7, 6, 6, 5, 5, 4]);
+          [9, 9, 8, 8, 7, 7, 6, 6, 5]);
       expect(config.pressureInterval(30), 4);
     });
 
@@ -150,16 +150,16 @@ void main() {
         RGGG.B
       ''', queue: [y, g], config: relief);
       game.drop(5);
-      expect(game.pressure, 7);
-      game.drop(4); // 2-step chain: +1 then −1 for the drop (6 without relief)
-      expect(game.pressure, 7);
+      expect(game.pressure, 8);
+      game.drop(4); // 2-step chain: +1 then −1 for the drop (7 without relief)
+      expect(game.pressure, 8);
 
       final capped = gameOn('''
         .RRR..
         RGGG.B
       ''', queue: [g], config: relief);
       capped.drop(4);
-      expect(capped.pressure, 7, reason: 'cannot exceed the interval of 8');
+      expect(capped.pressure, 8, reason: 'cannot exceed the interval of 9');
     });
 
     test('chain relief is off by default', () {
@@ -168,7 +168,7 @@ void main() {
         RGGG.B
       ''', queue: [g]);
       game.drop(4);
-      expect(game.pressure, 7);
+      expect(game.pressure, 8);
     });
   });
 
@@ -199,6 +199,42 @@ void main() {
       expect(stepsOf(result), isEmpty);
       expect((result.events.last as GameOver).reason, GameOverReason.boardFull);
       expect(game.isOver, isTrue);
+    });
+  });
+
+  group('starting board', () {
+    test('a fresh round starts with 1 shell row and 2 rows of balls, nothing matched', () {
+      for (var seed = 1; seed <= 50; seed++) {
+        final board = Game(seed: seed).board;
+        for (var c = 0; c < 6; c++) {
+          expect(board.at(c, 0)!.kind, CellKind.shell, reason: 'seed $seed');
+          expect(board.at(c, 1)?.kind, anyOf(isNull, CellKind.orb));
+          expect(board.height(c), lessThanOrEqualTo(3));
+        }
+        expect(findGroups(board, 4), isEmpty, reason: 'seed $seed');
+      }
+    });
+
+    test('almost every column gets both open rows', () {
+      var filled = 0;
+      for (var seed = 1; seed <= 50; seed++) {
+        final board = Game(seed: seed).board;
+        for (var c = 0; c < 6; c++) {
+          if (board.height(c) == 3) filled++;
+        }
+      }
+      expect(filled / (50 * 6), greaterThan(0.95));
+    });
+
+    test('the starting board is the same for the same seed', () {
+      expect(Game(seed: 5).board.toPicture(), Game(seed: 5).board.toPicture());
+      expect(Game(seed: 5).board.toPicture(), isNot(Game(seed: 6).board.toPicture()));
+    });
+
+    test('a board given to the game is used exactly (no starting rows added)', () {
+      final game = gameOn('RRR..B');
+      expect(bottom(game, 1), 'RRR..B');
+      expect(game.board.height(0), 1);
     });
   });
 
@@ -233,7 +269,7 @@ void main() {
       expect(restarted.queue, firstQueue);
       expect(restarted.score, 0);
       expect(restarted.moves, 0);
-      expect(restarted.board.isEmpty, isTrue);
+      expect(restarted.board.toPicture(), Game(seed: 9).board.toPicture());
     });
   });
 }

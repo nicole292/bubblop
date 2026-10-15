@@ -28,7 +28,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   Win32Window::Point origin(10, 10);
   // Phone-shaped window (roughly 9:19.5) for desktop testing.
   Win32Window::Size size(430, 900);
-  if (!window.Create(L"Project POP", origin, size)) {
+  if (!window.Create(L"POP!", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

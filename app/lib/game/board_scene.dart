@@ -32,6 +32,8 @@ class BoardScene {
   void Function(ChainStep step)? onStepPopped;
   void Function(CellPos pos, Cell cell)? onCracked;
   void Function(int column, int row)? onLanded;
+  void Function()? onRose;
+  void Function(int level)? onLevelUp;
 
   int? shakeColumn;
   double shakeTime = 0;
@@ -87,7 +89,10 @@ class BoardScene {
             }),
           ],
         LevelUp(:final level) => [
-            Phase(0, onStart: () => onBanner?.call('Level $level')),
+            Phase(0, onStart: () {
+              onBanner?.call('Level $level!');
+              onLevelUp?.call(level);
+            }),
           ],
         GameOver() => [
             Phase(Timings.gameOverDelay, onEnd: () => onGameOver?.call()),
@@ -230,6 +235,7 @@ class BoardScene {
     return Phase(
       Timings.rowRise,
       onStart: () {
+        onRose?.call();
         for (var col = 0; col < columns; col++) {
           for (var row = rows - 1; row > 0; row--) {
             _put(col, row, _at(col, row - 1));

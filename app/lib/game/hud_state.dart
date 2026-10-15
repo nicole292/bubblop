@@ -13,6 +13,9 @@ class HudState {
     this.longestChain = 0,
     this.moves = 0,
     this.spritesVersion = 0,
+    this.hint,
+    this.hintColumn,
+    this.newBest = false,
   });
 
   /// Displayed score: grows as each chain step finishes animating.
@@ -41,6 +44,13 @@ class HudState {
   /// Bumped when orb sprites are rebaked, so HUD icons redraw.
   final int spritesVersion;
 
+  /// Tutorial hint text, and the column it points at (if any).
+  final String? hint;
+  final int? hintColumn;
+
+  /// True when the finished round set a new best score.
+  final bool newBest;
+
   HudState copyWith({
     int? score,
     int? best,
@@ -54,6 +64,10 @@ class HudState {
     int? longestChain,
     int? moves,
     int? spritesVersion,
+    String? hint,
+    int? hintColumn,
+    bool clearHint = false,
+    bool? newBest,
   }) {
     return HudState(
       score: score ?? this.score,
@@ -68,6 +82,9 @@ class HudState {
       longestChain: longestChain ?? this.longestChain,
       moves: moves ?? this.moves,
       spritesVersion: spritesVersion ?? this.spritesVersion,
+      hint: clearHint ? null : hint ?? this.hint,
+      hintColumn: clearHint ? null : hintColumn ?? this.hintColumn,
+      newBest: newBest ?? this.newBest,
     );
   }
 }

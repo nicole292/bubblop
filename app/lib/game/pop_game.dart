@@ -11,6 +11,9 @@ import 'package:pop_core/pop_core.dart';
 import '../render/background.dart';
 import '../render/effects.dart';
 import '../render/orb_sprites.dart';
+import '../services/haptics.dart';
+import '../services/settings.dart';
+import '../services/sfx.dart';
 import 'board_component.dart';
 import 'board_layout.dart';
 import 'board_scene.dart';
@@ -21,17 +24,28 @@ import 'palette.dart';
 import 'phase_queue.dart';
 import 'session_stats.dart';
 import 'timings.dart';
+import 'tutorial.dart';
 
 /// Connects the rules ([Game]) to the screen. Input goes straight to the
-/// rules; the resulting events are queued as animation phases.
+/// rules; the resulting events are queued as animation phases, which also
+/// trigger effects, sound and vibration.
 ///
 /// The Flame canvas covers the whole screen (background, board, effects);
 /// the Flutter HUD sits on top and tells the game where the board goes via
 /// [setBoardArea].
 class PopGame extends FlameGame {
-  PopGame({this._config = const RulesConfig()}) {
-    _startRound();
+  PopGame({
+    required this.settings,
+    required this.sfx,
+    required this.haptics,
+    this._config = const RulesConfig(),
+  }) {
+    _startRound(tutorial: false);
   }
+
+  final Settings settings;
+  final Sfx sfx;
+  final Haptics haptics;
 
   RulesConfig _config;
   RulesConfig get config => _config;
@@ -60,11 +74,24 @@ class PopGame extends FlameGame {
   /// Screen shake for big chains: amplitude in pixels, decays quickly.
   double shake = 0;
 
-  /// Seconds since start; drives idle animation (glints, bobbing).
+  /// Seconds since start; drives idle animation.
   double time = 0;
 
-  /// Where the previous chain step burst, for the chain beam.
+  /// Where the previous chain step burst, for the sparkle trail.
   Offset? _lastStepCenter;
+
+  /// Praise for the move being animated: shown at chain step [_praiseStep].
+  int _praiseStep = 0;
+  String? _praiseText;
+
+  /// Shell cracks make one sound per chain step, not one per shell:
+  /// [_stepToken] counts chain steps; [_crackSoundToken] remembers which
+  /// step last played the crack sound.
+  int _stepToken = 0;
+  int _crackSoundToken = -1;
+
+  TutorialStep _tutorial = TutorialStep.off;
+  double _hintTimer = 0;
 
   // POP_BENCH only: auto-play and frame timing (see dev_options.dart).
   FrameBench? _bench;
@@ -108,39 +135,8 @@ class PopGame extends FlameGame {
     effects.update(scaled);
     boardLight = math.max(0, boardLight - scaled * 1.8);
     shake = math.max(0, shake - scaled * 30);
+    _updateTutorial(dt);
     if (_bench != null) _benchStep(dt);
-  }
-
-  /// Plays fast for the benchmark: stack the current colour on a matching
-  /// column top when possible (this produces frequent pops and chains).
-  void _benchStep(double dt) {
-    final bench = _bench!;
-    _benchTime += dt;
-    bench.peakEffects = math.max(bench.peakEffects, effects.activeCount);
-    if (_benchTime >= DevOptions.benchSeconds) {
-      bench.stop();
-      debugPrint(bench.report());
-      _bench = null;
-      return;
-    }
-    if (_benchTime < _benchNextDrop || layout == null) return;
-    _benchNextDrop = _benchTime + 0.2;
-    if (rules.isOver) {
-      restart();
-      return;
-    }
-    final board = rules.board;
-    var choice = -1;
-    var lowest = -1;
-    for (var c = 0; c < _config.columns; c++) {
-      if (!rules.canDrop(c)) continue;
-      final h = board.height(c);
-      final top = h > 0 ? board.at(c, h - 1) : null;
-      if (top != null && top.isOrb && top.color == rules.currentColor) choice = c;
-      if (lowest < 0 || h < board.height(lowest)) lowest = c;
-    }
-    final column = choice >= 0 ? choice : lowest;
-    if (column >= 0) dropAt(column);
   }
 
   /// Called by the screen with the board slot's rectangle in canvas
@@ -151,15 +147,31 @@ class PopGame extends FlameGame {
     _relayout();
   }
 
-  /// Starts a fresh round; a new [config] switches experiment mode.
-  void restart({RulesConfig? config}) {
+  /// X of a column's centre, relative to the board slot (for hint arrows).
+  double? columnCenterInSlot(int column) {
+    final layout = this.layout;
+    final area = _boardArea;
+    if (layout == null || area == null) return null;
+    return layout.center(column.toDouble(), 0).dx - area.left;
+  }
+
+  /// Y of the board's top edge, relative to the board slot.
+  double? boardTopInSlot() {
+    final layout = this.layout;
+    final area = _boardArea;
+    if (layout == null || area == null) return null;
+    return layout.rect.top - area.top;
+  }
+
+  /// Starts a fresh round. The first round on a new install is the tutorial.
+  void restart({RulesConfig? config, bool? tutorial}) {
     if (config != null) {
       _config = config;
       _relayout(force: true);
     }
     phases.clear();
     effects.clear();
-    _startRound();
+    _startRound(tutorial: tutorial ?? !settings.tutorialDone);
   }
 
   /// [x] is relative to the board slot.
@@ -181,19 +193,43 @@ class PopGame extends FlameGame {
     if (!phases.isIdle) phases.speed = Timings.fastForward;
     final result = rules.drop(column);
     if (!result.accepted) {
-      if (!rules.isOver) scene.shake(column);
+      if (!rules.isOver) {
+        scene.shake(column);
+        sfx.deny();
+        haptics.deny();
+      }
       return;
     }
     stats.recordMove(result);
     if (rules.isOver) {
       final summary = stats.finishRound(score: rules.score, moves: rules.moves);
-      debugPrint('Round over [${summary.mode}] score ${summary.score}, '
-          'moves ${summary.moves}, best chain ${summary.longestChain}');
+      debugPrint('Round over score ${summary.score}, moves ${summary.moves}, '
+          'best chain ${summary.longestChain}');
     }
+
+    _choosePraise(result);
     for (final event in result.events) {
       phases.addAll(scene.phasesFor(event));
     }
+    final popped = result.events.any((e) => e is ChainStep);
+    phases.addAll([Phase(0, onStart: () => _afterMove(popped))]);
     _publishRulesState();
+  }
+
+  /// Praise words for big moments, shown as the last chain step bursts.
+  void _choosePraise(MoveResult result) {
+    final steps = result.events.whereType<ChainStep>().toList();
+    _praiseText = null;
+    _praiseStep = steps.length;
+    if (steps.isEmpty) return;
+    final biggest = steps.expand((s) => s.groups).map((g) => g.cells.length).reduce(math.max);
+    _praiseText = switch (steps.length) {
+      >= 5 => 'Incredible!',
+      4 => 'Amazing!',
+      3 => 'Great!',
+      2 => 'Nice!',
+      _ => biggest >= 6 ? 'Big pop!' : null,
+    };
   }
 
   void _relayout({bool force = false}) {
@@ -206,52 +242,132 @@ class PopGame extends FlameGame {
       sprites?.dispose();
       final ratio = WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
       sprites = OrbSprites.bake(radius, ratio, _orbProgram);
-      // New sprites: let the HUD redraw its orb icons with them.
+      // New sprites: let the HUD redraw its ball icons with them.
       hud.value = hud.value.copyWith(spritesVersion: hud.value.spritesVersion + 1);
     }
     layout = next;
     effects.cell = next.cell;
   }
 
-  void _startRound() {
-    rules = DevOptions.demoGame(_config) ?? Game(seed: math.Random().nextInt(1 << 31), config: _config);
+  void _startRound({required bool tutorial}) {
+    final seed = math.Random().nextInt(1 << 31);
+    rules = DevOptions.demoGame(_config) ??
+        (tutorial ? Tutorial.game(_config, seed) : Game(seed: seed, config: _config));
     scene = BoardScene(_config.columns, _config.rows)
       ..onPoints = (points) {
         hud.value = hud.value.copyWith(score: hud.value.score + points);
       }
-      ..onBanner = (text) {
-        hud.value = hud.value.copyWith(banner: text, bannerId: hud.value.bannerId + 1);
-      }
-      ..onGameOver = () {
-        final last = stats.rounds.isEmpty ? null : stats.rounds.last;
-        hud.value = hud.value.copyWith(
-          isOver: true,
-          best: stats.bestScore,
-          longestChain: last?.longestChain ?? 0,
-          moves: last?.moves ?? rules.moves,
-        );
-      }
+      ..onBanner = _banner
+      ..onGameOver = _gameOver
       ..onStepPopped = _stepEffects
       ..onCracked = _crackEffects
       ..onLanded = _landEffects
+      ..onRose = _roseEffects
+      ..onLevelUp = (_) {
+        sfx.levelUp();
+        haptics.big();
+      }
       ..load(rules.board);
     aimColumn = null;
     boardLight = 0;
     shake = 0;
     _lastStepCenter = null;
+    _praiseText = null;
     stats.startRound(_config);
-    hud.value = HudState(best: stats.bestScore, bannerId: hud.value.bannerId);
+    _tutorial = tutorial && DevOptions.demo.isEmpty ? TutorialStep.drop : TutorialStep.off;
+    hud.value = HudState(
+      best: settings.best,
+      bannerId: hud.value.bannerId,
+      spritesVersion: hud.value.spritesVersion,
+      hint: _tutorial == TutorialStep.drop ? Tutorial.dropHint : null,
+      hintColumn: _tutorial == TutorialStep.drop ? Tutorial.dropColumn : null,
+    );
     _publishRulesState();
   }
+
+  void _banner(String text) {
+    hud.value = hud.value.copyWith(banner: text, bannerId: hud.value.bannerId + 1);
+  }
+
+  void _gameOver() {
+    final last = stats.rounds.isEmpty ? null : stats.rounds.last;
+    final isBest = settings.recordRound(rules.score);
+    if (isBest) {
+      sfx.newBest();
+      haptics.big();
+      final area = _boardArea;
+      if (area != null) {
+        // A celebration burst behind the results card.
+        for (var i = 0; i < Palette.balls.length; i++) {
+          effects.confetti(area.center.translate((i - 2) * 40.0, -40), Palette.balls[i], count: 14, power: 2.5);
+        }
+      }
+    } else {
+      sfx.gameOver();
+    }
+    hud.value = hud.value.copyWith(
+      isOver: true,
+      best: settings.best,
+      newBest: isBest,
+      longestChain: last?.longestChain ?? 0,
+      moves: last?.moves ?? rules.moves,
+      clearHint: true,
+    );
+    _tutorial = TutorialStep.off;
+  }
+
+  // --- Tutorial -----------------------------------------------------------
+
+  void _afterMove(bool popped) {
+    if (_tutorial == TutorialStep.drop) {
+      if (popped) {
+        // The key lesson is learned; don't force the tutorial again.
+        settings.tutorialDone = true;
+        _tutorial = TutorialStep.chain;
+        _hintTimer = 4.5;
+        hud.value = hud.value.copyWith(hint: Tutorial.chainHint, clearHint: false, hintColumn: -1);
+      } else {
+        hud.value = hud.value.copyWith(hint: Tutorial.retryHint);
+      }
+    }
+  }
+
+  void _updateTutorial(double dt) {
+    switch (_tutorial) {
+      case TutorialStep.chain:
+        _hintTimer -= dt;
+        if (_hintTimer <= 0) {
+          _tutorial = TutorialStep.waitForRise;
+          hud.value = hud.value.copyWith(clearHint: true);
+        }
+      case TutorialStep.waitForRise:
+        if (!rules.isOver && rules.pressure <= 2 && phases.isIdle) {
+          _tutorial = TutorialStep.rise;
+          hud.value = hud.value.copyWith(hint: Tutorial.riseHint, hintColumn: -1);
+        }
+      default:
+        break;
+    }
+  }
+
+  void _finishTutorial() {
+    _tutorial = TutorialStep.off;
+    hud.value = hud.value.copyWith(clearHint: true);
+  }
+
+  // --- Effects, sound and vibration --------------------------------------
 
   Offset _at(CellPos p) => layout!.center(p.col.toDouble(), p.row.toDouble());
 
   /// Effects grow with group size and, more strongly, with chain step, so a
   /// 3-step chain feels clearly bigger than a single 4-match.
   void _stepEffects(ChainStep e) {
+    final step = e.step;
+    _stepToken++;
+    sfx.pop(step, groups: e.groups.length);
+    haptics.pop(step);
     if (layout == null) return;
     if (_bench != null) _bench!.pops++;
-    final step = e.step;
     var stepCenter = Offset.zero;
     var total = 0;
     for (final g in e.groups) {
@@ -291,11 +407,22 @@ class PopGame extends FlameGame {
 
     boardLight = math.min(1.0, 0.45 + 0.2 * (step - 1) + 0.05 * (total - 4));
     if (step >= 3) shake = math.min(6, 1.5 * (step - 2) + 1);
+
+    if (step == _praiseStep && _praiseText != null) {
+      _banner(_praiseText!);
+      sfx.praise();
+      _praiseText = null;
+    }
   }
 
   /// A shell's bubble pops: droplets, a ring in the freed ball's colour.
   void _crackEffects(CellPos pos, Cell cell) {
-    if (layout == null || cell.kind != CellKind.shell) return;
+    if (cell.kind != CellKind.shell) return;
+    if (_crackSoundToken != _stepToken) {
+      _crackSoundToken = _stepToken;
+      sfx.crack();
+    }
+    if (layout == null) return;
     final at = _at(pos);
     effects
       ..puff(at, count: 8, spread: 0.55, size: 0.11, color: const Color(0xFFC7D0FF))
@@ -304,11 +431,18 @@ class PopGame extends FlameGame {
   }
 
   void _landEffects(int column, int row) {
-    if (layout == null) return;
+    sfx.land();
+    haptics.land();
     // A new move starts a new chain, so the trail has nothing to link back to.
     _lastStepCenter = null;
+    if (layout == null) return;
     final at = layout!.center(column.toDouble(), row - 0.42);
     effects.puff(at, count: 4, spread: 0.25, size: 0.06, color: const Color(0xFFCBD3FF));
+  }
+
+  void _roseEffects() {
+    sfx.rise();
+    if (_tutorial == TutorialStep.rise) _finishTutorial();
   }
 
   /// Values the HUD can show immediately (they are not animated).
@@ -318,7 +452,41 @@ class PopGame extends FlameGame {
       queue: rules.queue,
       pressure: rules.pressure,
       pressureMax: _config.pressureInterval(rules.level),
-      best: stats.bestScore,
+      best: settings.best,
     );
+  }
+
+  // --- Benchmark (developer only) ----------------------------------------
+
+  /// Plays fast for the benchmark: stack the current colour on a matching
+  /// column top when possible (this produces frequent pops and chains).
+  void _benchStep(double dt) {
+    final bench = _bench!;
+    _benchTime += dt;
+    bench.peakEffects = math.max(bench.peakEffects, effects.activeCount);
+    if (_benchTime >= DevOptions.benchSeconds) {
+      bench.stop();
+      debugPrint(bench.report());
+      _bench = null;
+      return;
+    }
+    if (_benchTime < _benchNextDrop || layout == null) return;
+    _benchNextDrop = _benchTime + 0.2;
+    if (rules.isOver) {
+      restart(tutorial: false);
+      return;
+    }
+    final board = rules.board;
+    var choice = -1;
+    var lowest = -1;
+    for (var c = 0; c < _config.columns; c++) {
+      if (!rules.canDrop(c)) continue;
+      final h = board.height(c);
+      final top = h > 0 ? board.at(c, h - 1) : null;
+      if (top != null && top.isOrb && top.color == rules.currentColor) choice = c;
+      if (lowest < 0 || h < board.height(lowest)) lowest = c;
+    }
+    final column = choice >= 0 ? choice : lowest;
+    if (column >= 0) dropAt(column);
   }
 }

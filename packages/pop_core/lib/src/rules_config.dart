@@ -19,12 +19,14 @@ class RulesConfig {
     this.maxColors = 5,
     this.extraColorLevel = 5,
     this.orbsPerLevel = 30,
-    this.startPressure = 8,
+    this.startPressure = 9,
     this.minPressure = 4,
     this.previewLength = 3,
     this.risingRowKind = RisingRowKind.shells,
     this.chainRelief = 0,
     this.levelsPerPressureStep = 2,
+    this.startRows = 1,
+    this.startOpenRows = 2,
   });
 
   final int columns;
@@ -54,6 +56,14 @@ class RulesConfig {
   /// the current interval. 0 turns it off.
   final int chainRelief;
 
+  /// Rows of shells already on the board when a round starts, so the very
+  /// first drops can crack shells and chain.
+  final int startRows;
+
+  /// Rows of ordinary balls placed on top of [startRows] at the start, with
+  /// no group already complete, so early drops can pop and crack shells.
+  final int startOpenRows;
+
   /// The countdown shortens by one every [levelsPerPressureStep] levels.
   final int levelsPerPressureStep;
 
@@ -72,6 +82,8 @@ class RulesConfig {
     int? chainRelief,
     int? levelsPerPressureStep,
     int? extraColorLevel,
+    int? startRows,
+    int? startOpenRows,
   }) {
     return RulesConfig(
       columns: columns,
@@ -87,6 +99,8 @@ class RulesConfig {
       risingRowKind: risingRowKind ?? this.risingRowKind,
       chainRelief: chainRelief ?? this.chainRelief,
       levelsPerPressureStep: levelsPerPressureStep ?? this.levelsPerPressureStep,
+      startRows: startRows ?? this.startRows,
+      startOpenRows: startOpenRows ?? this.startOpenRows,
     );
   }
 }

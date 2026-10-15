@@ -3,17 +3,18 @@ import 'package:flutter/material.dart';
 import '../game/hud_state.dart';
 import '../game/palette.dart';
 import '../render/orb_sprites.dart';
+import 'buttons.dart';
 import 'orb_icon.dart';
 import 'type.dart';
 
 /// Score, next balls, level and the rising-row countdown on clean white
 /// cards. Sizes itself to its content.
 class HudBar extends StatelessWidget {
-  const HudBar({super.key, required this.hud, required this.sprites, required this.onRestart});
+  const HudBar({super.key, required this.hud, required this.sprites, required this.onPause});
 
   final HudState hud;
   final OrbSprites? sprites;
-  final VoidCallback onRestart;
+  final VoidCallback onPause;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +81,7 @@ class HudBar extends StatelessWidget {
               const SizedBox(width: 8),
               _Pips(left: hud.pressure, max: hud.pressureMax),
               const Spacer(),
-              _RoundButton(tooltip: 'Restart', onPressed: onRestart),
+              RoundIconButton(icon: Icons.pause_rounded, tooltip: 'Pause', size: 38, onPressed: onPause),
             ],
           ),
         ],
@@ -195,32 +196,6 @@ class _Pips extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _RoundButton extends StatelessWidget {
-  const _RoundButton({required this.tooltip, required this.onPressed});
-  final String tooltip;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Palette.card,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: const SizedBox(
-            width: 38,
-            height: 38,
-            child: Icon(Icons.refresh_rounded, size: 22, color: Palette.ink),
-          ),
-        ),
-      ),
     );
   }
 }

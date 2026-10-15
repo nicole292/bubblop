@@ -1,10 +1,13 @@
-# Project POP — Gameplay Rules (v0.2)
+# Project POP — Gameplay Rules (v0.3)
 
 Status: draft spec for the first prototype. Every number here lives in
 `RulesConfig` (packages/pop_core) so it can be tuned without code changes.
 
 ## Board
 - 6 columns × 10 rows, portrait. Row 0 is the bottom.
+- **A round starts with 1 row of shells at the bottom and 2 rows of ordinary balls on
+  top**, coloured so that no group is already complete (v0.3). Early drops can complete
+  groups that crack the shells below.
 - Each cell is empty, an **orb** (colour), or a **shell** (colour, encased).
 
 ## Input
@@ -29,10 +32,10 @@ Status: draft spec for the first prototype. Every number here lives in
 8. k = k + 1 and go back to step 3.
 
 ## Pressure (shells)
-- A countdown starts at 8 pips. Every drop ticks it by 1.
+- A countdown starts at 9 pips. Every drop ticks it by 1.
 - At 0, **after the move has fully resolved**, a row of 6 shells rises from the bottom
   and pushes everything up by one. The countdown resets to the current level's interval.
-- Interval: 8 at level 1, down 1 every **2** levels, minimum 4 (8, 8, 7, 7, 6, 6, 5, 5, 4…).
+- Interval: 9 at level 1, down 1 every **2** levels, minimum 4 (9, 9, 8, 8, 7, 7, 6, 6, 5…).
 - **The next row is visible** before it rises, so its shell colours can be planned for.
   Rows are generated one rise ahead; a level-up affects the row after the previewed one.
 - Optional `chainRelief` (off by default): a 2+ step chain adds drops back to the
@@ -89,3 +92,11 @@ Run `dart run tool/simulate.dart` in packages/pop_core to compare configurations
 - 3-match pops on ~44% of moves (vs ~28%) and keeps the board emptier; likely less
   planning. 4-match stays the default; 3-match stays a debug toggle for playtests.
 - Chain relief had no measurable effect for the bot; left off to keep the rules simple.
+
+## Balance notes (v0.3): the first 10 seconds
+Starting with an empty board, **0%** of simulated games popped anything within the first
+5 moves (4 matching balls are needed). Starting with shell rows alone did not help
+(shells never match) and only shortened games. Starting with **1 shell row + 2 rows of
+balls** gave a pop within 5 moves in **66%** of games and the most chains (2.0 per
+100 moves). With the first countdown raised from 8 to 9, the median game length is
+unchanged (101 moves, against 103).

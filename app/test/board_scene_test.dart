@@ -15,7 +15,8 @@ final seen = <String, int>{};
   int maxMoves = 300,
 }) {
   final rules = Game(seed: seed, config: config);
-  final scene = BoardScene(config.columns, config.rows);
+  // Rounds start with balls on the board; the app loads them the same way.
+  final scene = BoardScene(config.columns, config.rows)..load(rules.board);
   final phases = PhaseQueue();
   var points = 0;
   scene.onPoints = (p) => points += p;

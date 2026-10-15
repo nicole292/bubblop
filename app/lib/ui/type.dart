@@ -30,7 +30,7 @@ abstract final class PopType {
   static final score = of(36, 900, numbers: true);
   static final small = of(12, 800, color: Palette.inkSoft, numbers: true);
   static final onSky = of(11, 900, color: const Color(0xFFFFFFFF), spacing: 1.3);
-  static final banner = of(32, 900, color: const Color(0xFFFFFFFF));
+  static final banner = of(46, 1000, color: const Color(0xFFFFFFFF));
   static final panelTitle = of(13, 900, color: Palette.inkSoft, spacing: 2);
   static final panelScore = of(58, 900, numbers: true);
   static final button = of(20, 900, color: const Color(0xFFFFFFFF), spacing: 0.3);

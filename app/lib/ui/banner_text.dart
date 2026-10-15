@@ -41,7 +41,7 @@ class _BannerTextState extends State<BannerText> with SingleTickerProviderStateM
           final t = _controller.value;
           if (t == 0 || t == 1 || widget.text == null) return const SizedBox.shrink();
           // Quick pop-in, hold, then fade.
-          final scale = t < 0.15 ? 0.8 + 0.2 * Curves.easeOutBack.transform(t / 0.15) : 1.0;
+          final scale = t < 0.18 ? 0.4 + 0.6 * Curves.easeOutBack.transform(t / 0.18) : 1.0;
           final opacity = t < 0.7 ? 1.0 : 1 - (t - 0.7) / 0.3;
           return Opacity(
             opacity: opacity,
@@ -52,10 +52,10 @@ class _BannerTextState extends State<BannerText> with SingleTickerProviderStateM
                 children: [
                   Text(
                     widget.text!,
-                    style: PopType.of(32, 900,
+                    style: PopType.of(46, 1000,
                         foreground: Paint()
                           ..style = PaintingStyle.stroke
-                          ..strokeWidth = 7
+                          ..strokeWidth = 10
                           ..strokeJoin = StrokeJoin.round
                           ..color = Palette.accent),
                   ),

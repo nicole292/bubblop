@@ -42,6 +42,9 @@ While `flutter run` is active: `r` hot-reloads code changes, `R` restarts, `q` q
 
 ### Developer launch options
 ```powershell
+# Show the developer bar (4/3-match switch, session stats)
+flutter run -d windows --dart-define=POP_DEV=true
+
 # Start on a board where the first drop into column 5 sets off a 3-step chain
 flutter run -d windows --dart-define=POP_DEMO=chain
 
@@ -67,5 +70,8 @@ render/orb_sprites.dart  bakes shader balls, shells, halos and shadow once per s
 render/effects.dart    pooled playful effects (confetti, sparkles, rings, puffs, trails, labels)
 render/background.dart bright sky, colour blobs, floating bubbles
 shaders/ball.frag      glossy ball and shell bubble material
-ui/                    HUD, banners, game-over panel, debug bar
+game/tutorial.dart     the guided first round
+services/              settings (saved), sound effects (SoLoud), haptics
+ui/                    home screen, HUD, pause menu, hints, banners, game-over panel, debug bar
+tools/make_sfx.py      generates every sound effect from scratch (python tools/make_sfx.py)
 ```
