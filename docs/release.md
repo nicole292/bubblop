@@ -60,6 +60,20 @@ types; per-phone downloads measured at 18–22 MB).
    where you install it on an iPhone.
 4. A Mac becomes necessary only if an iOS-specific bug needs hands-on debugging.
 
+## 4b. Play on your own iPhone for free (no Apple Developer Program)
+Uses a free Apple ID. The app stops opening after **7 days**; reinstall it the same way.
+1. In Codemagic, run **iOS build check** and download `Bubblop-unsigned.ipa` from the
+   build's artifacts.
+2. On the PC, install **iTunes from apple.com** (not the Microsoft Store version) and
+   **Sideloadly** (sideloadly.io).
+3. Plug the iPhone in by USB, unlock it and tap **Trust**.
+4. Open Sideloadly, drag in the `.ipa`, enter your Apple ID, press **Start**.
+   If it complains about the bundle ID, tick the option to change it under Advanced Options.
+5. On the iPhone:
+   - Settings → Privacy & Security → **Developer Mode** → on (the phone restarts).
+   - Settings → General → VPN & Device Management → your Apple ID → **Trust**.
+6. Open Bubblop. A free Apple ID allows 3 sideloaded apps at a time.
+
 ## 5. Before each release (checklist)
 - [ ] `dart test` in `packages/pop_core` and `flutter test` in `app` pass
 - [ ] `flutter analyze` clean

@@ -22,5 +22,11 @@ workflows:
       - name: Build iOS (no code signing)
         working_directory: app
         script: flutter build ios --release --no-codesign
+      - name: Package unsigned .ipa (for sideloading with Sideloadly)
+        working_directory: app/build/ios
+        script: |
+          rm -rf ipa && mkdir -p ipa/Payload
+          cp -R iphoneos/Runner.app ipa/Payload/
+          cd ipa && zip -qry Bubblop-unsigned.ipa Payload
     artifacts:
-      - app/build/ios/iphoneos/*.app
+      - app/build/ios/ipa/*.ipa

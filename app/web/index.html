@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Bubblop: a one-thumb chain-reaction puzzle game.">
+
+  <!-- iOS: "Add to Home Screen" opens it full screen like an app -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Bubblop">
+  <meta name="theme-color" content="#6FB8FF">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Bubblop</title>
+  <link rel="manifest" href="manifest.json">
+  <style>html, body { margin: 0; background: #6FB8FF; }</style>
+</head>
+<body>
+  <!-- Sound engine (flutter_soloud) for the web build -->
+  <script src="assets/packages/flutter_soloud/web/init_soloud.js" defer></script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
