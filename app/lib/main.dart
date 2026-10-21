@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'dev/shot_driver.dart';
 import 'game/palette.dart';
 import 'services/haptics.dart';
 import 'services/settings.dart';
@@ -10,10 +11,12 @@ import 'ui/game_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  final settings = await Settings.load();
+  // Phone-frame test runs never touch the player's saved progress.
+  final settings = DevPhone.enabled ? (Settings.memory()..tutorialDone = true) : await Settings.load();
   final sfx = Sfx(settings);
   await sfx.init();
-  runApp(PopApp(settings: settings, sfx: sfx, haptics: Haptics(settings)));
+  final app = PopApp(settings: settings, sfx: sfx, haptics: Haptics(settings));
+  runApp(DevPhone.enabled ? DevPhone(child: app) : app);
 }
 
 class PopApp extends StatelessWidget {

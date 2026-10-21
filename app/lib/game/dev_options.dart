@@ -15,6 +15,13 @@ abstract final class DevOptions {
 
   static bool get isBench => benchSeconds > 0;
 
+  /// POP_PLAY=true skips the home screen (screenshot runs).
+  static const startPlaying = bool.fromEnvironment('POP_PLAY');
+
+  /// POP_SEED=n deals the same round every time (for comparing screenshots).
+  static const _seed = int.fromEnvironment('POP_SEED', defaultValue: -1);
+  static int? get seed => _seed < 0 ? null : _seed;
+
   /// POP_DEV=true shows the developer bar (4/3-match switch, session stats).
   static const showDevBar = bool.fromEnvironment('POP_DEV');
 

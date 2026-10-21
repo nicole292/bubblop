@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:flutter/painting.dart'
     show TextPainter, TextSpan, TextStyle, TextDirection;
 
-enum _Kind { confetti, star, ring, puff, label }
+enum _Kind { confetti, star, ring, puff, flash, label }
 
 class _Fx {
   _Kind kind = _Kind.confetti;
@@ -152,6 +152,21 @@ class Effects {
     }
   }
 
+  /// A quick soft disc of light where a ball bursts: [color] lightened,
+  /// swelling from [from] to [to] cells (radius) and fading.
+  void flash(Offset at, Color color, {double from = 0.3, double to = 0.6, double life = 0.2}) {
+    final p = _take();
+    if (p == null) return;
+    p
+      ..kind = _Kind.flash
+      ..x = at.dx
+      ..y = at.dy
+      ..life = life
+      ..size = from
+      ..endSize = to
+      ..color = Color.lerp(color, const Color(0xFFFFFFFF), 0.6)!;
+  }
+
   /// A line of sparkles that appear one after another from [from] to [to].
   void trail(Offset from, Offset to, Color color, {int count = 7}) {
     for (var i = 0; i <= count; i++) {
@@ -286,6 +301,10 @@ class Effects {
             ..strokeWidth = p.angle * cell * (1 - t)
             ..color = p.color.withValues(alpha: 0.75 * (1 - t));
           canvas.drawCircle(Offset(p.x, p.y), r, _stroke);
+        case _Kind.flash:
+          final k = 1 - (1 - t) * (1 - t);
+          _paint.color = p.color.withValues(alpha: 0.85 * (1 - t));
+          canvas.drawCircle(Offset(p.x, p.y), (p.size + (p.endSize - p.size) * k) * cell, _paint);
         case _Kind.puff:
           _paint.color = p.color.withValues(alpha: 0.9 * (1 - t));
           canvas.drawCircle(Offset(p.x, p.y), p.size * (1 + 0.6 * t), _paint);

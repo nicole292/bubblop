@@ -35,7 +35,8 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late final game = PopGame(settings: widget.settings, sfx: widget.sfx, haptics: widget.haptics);
   final _stackKey = GlobalKey();
-  _Mode _mode = DevOptions.demo.isNotEmpty || DevOptions.isBench ? _Mode.playing : _Mode.home;
+  _Mode _mode =
+      DevOptions.demo.isNotEmpty || DevOptions.isBench || DevOptions.startPlaying ? _Mode.playing : _Mode.home;
 
   @override
   void initState() {
@@ -197,7 +198,8 @@ class _BoardSlot extends StatelessWidget {
         child: Stack(
           children: [
             Align(
-              alignment: const Alignment(0, -0.2),
+              // High on the board, where it is usually empty.
+              alignment: const Alignment(0, -0.55),
               child: BannerText(text: hud.banner, id: hud.bannerId),
             ),
             if (hint != null)

@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 import '../game/palette.dart';
 import 'orb_material.dart';
@@ -28,6 +28,9 @@ class OrbSprites {
   /// Loads the ball shader, or returns null (with a log line) if this device
   /// cannot compile it; sprites then fall back to Canvas drawing.
   static Future<FragmentProgram?> loadProgram() async {
+    // The web renderer compiles the shader but draws it misplaced (square or
+    // quarter balls), so the browser build uses the Canvas material.
+    if (kIsWeb) return null;
     try {
       return await FragmentProgram.fromAsset(_shaderAsset);
     } catch (e) {
@@ -85,10 +88,9 @@ class OrbSprites {
       balls.add(ball);
       shells.add(picture((canvas) {
         if (program != null) {
-          // A smaller ball inside a white bubble.
-          canvas.drawImageRect(ball, full,
-              Rect.fromCenter(center: full.center, width: size * 0.62, height: size * 0.62),
-              Paint()..filterQuality = FilterQuality.high);
+          // The full-size ball under frosted glass, so every cell reads
+          // as the same size.
+          canvas.drawImage(ball, Offset.zero, Paint());
           shaderPass(canvas, const Color(0xFFFFFFFF), 1);
         } else {
           centred(canvas, (cv) => paintShell(cv, radius, c));

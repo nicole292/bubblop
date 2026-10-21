@@ -23,34 +23,33 @@ void paintContactShadow(Canvas canvas, double r) {
   );
 }
 
-/// Fallback glossy ball.
+/// Fallback ball: mostly solid colour, gentle shading, soft highlight.
 void paintBall(Canvas canvas, double r, int colorIndex) {
   final base = Palette.balls[colorIndex];
   canvas.drawCircle(
     Offset.zero,
     r,
     Paint()
-      ..shader = Gradient.radial(Offset(-r * 0.3, -r * 0.35), r * 1.4,
-          [_shift(base, 0.12), base, _shift(base, -0.16)], const [0.0, 0.5, 1.0]),
+      ..shader = Gradient.radial(Offset(-r * 0.3, -r * 0.35), r * 1.45,
+          [_shift(base, 0.08), base, _shift(base, -0.10)], const [0.0, 0.55, 1.0]),
   );
   canvas.save();
-  canvas.translate(-r * 0.32, -r * 0.4);
+  canvas.translate(-r * 0.3, -r * 0.42);
   canvas.rotate(-0.6);
-  canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: r * 0.6, height: r * 0.36),
-      Paint()..color = const Color(0xC8FFFFFF));
+  canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: r * 0.62, height: r * 0.34),
+      Paint()
+        ..color = const Color(0x99FFFFFF)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.05));
   canvas.restore();
 }
 
-/// Fallback shell: a white bubble around a smaller ball.
+/// Fallback shell: the full-size ball under frosted glass with a white rim.
 void paintShell(Canvas canvas, double r, int colorIndex) {
-  canvas.save();
-  canvas.scale(0.62);
   paintBall(canvas, r, colorIndex);
-  canvas.restore();
-  canvas.drawCircle(Offset.zero, r, Paint()..color = const Color(0x33FFFFFF));
+  canvas.drawCircle(Offset.zero, r, Paint()..color = const Color(0x80FFFFFF));
   canvas.drawCircle(
     Offset.zero,
-    r * 0.92,
+    r * 0.93,
     Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = r * 0.14

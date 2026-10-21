@@ -58,6 +58,20 @@ flutter run -d windows --profile --dart-define=POP_BENCH=60
 flutter run -d windows --profile --dart-define=POP_BENCH=30 --dart-define=POP_SKIP=fx,bg
 ```
 
+### Phone-size screenshots (developer only)
+```powershell
+# Show the game as a 390x844 phone (47 px top / 34 px bottom safe area) in the window.
+# Uses a throwaway save, so your real best score is never touched.
+flutter run -d windows --dart-define=POP_PHONE=390x844+47+34
+
+# Play a script and save PNGs to build/shots/ (next to the .exe when run from a build), then quit.
+# POP_PLAY=true skips the home screen; POP_SEED=7 deals the same round every time.
+flutter run -d windows --dart-define=POP_PHONE=390x844+47+34 --dart-define=POP_PLAY=true `
+  --dart-define=POP_SEED=7 "--dart-define=POP_SHOT=wait 2; tap 221 450; wait 1; shot board"
+```
+Script commands: `wait S`, `tap X Y`, `down X Y`, `up`, `shot NAME`, `burst NAME COUNT SECONDS`
+(coordinates in logical pixels inside the phone).
+
 ## App structure (`app/lib`)
 ```
 main.dart              app entry, portrait lock, theme
@@ -67,7 +81,8 @@ game/phase_queue.dart  timed animation steps (fast-forwards on early input)
 game/board_component.dart  draws background, board card (baked), balls, dock, effects
 game/orb_painter.dart  one ball's animation state (squash, halo, cracks, reveal, boing)
 game/board_layout.dart cell ↔ pixel conversion
-game/dev_options.dart  POP_DEMO / POP_BENCH / POP_SKIP (developer only)
+game/dev_options.dart  POP_DEMO / POP_BENCH / POP_SKIP / POP_SEED / POP_PLAY (developer only)
+dev/shot_driver.dart   POP_PHONE / POP_SHOT: phone-size frame and scripted screenshots
 game/frame_bench.dart  frame-time measurement for POP_BENCH
 render/orb_sprites.dart  bakes shader balls, shells, halos and shadow once per size
 render/effects.dart    pooled playful effects (confetti, sparkles, rings, puffs, trails, labels)

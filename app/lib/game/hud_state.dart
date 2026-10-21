@@ -2,6 +2,8 @@
 class HudState {
   const HudState({
     this.score = 0,
+    this.gain = 0,
+    this.gainId = 0,
     this.best = 0,
     this.level = 1,
     this.queue = const [],
@@ -20,6 +22,10 @@ class HudState {
 
   /// Displayed score: grows as each chain step finishes animating.
   final int score;
+
+  /// The latest points added to [score]; [gainId] changes with each gain.
+  final int gain;
+  final int gainId;
   final int best;
   final int level;
 
@@ -53,6 +59,8 @@ class HudState {
 
   HudState copyWith({
     int? score,
+    int? gain,
+    int? gainId,
     int? best,
     int? level,
     List<int>? queue,
@@ -71,6 +79,8 @@ class HudState {
   }) {
     return HudState(
       score: score ?? this.score,
+      gain: gain ?? this.gain,
+      gainId: gainId ?? this.gainId,
       best: best ?? this.best,
       level: level ?? this.level,
       queue: queue ?? this.queue,

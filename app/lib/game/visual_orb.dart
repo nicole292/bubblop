@@ -13,6 +13,11 @@ class VisualOrb {
   double col;
   double row;
 
+  /// Visual nudge in cell units, added to [col]/[row] when drawn (a popping
+  /// group pulls together). Never part of the board position.
+  double dx = 0;
+  double dy = 0;
+
   double scale = 1;
   double alpha = 1;
 

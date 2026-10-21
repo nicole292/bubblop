@@ -17,7 +17,7 @@ class BannerText extends StatefulWidget {
 class _BannerTextState extends State<BannerText> with SingleTickerProviderStateMixin {
   late final _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 900),
+    duration: const Duration(milliseconds: 750),
   );
 
   @override
@@ -52,10 +52,10 @@ class _BannerTextState extends State<BannerText> with SingleTickerProviderStateM
                 children: [
                   Text(
                     widget.text!,
-                    style: PopType.of(46, 1000,
+                    style: PopType.of(36, 1000,
                         foreground: Paint()
                           ..style = PaintingStyle.stroke
-                          ..strokeWidth = 10
+                          ..strokeWidth = 8
                           ..strokeJoin = StrokeJoin.round
                           ..color = Palette.accent),
                   ),

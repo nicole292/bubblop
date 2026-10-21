@@ -14,8 +14,8 @@ import 'pop_game.dart';
 import 'timings.dart';
 import 'visual_orb.dart';
 
-/// Draws the whole canvas: background, board card, balls, next-row dock and
-/// effects. Reads state; never changes it.
+/// Draws the whole canvas: background, board card (board, rise meter and
+/// next-row tray), balls and effects. Reads state; never changes it.
 class BoardComponent extends Component {
   BoardComponent(this.game);
 
@@ -77,7 +77,10 @@ class BoardComponent extends Component {
       _fill.shader = null;
     }
 
-    if (!DevOptions.skip('dock')) _paintDockBalls(canvas, layout, sprites);
+    if (!DevOptions.skip('dock')) {
+      _paintMeter(canvas, layout);
+      _paintDockBalls(canvas, layout, sprites);
+    }
 
     canvas.save();
     // Hide balls below the floor while a new row slides up.
@@ -101,7 +104,7 @@ class BoardComponent extends Component {
     final scene = game.scene;
     final centers = <VisualOrb, Offset>{};
     for (final orb in scene.orbs) {
-      var c = layout.center(orb.col, orb.row);
+      var c = layout.center(orb.col + orb.dx, orb.row + orb.dy);
       if (scene.shakeTime > 0 && orb.col.round() == scene.shakeColumn) {
         final t = scene.shakeTime / Timings.shake;
         c = c.translate(math.sin(t * math.pi * 6) * cell * 0.08 * t, 0);
@@ -134,9 +137,9 @@ class BoardComponent extends Component {
     if (game.boardLight <= 0) return;
     final card = _cardRRect(layout);
     _stroke
-      ..strokeWidth = layout.cell * (0.08 + 0.10 * game.boardLight)
-      ..color = game.boardLightColor.withValues(alpha: 0.85 * game.boardLight);
-    canvas.drawRRect(card.deflate(layout.cell * 0.04), _stroke);
+      ..strokeWidth = layout.cell * (0.04 + 0.06 * game.boardLight)
+      ..color = game.boardLightColor.withValues(alpha: 0.6 * game.boardLight);
+    canvas.drawRRect(card.deflate(layout.cell * 0.03), _stroke);
   }
 
   /// Red tint sliding down from the top of nearly full columns.
@@ -156,52 +159,66 @@ class BoardComponent extends Component {
     _fill.shader = null;
   }
 
-  /// The next row bobbing gently in its sockets; brighter when it is close.
+  /// The rise meter: one segment per drop until the next row rises. Lit
+  /// segments are drops left; they turn red for the last two.
+  void _paintMeter(Canvas canvas, BoardLayout layout) {
+    final rules = game.rules;
+    final rect = layout.rect;
+    final cell = layout.cell;
+    final total = math.max(1, game.config.pressureInterval(rules.level));
+    final left = rules.pressure.clamp(0, total);
+    final urgent = left <= 2;
+    final pulse = left <= 1 ? 0.5 + 0.5 * math.sin(game.time * 8) : 1.0;
+    final lit = urgent ? Palette.danger.withValues(alpha: 0.6 + 0.4 * pulse) : Palette.accent;
+
+    final gap = cell * 0.08;
+    final x0 = rect.left + cell * 0.12;
+    final width = rect.width - cell * 0.24;
+    final w = (width - gap * (total - 1)) / total;
+    final h = cell * 0.1;
+    for (var i = 0; i < total; i++) {
+      final seg = Rect.fromLTWH(x0 + i * (w + gap), layout.meterY - h / 2, w, h);
+      _fill.color = i < left ? lit : Palette.pipEmpty;
+      canvas.drawRRect(RRect.fromRectAndRadius(seg, Radius.circular(h / 2)), _fill);
+    }
+  }
+
+  /// The next row, already in its shells, bobbing gently in the tray.
   void _paintDockBalls(Canvas canvas, BoardLayout layout, OrbSprites sprites) {
     final rules = game.rules;
     final rect = layout.rect;
     final cell = layout.cell;
     final y = layout.trayCenterY;
-    final urgent = rules.pressure <= 2;
-    final pulse = rules.pressure <= 1 ? 0.5 + 0.5 * math.sin(game.time * 8) : 0.0;
     final row = rules.nextRow;
+    final lift = rules.pressure <= 1 ? (0.5 + 0.5 * math.sin(game.time * 8)) * cell * 0.03 : 0.0;
     for (var c = 0; c < row.length; c++) {
       final at = Offset(rect.left + (c + 0.5) * cell, y);
-      if (urgent) {
-        _stroke
-          ..strokeWidth = cell * 0.05
-          ..color = Palette.danger.withValues(alpha: 0.55 + 0.45 * pulse);
-        canvas.drawCircle(at, cell * 0.34, _stroke);
-      }
-      final bob = math.sin(game.time * 1.8 + c * 0.9) * cell * 0.025;
-      final orb = VisualOrb(row[c], c.toDouble(), 0)
-        ..scale = 0.64
-        ..alpha = urgent ? 1.0 : 0.9;
+      final bob = math.sin(game.time * 1.8 + c * 0.9) * cell * 0.02 - lift;
+      final orb = VisualOrb(row[c], c.toDouble(), 0)..scale = 0.62;
       paintOrb(canvas, sprites, at.translate(0, bob), orb);
     }
   }
 
-  RRect _cardRRect(BoardLayout layout) =>
-      RRect.fromRectAndRadius(layout.rect.inflate(layout.cell * 0.2), Radius.circular(layout.cell * 0.55));
+  /// The board card: the board, then the rise meter and the next-row tray.
+  RRect _cardRRect(BoardLayout layout) {
+    final rect = layout.rect;
+    final cell = layout.cell;
+    return RRect.fromLTRBR(rect.left - cell * 0.2, rect.top - cell * 0.2, rect.right + cell * 0.2,
+        layout.cardBottom, Radius.circular(cell * 0.5));
+  }
 
   void _ensureStatic(BoardLayout layout) {
     if (_static != null && _staticFor == layout.rect) return;
-    final cell = layout.cell;
     final card = _cardRRect(layout);
-    final dockRect = Rect.fromCenter(
-      center: Offset(layout.rect.center.dx, layout.trayCenterY),
-      width: layout.rect.width + cell * 0.2,
-      height: cell * 0.86,
-    );
-    // Room for the shadows around the card and dock.
-    final bounds = Rect.fromLTRB(card.left, card.top, card.right, dockRect.bottom).inflate(cell * 0.8);
+    // Room for the shadow around the card.
+    final bounds = card.outerRect.inflate(layout.cell * 0.6);
     final ratio = WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
 
     final recorder = PictureRecorder();
     final canvas = Canvas(recorder)
       ..scale(ratio)
       ..translate(-bounds.left, -bounds.top);
-    _paintStatic(canvas, layout, card, dockRect);
+    _paintStatic(canvas, layout, card);
     final picture = recorder.endRecording();
     _static?.dispose();
     _static = picture.toImageSync((bounds.width * ratio).ceil(), (bounds.height * ratio).ceil());
@@ -210,61 +227,33 @@ class BoardComponent extends Component {
     _staticBounds = bounds;
   }
 
-  void _paintStatic(Canvas canvas, BoardLayout layout, RRect card, Rect dockRect) {
+  void _paintStatic(Canvas canvas, BoardLayout layout, RRect card) {
     final rect = layout.rect;
     final cell = layout.cell;
     final paint = Paint();
 
-    // Soft coloured shadow lifts the card off the sky.
+    // A soft, close shadow: lifted off the sky, not floating.
     paint
-      ..color = Palette.cardShadow
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, cell * 0.35);
-    canvas.drawRRect(card.shift(Offset(0, cell * 0.22)), paint);
-    paint.maskFilter = null;
-
-    // The card: white, with a gentle cool tint at the bottom edge. (Reset the
-    // colour first: a paint's alpha also fades its shader.)
+      ..color = Palette.panelShadow
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, cell * 0.18);
+    canvas.drawRRect(card.shift(Offset(0, cell * 0.08)), paint);
     paint
-      ..color = const Color(0xFFFFFFFF)
-      ..shader = Gradient.linear(card.outerRect.topCenter, card.outerRect.bottomCenter,
-        const [Palette.card, Color(0xFFF4F1FF)]);
+      ..maskFilter = null
+      ..color = Palette.card;
     canvas.drawRRect(card, paint);
-    paint.shader = null;
 
     // The well the balls sit in.
-    final well = RRect.fromRectAndRadius(rect.inflate(cell * 0.07), Radius.circular(cell * 0.45));
+    final well = RRect.fromRectAndRadius(rect.inflate(cell * 0.07), Radius.circular(cell * 0.42));
     paint.color = Palette.well;
     canvas.drawRRect(well, paint);
     canvas.save();
     canvas.clipRRect(well);
-    // Alternate lane stripes, rounded at both ends.
+    // Alternate lanes, so columns are easy to tell apart.
     paint.color = Palette.laneAlt;
     for (var c = 1; c < layout.columns; c += 2) {
       final lane = Rect.fromLTWH(rect.left + c * cell, rect.top, cell, rect.height).deflate(cell * 0.06);
-      canvas.drawRRect(RRect.fromRectAndRadius(lane, Radius.circular(cell * 0.45)), paint);
+      canvas.drawRRect(RRect.fromRectAndRadius(lane, Radius.circular(cell * 0.42)), paint);
     }
-    // A soft inner shadow at the top gives the well a little depth.
-    final lip = Rect.fromLTWH(well.left, well.top, well.width, cell * 0.6);
-    paint
-      ..color = const Color(0xFFFFFFFF)
-      ..shader = Gradient.linear(lip.topCenter, lip.bottomCenter, const [Color(0x223A2D9E), Color(0x003A2D9E)]);
-    canvas.drawRect(lip, paint);
-    paint.shader = null;
     canvas.restore();
-
-    // The dock for the next row.
-    final dock = RRect.fromRectAndRadius(dockRect, Radius.circular(dockRect.height / 2));
-    paint
-      ..color = Palette.cardShadow
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, cell * 0.2);
-    canvas.drawRRect(dock.shift(Offset(0, cell * 0.12)), paint);
-    paint
-      ..maskFilter = null
-      ..color = Palette.card;
-    canvas.drawRRect(dock, paint);
-    paint.color = Palette.socket;
-    for (var c = 0; c < layout.columns; c++) {
-      canvas.drawCircle(Offset(rect.left + (c + 0.5) * cell, layout.trayCenterY), cell * 0.34, paint);
-    }
   }
 }

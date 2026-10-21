@@ -12,6 +12,7 @@ abstract final class Palette {
   static const well = Color(0xFFF1F4FF);
   static const laneAlt = Color(0xFFE8EDFF);
   static const cardShadow = Color(0x553A2D9E);
+  static const panelShadow = Color(0x2E3A2D9E);
   static const socket = Color(0xFFE4E9FF);
 
   // Text and UI.

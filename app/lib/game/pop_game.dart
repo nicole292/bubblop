@@ -250,12 +250,14 @@ class PopGame extends FlameGame {
   }
 
   void _startRound({required bool tutorial}) {
-    final seed = math.Random().nextInt(1 << 31);
+    final seed = DevOptions.seed ?? math.Random().nextInt(1 << 31);
     rules = DevOptions.demoGame(_config) ??
         (tutorial ? Tutorial.game(_config, seed) : Game(seed: seed, config: _config));
     scene = BoardScene(_config.columns, _config.rows)
       ..onPoints = (points) {
-        hud.value = hud.value.copyWith(score: hud.value.score + points);
+        if (points <= 0) return;
+        final h = hud.value;
+        hud.value = h.copyWith(score: h.score + points, gain: points, gainId: h.gainId + 1);
       }
       ..onBanner = _banner
       ..onGameOver = _gameOver
@@ -278,6 +280,7 @@ class PopGame extends FlameGame {
     hud.value = HudState(
       best: settings.best,
       bannerId: hud.value.bannerId,
+      gainId: hud.value.gainId,
       spritesVersion: hud.value.spritesVersion,
       hint: _tutorial == TutorialStep.drop ? Tutorial.dropHint : null,
       hintColumn: _tutorial == TutorialStep.drop ? Tutorial.dropColumn : null,
@@ -378,14 +381,18 @@ class PopGame extends FlameGame {
       for (final p in g.cells) {
         final at = _at(p);
         sum += at;
-        effects.confetti(at, color, count: (4 + 2.5 * intensity).round(), power: intensity);
+        // Restrained: a burst of light and a couple of confetti bits per
+        // ball, growing with group size and chain step.
+        effects
+          ..flash(at, color, to: 0.55 + 0.05 * step)
+          ..confetti(at, color, count: (0.5 + 1.2 * intensity).round(), power: intensity);
       }
       final center = sum / n.toDouble();
       stepCenter += sum;
       total += n;
       effects
-        ..ring(center, color, to: 0.9 + 0.25 * math.sqrt(n) + 0.3 * (step - 1), width: 0.16 + 0.03 * step)
-        ..sparkles(center, count: 1 + step, spread: 0.5 + 0.1 * math.sqrt(n), color: Palette.gold);
+        ..ring(center, color, to: 0.8 + 0.2 * math.sqrt(n) + 0.25 * (step - 1), width: 0.12 + 0.03 * step)
+        ..sparkles(center, count: step, spread: 0.5 + 0.1 * math.sqrt(n), color: Palette.gold);
       boardLightColor = color;
     }
     stepCenter = stepCenter / total.toDouble();
@@ -398,15 +405,16 @@ class PopGame extends FlameGame {
       final color = Palette.balls[e.groups.first.color];
       effects
         ..trail(_lastStepCenter!, stepCenter, Palette.gold)
-        ..label(stepCenter.translate(0, -layout!.cell * 0.6), '×$step', color,
-            size: 0.66 + 0.08 * math.min(step, 5), life: 0.9, rise: 0.6);
+        ..label(stepCenter.translate(0, -layout!.cell * 0.45), '×$step', color,
+            size: 0.5 + 0.07 * math.min(step, 5), life: 0.7, rise: 0.5);
     }
-    effects.label(stepCenter.translate(0, layout!.cell * 0.15), '+${e.points}', Palette.ink,
-        size: 0.4 + 0.03 * math.min(step, 5), life: 0.8, rise: 1.0);
+    // The total also lands in the score panel; this small tag says where.
+    effects.label(stepCenter.translate(0, layout!.cell * 0.25), '+${e.points}', Palette.ink,
+        size: 0.32 + 0.02 * math.min(step, 5), life: 0.6, rise: 0.8);
     _lastStepCenter = stepCenter;
 
-    boardLight = math.min(1.0, 0.45 + 0.2 * (step - 1) + 0.05 * (total - 4));
-    if (step >= 3) shake = math.min(6, 1.5 * (step - 2) + 1);
+    boardLight = math.min(1.0, 0.35 + 0.2 * (step - 1) + 0.05 * (total - 4));
+    if (step >= 3) shake = math.min(5, 1.2 * (step - 2) + 1);
 
     if (step == _praiseStep && _praiseText != null) {
       _banner(_praiseText!);

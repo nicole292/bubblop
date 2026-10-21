@@ -60,6 +60,49 @@ void main() {
     expect(scene.toBoard().toPicture(), board.toPicture());
   });
 
+  test('a popping group squeezes toward its centre; balls left behind never move', () {
+    final rules = Game(
+      seed: 1,
+      board: Board.parse('''
+        GG....
+        YRR...
+        RgGR..
+        RBBB..
+      '''),
+      scriptedQueue: [3],
+    );
+    final scene = BoardScene(6, 10)..load(rules.board);
+    final phases = PhaseQueue();
+    for (final e in rules.drop(4).events) {
+      phases.addAll(scene.phasesFor(e));
+    }
+    // Once the first step's highlight starts: the dropped blue (column 4) joins
+    // the blue run in columns 1–3 of row 0, centred on column 2.5.
+    for (var frame = 0; frame < 60 && scene.orbs.every((o) => o.dx == 0); frame++) {
+      phases.update(1 / 60);
+    }
+    phases.update(1 / 60);
+    double pullAt(int col) => scene.orbs.firstWhere((o) => o.col == col && o.row == 0).dx;
+    expect(pullAt(1), greaterThan(0));
+    expect(pullAt(4), lessThan(0));
+    expect(scene.orbs.where((o) => o.col == 0).every((o) => o.dx == 0 && o.dy == 0), isTrue,
+        reason: 'balls that are not popping stay put');
+
+    var maxPull = 0.0;
+    for (var frame = 0; frame < 600 && !phases.isIdle; frame++) {
+      phases.update(1 / 60);
+      for (final orb in scene.orbs) {
+        maxPull = [maxPull, orb.dx.abs(), orb.dy.abs()].reduce((a, b) => a > b ? a : b);
+      }
+    }
+    expect(maxPull, greaterThan(0.05), reason: 'popping balls lean together');
+    expect(maxPull, lessThan(0.5), reason: 'the lean is a nudge, not a move');
+    for (final orb in scene.orbs) {
+      expect((orb.dx, orb.dy, orb.scale, orb.alpha), (0.0, 0.0, 1.0, 1.0));
+    }
+    expect(scene.toBoard().toPicture(), rules.board.toPicture());
+  });
+
   test('a pre-filled board plays through to the same picture', () {
     final rules = Game(
       seed: 1,

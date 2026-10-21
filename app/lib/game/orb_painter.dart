@@ -43,14 +43,14 @@ void paintOrb(Canvas canvas, OrbSprites sprites, Offset center, VisualOrb orb) {
         if (orb.crack > 0) _paintCracks(canvas, c, sprites.radius * sx, orb, 1 - t);
       }
       if (t > 0) {
-        final k = 0.62 + 0.38 * Curves.easeOutBack.transform(t);
+        final k = 0.9 + 0.1 * Curves.easeOutBack.transform(t);
         sprites.draw(canvas, sprites.ball(color), c, sx: sx * k, sy: sy * k, alpha: orb.alpha * t);
       }
     case CellKind.orb:
       final g = math.max(orb.glow, flash);
       if (g > 0) {
-        final k = 1.0 + 0.3 * g;
-        sprites.draw(canvas, sprites.halo(color), c, sx: sx * k, sy: sy * k, alpha: orb.alpha * g * 0.85);
+        final k = 1.0 + 0.15 * g;
+        sprites.draw(canvas, sprites.halo(color), c, sx: sx * k, sy: sy * k, alpha: orb.alpha * g * 0.55);
       }
       sprites.draw(canvas, sprites.ball(color), c, sx: sx, sy: sy, alpha: orb.alpha);
   }

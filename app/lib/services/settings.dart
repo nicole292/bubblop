@@ -26,8 +26,7 @@ class Settings extends ChangeNotifier {
     }
   }
 
-  /// In-memory settings for tests.
-  @visibleForTesting
+  /// In-memory settings (tests and developer screenshot runs).
   factory Settings.memory() => Settings._(null);
 
   late bool _sound = _prefs?.getBool(_soundKey) ?? true;

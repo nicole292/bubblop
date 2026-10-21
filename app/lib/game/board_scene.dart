@@ -121,12 +121,23 @@ class BoardScene {
     final popped = [for (final g in e.groups) ...g.cells];
     var popOrbs = <VisualOrb>[];
     var crackOrbs = <VisualOrb>[];
+    // How far each popping orb leans toward its group's centre (cells).
+    final pull = <VisualOrb, (double, double)>{};
 
     return [
       Phase(
         Timings.highlight * f,
         onStart: () {
           popOrbs = [for (final p in popped) ?_at(p.col, p.row)];
+          pull.clear();
+          for (final g in e.groups) {
+            final cx = g.cells.map((p) => p.col).reduce((a, b) => a + b) / g.cells.length;
+            final cy = g.cells.map((p) => p.row).reduce((a, b) => a + b) / g.cells.length;
+            for (final p in g.cells) {
+              final orb = _at(p.col, p.row);
+              if (orb != null) pull[orb] = ((cx - p.col) * 0.12, (cy - p.row) * 0.12);
+            }
+          }
           crackOrbs = [];
           final poppedSet = popped.toSet();
           for (final p in e.cracked.keys) {
@@ -148,9 +159,15 @@ class BoardScene {
           }
         },
         onUpdate: (t) {
+          // The group squeezes together, glowing, just before it bursts.
+          final k = Curves.easeOut.transform(t);
           for (final o in popOrbs) {
-            o.scale = 1 + 0.15 * t;
+            o.scale = 1 + 0.12 * k;
             o.glow = t;
+            final (px, py) = pull[o] ?? (0.0, 0.0);
+            o
+              ..dx = px * k
+              ..dy = py * k;
           }
           for (final o in crackOrbs) {
             if (o.cell.kind == CellKind.shell) o.crack = t;
@@ -166,9 +183,9 @@ class BoardScene {
         onUpdate: (t) {
           // Balloon pop: puff up a little and vanish quickly.
           for (final o in popOrbs) {
-            o.scale = 1.15 + 0.3 * Curves.easeOut.transform(t);
-            o.alpha = (1 - t * 1.8).clamp(0.0, 1.0);
-            o.glow = (1 - t * 1.8).clamp(0.0, 1.0);
+            o.scale = 1.12 + 0.3 * Curves.easeOut.transform(t);
+            o.alpha = (1 - t * 2.2).clamp(0.0, 1.0);
+            o.glow = (1 - t * 2.2).clamp(0.0, 1.0);
           }
           for (final o in crackOrbs) {
             if (o.cell.kind == CellKind.shell) {

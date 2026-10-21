@@ -15,6 +15,8 @@
 - **Ghost/landing ring uses the rules board**, which can be one move ahead of the animation
   when the player taps mid-chain. Only visible during fast-forwarded animation.
 - The upper part of the board is empty early in a round.
+- **Web build:** the ball shader draws misplaced in the browser, so the web version uses the
+  simpler Canvas ball material (`OrbSprites.loadProgram`). No vibration on the web.
 - On short or wide screens the board is limited by height and gets side margins.
 - Score text can be wider than its card above ~10 million (not reachable yet).
 
