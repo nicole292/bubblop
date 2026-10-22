@@ -16,7 +16,7 @@ class Sfx {
   SoundHandle? _musicHandle;
   bool _hidden = false;
 
-  static const _musicVolume = 0.32;
+  static const _musicVolume = 0.28;
 
   static const popSteps = 8;
   static final _names = [
