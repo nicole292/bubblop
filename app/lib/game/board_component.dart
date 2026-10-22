@@ -31,10 +31,6 @@ class BoardComponent extends Component {
   final _stroke = Paint()..style = PaintingStyle.stroke;
   final _imagePaint = Paint()..filterQuality = FilterQuality.medium;
 
-  /// Where the held ball hovers: it glides to the aimed column and stays
-  /// there between moves (centred at the start).
-  double? _heldCol;
-
   /// The held ball's colour and how long it has been in hand (it pops in).
   int? _heldColor;
   double _heldAge = 0;
@@ -42,12 +38,6 @@ class BoardComponent extends Component {
   @override
   void update(double dt) {
     super.update(dt);
-    final layout = game.layout;
-    if (layout == null) return;
-    final aim = game.aimColumn;
-    final rest = (layout.columns - 1) / 2;
-    final held = _heldCol ?? rest;
-    _heldCol = aim == null ? held : held + (aim - held) * math.min(1.0, dt * 22);
     final color = game.rules.currentColor;
     if (color != _heldColor) {
       _heldColor = color;
@@ -152,55 +142,24 @@ class BoardComponent extends Component {
     }
     canvas.restore();
 
-    if (!rules.isOver) _paintHeld(canvas, layout, sprites, aim);
+    if (aim != null) _paintHeld(canvas, layout, sprites, aim);
 
     if (!DevOptions.skip('fx')) game.effects.render(canvas);
     canvas.restore();
   }
 
-  /// The held ball, always waiting right above the lines: it pops in when it
-  /// arrives, glows softly in its colour, casts a small shadow on the card,
-  /// and (until you aim) a little arrow points down into the lanes.
-  void _paintHeld(Canvas canvas, BoardLayout layout, OrbSprites sprites, int? aim) {
+  /// The held ball at the top of the aimed lane: it pops in when a new one
+  /// arrives and glows softly in its colour, with a gentle bob.
+  void _paintHeld(Canvas canvas, BoardLayout layout, OrbSprites sprites, int aim) {
     final color = game.rules.currentColor;
-    final cell = layout.cell;
     final time = game.time;
-    final col = _heldCol ?? (layout.columns - 1) / 2;
     final appear = Curves.easeOutBack.transform(math.min(1.0, _heldAge / 0.3));
-    final bob = math.sin(time * 4) * cell * 0.035;
-    final at = layout.center(col, layout.rows + 0.1).translate(0, bob);
-    final r = sprites.radius;
-
-    // Shadow on the card, tighter when the ball bobs low.
-    final shadowY = layout.rect.top - cell * 0.04;
-    _fill.color = Palette.panelShadow.withValues(alpha: 0.18 * appear.clamp(0.0, 1.0));
-    canvas.drawOval(
-        Rect.fromCenter(center: Offset(at.dx, shadowY), width: r * (1.3 + bob / cell), height: r * 0.28), _fill);
-
-    // Soft glow in the ball's colour.
+    final bob = math.sin(time * 5) * layout.cell * 0.04;
+    final at = layout.center(aim.toDouble(), layout.rows - 0.1).translate(0, bob);
     final pulse = 0.5 + 0.5 * math.sin(time * 3);
     final glow = 1.12 + 0.04 * pulse;
-    sprites.draw(canvas, sprites.halo(color), at,
-        sx: glow * appear, sy: glow * appear, alpha: 0.28 + 0.12 * pulse);
-
-    final held = VisualOrb(Cell.orb(color), col, layout.rows + 0.1)..scale = appear;
-    paintOrb(canvas, sprites, at, held);
-
-    // A small arrow under the ball, until you aim.
-    if (aim == null && game.phases.isIdle) {
-      final y = at.dy + r + cell * 0.24 + math.sin(time * 4 + 1) * cell * 0.03;
-      final w = cell * 0.12;
-      final path = Path()
-        ..moveTo(at.dx - w, y)
-        ..lineTo(at.dx, y + w * 0.75)
-        ..lineTo(at.dx + w, y);
-      _stroke
-        ..strokeWidth = cell * 0.05
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..color = Palette.balls[color].withValues(alpha: 0.55 * appear.clamp(0.0, 1.0));
-      canvas.drawPath(path, _stroke);
-    }
+    sprites.draw(canvas, sprites.halo(color), at, sx: glow * appear, sy: glow * appear, alpha: 0.28 + 0.12 * pulse);
+    paintOrb(canvas, sprites, at, VisualOrb(Cell.orb(color), aim.toDouble(), layout.rows - 0.1)..scale = appear);
   }
 
   /// The board's border lights up in the colour of a pop, stronger in chains.
@@ -220,7 +179,7 @@ class BoardComponent extends Component {
       if (board.height(c) < layout.rows - 2) continue;
       final pulse = 0.7 + 0.3 * math.sin(game.time * 6);
       final top = layout.lane(c);
-      final lane = Rect.fromLTWH(top.left, top.top, top.width, cell * 2.2).deflate(cell * 0.06);
+      final lane = Rect.fromLTWH(top.left, layout.rect.top - cell * 0.5, top.width, cell * 2.7).deflate(cell * 0.06);
       _fill.shader = Gradient.linear(lane.topCenter, lane.bottomCenter, [
         Palette.danger.withValues(alpha: 0.45 * pulse),
         Palette.danger.withValues(alpha: 0),
@@ -307,24 +266,11 @@ class BoardComponent extends Component {
       ..color = Palette.card;
     canvas.drawRRect(card, paint);
 
-    // A soft rule under the header.
-    final header = layout.headerRect;
-    paint.color = Palette.well;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTRB(
-          header.left + cell * 0.35,
-          header.bottom - cell * 0.03,
-          header.right - cell * 0.35,
-          header.bottom + cell * 0.03,
-        ),
-        Radius.circular(cell * 0.03),
-      ),
-      paint,
+    // The well the balls sit in, reaching up to the header.
+    final well = RRect.fromRectAndRadius(
+      Rect.fromLTRB(rect.left - cell * 0.07, layout.wellTop, rect.right + cell * 0.07, rect.bottom + cell * 0.07),
+      Radius.circular(cell * 0.42),
     );
-
-    // The well the balls sit in.
-    final well = RRect.fromRectAndRadius(rect.inflate(cell * 0.07), Radius.circular(cell * 0.42));
     paint.color = Palette.well;
     canvas.drawRRect(well, paint);
     canvas.save();

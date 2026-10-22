@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../game/dev_options.dart';
 
@@ -80,6 +81,8 @@ class _DevPhoneState extends State<DevPhone> {
       }
     }
     debugPrint('Shots saved to ${dir.absolute.path}');
+    // Stop the audio engine first: exiting with it running hangs on Windows.
+    if (SoLoud.instance.isInitialized) SoLoud.instance.deinit();
     exit(0);
   }
 

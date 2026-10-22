@@ -9,9 +9,9 @@ import 'orb_icon.dart';
 import 'type.dart';
 
 /// The header at the top of the board card: pause (quiet, on the left),
-/// score with best and level under it, and the next balls on the right
-/// (the ball you are holding waits on top of the lines, below). Laid out at [designHeight] and scaled to fit
-/// the header, so it keeps its proportions on every screen.
+/// score with best and level under it, and the next balls on the right.
+/// Laid out at [designHeight] and scaled to fit the header, so it keeps its
+/// proportions on every screen.
 class HudBar extends StatelessWidget {
   const HudBar({super.key, required this.hud, required this.sprites, required this.onPause});
 
@@ -32,7 +32,7 @@ class HudBar extends StatelessWidget {
             width: constraints.maxWidth / scale,
             height: designHeight,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 4, 10, 12),
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
               child: Row(
                 children: [
                   _PauseButton(onPressed: onPause),
@@ -190,8 +190,8 @@ class _SubLine extends StatelessWidget {
   }
 }
 
-/// The two balls after the one waiting above the board, in a small tinted
-/// pill: the very next one first, the one after it smaller and lighter.
+/// The ball you are about to drop, big in a white ring so it is easy to
+/// see at a glance, then the two after it, smaller and lighter.
 class NextBalls extends StatelessWidget {
   const NextBalls({super.key, required this.sprites, required this.queue});
   final OrbSprites? sprites;
@@ -200,18 +200,28 @@ class NextBalls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
-      padding: const EdgeInsets.fromLTRB(14, 4, 10, 4),
-      decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(22)),
+      height: 56,
+      padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
+      decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(28)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('NEXT', style: PopType.label),
+          Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: Palette.card,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 6, offset: Offset(0, 2))],
+            ),
+            child: queue.isEmpty ? null : _Ball(sprites: sprites, color: queue[0], size: 40),
+          ),
           for (var i = 1; i < queue.length; i++) ...[
-            SizedBox(width: i == 1 ? 8 : 5),
+            SizedBox(width: i == 1 ? 10 : 6),
             Opacity(
               opacity: i == 1 ? 1 : 0.65,
-              child: _Ball(sprites: sprites, color: queue[i], size: i == 1 ? 28 : 22),
+              child: _Ball(sprites: sprites, color: queue[i], size: i == 1 ? 26 : 21),
             ),
           ],
         ],

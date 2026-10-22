@@ -182,52 +182,48 @@ def effects():
     pentatonic = [0, 2, 4, 7, 9, 12, 14, 16]
     for step, semis in enumerate(pentatonic):
         plip = droplet(semis - 12, 0.15, rise=9, rise_time=0.02, decay=0.04)
-        ding = gain(glock(semis, 0.7, decay=0.18), 0.5)
-        save(f"pop_{step}", lowpass(mix(plip, ding, offsets=[0, 0.02]), 5000), peak=0.42, room=0.2)
+        ding = gain(glock(semis, 0.7, decay=0.18), 0.4)
+        save(f"pop_{step}", lowpass(mix(plip, ding, offsets=[0, 0.02]), 4500), peak=0.36, room=0.2)
 
     # Dropping a ball in: a tiny, gentle water-drop "plip".
     save("land", lowpass(droplet(5, 0.14, rise=6, rise_time=0.025, decay=0.035), 3000), peak=0.24, room=0.12)
 
-    # Shell bubble breaking: a soft droplet and two light dings.
-    tings = [gain(glock(s, 0.7, decay=0.16), 0.55 - 0.15 * k) for k, s in enumerate((12, 16))]
-    save("crack", lowpass(mix(droplet(0, 0.15), *tings, offsets=[0, 0.03, 0.08]), 5000), peak=0.36, room=0.2)
+    # Shell bubble breaking: the drop "plip", a little higher, and one soft ding.
+    save("crack", lowpass(mix(droplet(9, 0.14, rise=6, rise_time=0.025, decay=0.035),
+                              gain(glock(12, 0.7, decay=0.16), 0.35), offsets=[0, 0.04]), 4000),
+         peak=0.26, room=0.2)
 
-    # A row rising: a soft upward hum into a kalimba note.
-    slide = tone(note(-12), 0.35, attack=0.06, decay=0.12, partials=((1, 1.0, 1.0),), bend=-7, bend_time=0.1)
-    save("rise", lowpass(mix(gain(slide, 0.7), gain(kalimba(7, 0.6, decay=0.14), 0.5), offsets=[0, 0.16]), 3500),
-         peak=0.3, room=0.2)
+    # A row rising: two soft kalimba notes stepping up.
+    save("rise", lowpass(mix(kalimba(-5, 0.6, decay=0.14), gain(kalimba(0, 0.7, decay=0.16), 0.8),
+                             offsets=[0, 0.12]), 2800), peak=0.22, room=0.2)
 
-    # Rejected drop (full column): two soft kalimba notes, falling.
-    nope = mix(kalimba(-1, 0.3, decay=0.06), kalimba(-5, 0.35, decay=0.08), offsets=[0, 0.11])
-    save("deny", lowpass(nope, 2500), peak=0.26, room=0.12)
+    # Rejected drop (full column): one soft, low kalimba note.
+    save("deny", lowpass(kalimba(-8, 0.4, decay=0.08), 2200), peak=0.2, room=0.12)
 
     # UI tap: the lightest little droplet.
-    save("tap", lowpass(droplet(12, 0.08, rise=5, rise_time=0.012, decay=0.018), 4000), peak=0.22, room=0.08)
+    save("tap", lowpass(droplet(12, 0.08, rise=5, rise_time=0.012, decay=0.018), 4000), peak=0.2, room=0.08)
 
-    # Praise: a light music-box run.
-    run = [gain(glock(s, 0.7, decay=0.18), 0.7) for s in (7, 12, 16, 19)]
-    save("praise", lowpass(mix(*run, offsets=[0, 0.06, 0.12, 0.18]), 6000), peak=0.38, room=0.3)
+    # Praise: three light music-box notes.
+    run = [glock(s, 0.7, decay=0.18) for s in (7, 12, 16)]
+    save("praise", lowpass(mix(*run, offsets=[0, 0.08, 0.16]), 4500), peak=0.3, room=0.3)
 
-    # Level up: a kalimba arpeggio blooming into a soft chord.
-    arp = [kalimba(s, 0.8, decay=0.25) for s in (0, 4, 7, 12)]
-    bloom = chord((0, 4, 7), 1.2, g=0.3, attack=0.08, decay=0.4)
-    sparkle = [gain(glock(s, 0.6, decay=0.2), 0.3) for s in (12, 16, 19)]
-    save("levelup", lowpass(mix(*arp, bloom, *sparkle, offsets=[0, 0.08, 0.16, 0.24, 0.24, 0.34, 0.4, 0.46]), 5500),
-         peak=0.42, room=0.3)
+    # Level up: a soft kalimba arpeggio over a quiet chord.
+    arp = [kalimba(s, 0.8, decay=0.22) for s in (0, 4, 7, 12)]
+    bed = chord((-12, -5, 4), 1.2, g=0.2, attack=0.1, decay=0.5)
+    save("levelup", lowpass(mix(*arp, bed, offsets=[0, 0.1, 0.2, 0.3, 0.1]), 4000), peak=0.34, room=0.3)
 
-    # New best: a happy kalimba run with a music-box sparkle, settling on a
-    # warm chord.
-    notes = (0, 4, 7, 12, 16, 19)
-    run = [kalimba(s, 0.6, decay=0.18) for s in notes]
-    sparkle = [gain(glock(s, 0.8, decay=0.25), 0.4) for s in (12, 16, 19, 24)]
-    warm = chord((-12, 0, 4, 7), 1.8, g=0.35, attack=0.1, decay=0.6)
-    offs = [0.08 * k for k in range(len(notes))] + [0.5 + 0.07 * k for k in range(4)] + [0.48]
-    save("newbest", lowpass(mix(*run, *sparkle, warm, offsets=offs), 5500), peak=0.45, room=0.35)
+    # New best: a longer kalimba run with a music-box twinkle on a warm chord.
+    notes = (0, 4, 7, 12, 16)
+    run = [kalimba(s, 0.7, decay=0.2) for s in notes]
+    twinkle = [gain(glock(s, 0.8, decay=0.22), 0.3) for s in (12, 19)]
+    warm = chord((-12, 0, 4, 7), 1.8, g=0.25, attack=0.15, decay=0.6)
+    offs = [0.1 * k for k in range(len(notes))] + [0.55, 0.65, 0.45]
+    save("newbest", lowpass(mix(*run, *twinkle, warm, offsets=offs), 4000), peak=0.36, room=0.35)
 
     # Game over: gentle and warm -- a soft falling kalimba line onto a chord.
-    down = [kalimba(s, 0.8, decay=0.22) for s in (12, 7, 4)]
-    rest = chord((-12, -5, 0, 4), 1.8, g=0.3, attack=0.08, decay=0.6)
-    save("gameover", lowpass(mix(*down, rest, offsets=[0, 0.2, 0.4, 0.6]), 3500), peak=0.36, room=0.35)
+    down = [kalimba(s, 0.8, decay=0.22) for s in (7, 4, 0)]
+    rest = chord((-12, -5, 0, 4), 1.8, g=0.22, attack=0.12, decay=0.6)
+    save("gameover", lowpass(mix(*down, rest, offsets=[0, 0.22, 0.44, 0.6]), 3000), peak=0.3, room=0.35)
 
 
 def music():

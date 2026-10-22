@@ -41,7 +41,7 @@ class BoardLayout {
   static const headerCells = 1.3;
 
   /// Room above the board for the held orb and orbs dropping in.
-  static const headroomCells = 1.25;
+  static const headroomCells = 1.0;
 
   /// Room below the board for the tray (the card's lower part).
   static const trayCells = 1.12;
@@ -75,8 +75,13 @@ class BoardLayout {
 
   Rect get rect => origin & Size(columnWidth * columns, cell * rows);
 
-  /// One column's lane, top to bottom of the board.
-  Rect lane(int column) => Rect.fromLTWH(rect.left + column * columnWidth, rect.top, columnWidth, rect.height);
+  /// Top of the well and its lanes: just under the header, so the lanes run
+  /// all the way up through the headroom.
+  double get wellTop => headerRect.bottom + cell * 0.06;
+
+  /// One column's lane, from just under the header to the board's bottom.
+  Rect lane(int column) =>
+      Rect.fromLTRB(rect.left + column * columnWidth, wellTop, rect.left + (column + 1) * columnWidth, rect.bottom);
 
   /// Centre line of the rise meter, between the board and the tray.
   double get meterY => rect.bottom + cell * 0.24;
