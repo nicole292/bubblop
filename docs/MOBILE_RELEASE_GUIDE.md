@@ -123,20 +123,29 @@ once, so keep it in your password manager as an attachment.
 
 ## 8. Register the accounts
 
+**Who owns the accounts:** both stores require the account holder to be an adult (18+,
+or the legal age where you live). If a parent creates them, **every legal field is the
+parent's**: name, address, ID, phone, payment card, and accepting the agreements. They can
+then invite you as a team member (Play Console **Users and permissions**, App Store
+Connect **Users and Access**), and the games can be transferred to your own account later.
+
 ### Google Play Console
-1. Go to **play.google.com/console**, sign in with the Google account you want to own
-   the game (for example the new Bubblop Gmail).
+1. Go to **play.google.com/console**, sign in with the Google account that will own the
+   studio's games (one the account holder controls; it can be elishakov.studio@gmail.com).
 2. Choose **Yourself** (personal account), pay **$25**.
-3. Verify your identity: legal name, address, and a photo of your ID. You may also be
-   asked to verify a phone number and to sign in to the **Play Console app on a real
-   Android phone**. Verification can take a few days.
+3. **Developer name** (shown publicly under every game): `Elishakov Studio`. Developer
+   email: `elishakov.studio@gmail.com`.
+4. Verify the account holder's identity: legal name, address, and a photo of their ID.
+   You may also be asked to verify a phone number and to sign in to the **Play Console
+   app on a real Android phone**. Verification can take a few days.
 
 ### Apple Developer Program
-1. Make sure your Apple ID has **two-factor authentication** on (iPhone **Settings → your
-   name → Sign-In & Security**).
+1. Make sure the account holder's Apple ID has **two-factor authentication** on (iPhone
+   **Settings → your name → Sign-In & Security**).
 2. Install the **Apple Developer** app on the iPhone, open **Account → Enroll Now**, and
-   choose **Individual**. Pay **$99**. Approval usually takes 1–2 days. Your real name is
-   shown as the seller on the App Store.
+   choose **Individual**. Pay **$99**. Approval usually takes 1–2 days. On an individual
+   account the account holder's **legal name** is shown as the seller on the App Store
+   ("Elishakov Studio" would need a registered company).
 
 ## 9. Upload and fill in the listings
 
@@ -146,9 +155,8 @@ once, so keep it in your password manager as an attachment.
    **/docs**, then **Save**.
 3. After 1–2 minutes, check that **https://nicole292.github.io/bubblop/** and
    **https://nicole292.github.io/bubblop/privacy.html** open.
-4. Make sure **bubblop.game@gmail.com** exists and you can read its mail (create it at
-   gmail.com if needed). If you'd rather use a different address, tell me and I'll change
-   it everywhere.
+4. Support email: **elishakov.studio@gmail.com** (the studio inbox, used for every game).
+   Check it regularly; store reviewers and players write there.
 
 ### Part B: Google Play
 1. **Play Console → Create app**: name `Bubblop: Drop & Pop Puzzle`, default language
@@ -243,7 +251,7 @@ once, so keep it in your password manager as an attachment.
 
 - Your legal name, address, phone number and ID document (both stores verify identity).
 - Payment card for the $25 and $99 fees.
-- A real support email you check. The listing uses `bubblop.game@gmail.com`.
+- The studio email `elishakov.studio@gmail.com` (done) and the developer name **Elishakov Studio**.
 - 12+ people with Android phones for Google's 14-day closed test.
 - Your name for the App Store copyright line and the App Review contact details.
 - The EU trader status declaration (your own legal statement).
@@ -251,7 +259,7 @@ once, so keep it in your password manager as an attachment.
 ## 12. Remaining blockers, and how to clear each
 
 1. **Upload key isn't backed up yet:** section 7, steps 1–2.
-2. **Support email may not exist:** create bubblop.game@gmail.com, or ask me to change it.
+2. ~~Support email~~: done, `elishakov.studio@gmail.com`.
 3. **Privacy and support pages are offline:** part A (one switch in GitHub settings).
 4. **No developer accounts yet:** section 8.
 5. **Google's 14-day closed test with 12 testers:** part B step 5. Start it as early as

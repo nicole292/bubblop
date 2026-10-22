@@ -31,4 +31,4 @@ If a future version adds features that handle data (for example optional ads), t
 will be updated before that version is released, and the app's store listing will say so.
 
 ## Contact
-Questions: bubblop.game@gmail.com
+Questions: elishakov.studio@gmail.com

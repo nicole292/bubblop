@@ -21,7 +21,8 @@ Everything below matches what the game really does (checked against the code on
 Free. No ads, no in-app purchases.
 
 ### Contact and web pages
-- Support email: `bubblop.game@gmail.com` (**must be a real inbox you check**; see the guide)
+- Developer name (Google Play): `Elishakov Studio`
+- Support email: `elishakov.studio@gmail.com` (the studio inbox; check it regularly)
 - Support / marketing URL: `https://nicole292.github.io/bubblop/`
 - Privacy policy URL: `https://nicole292.github.io/bubblop/privacy.html`
   (both work once GitHub Pages is switched on; see the guide, part A)
@@ -85,7 +86,7 @@ The app is iPhone-only, so no iPad screenshots are needed. If App Store Connect 
 a different iPhone size first, the guide explains how to remake them in one command.
 
 ### Copyright
-`2026 <your full name>`
+`2026 Elishakov Studio`
 
 ---
 

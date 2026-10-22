@@ -17,7 +17,7 @@ Tick items as you go (in VS Code: change `[ ]` to `[x]`). Details for each step 
 ## Before anything else
 - [ ] Copy the key password from `app/android/key.properties` into a password manager [7]
 - [ ] Back up `C:\Users\User\pop-upload-key.jks` to two places off this PC [7]
-- [ ] Create or confirm the support inbox bubblop.game@gmail.com [9A]
+- [x] Studio inbox created: elishakov.studio@gmail.com [9A]
 - [ ] Switch on GitHub Pages (Settings → Pages → main, /docs) [9A]
 - [ ] Check both pages open: nicole292.github.io/bubblop/ and …/privacy.html [9A]
 - [ ] Decide: keep the GitHub repo public, or move the pages and make it private [12]
