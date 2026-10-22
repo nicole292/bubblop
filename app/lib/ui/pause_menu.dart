@@ -67,12 +67,6 @@ class PauseMenu extends StatelessWidget {
                     value: settings.haptics,
                     onChanged: (v) => settings.haptics = v,
                   ),
-                  ToggleRow(
-                    icon: Icons.category_rounded,
-                    label: 'Ball shapes',
-                    value: settings.shapes,
-                    onChanged: (v) => settings.shapes = v,
-                  ),
                   const SizedBox(height: 10),
                   SoftButton(label: 'Restart', icon: Icons.refresh_rounded, onPressed: onRestart),
                   const SizedBox(height: 10),

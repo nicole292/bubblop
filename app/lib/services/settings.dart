@@ -13,7 +13,6 @@ class Settings extends ChangeNotifier {
   static const _bestKey = 'best';
   static const _tutorialKey = 'tutorialDone';
   static const _gamesKey = 'gamesPlayed';
-  static const _shapesKey = 'shapes';
 
   final SharedPreferences? _prefs;
 
@@ -37,7 +36,6 @@ class Settings extends ChangeNotifier {
   late int _best = _prefs?.getInt(_bestKey) ?? 0;
   late bool _tutorialDone = _prefs?.getBool(_tutorialKey) ?? false;
   late int _gamesPlayed = _prefs?.getInt(_gamesKey) ?? 0;
-  late bool _shapes = _prefs?.getBool(_shapesKey) ?? false;
 
   bool get sound => _sound;
 
@@ -47,9 +45,6 @@ class Settings extends ChangeNotifier {
   int get best => _best;
   bool get tutorialDone => _tutorialDone;
   int get gamesPlayed => _gamesPlayed;
-
-  /// Colour-blind option: a shape on every ball.
-  bool get shapes => _shapes;
 
   set sound(bool value) {
     _sound = value;
@@ -66,12 +61,6 @@ class Settings extends ChangeNotifier {
   set haptics(bool value) {
     _haptics = value;
     _prefs?.setBool(_hapticsKey, value);
-    notifyListeners();
-  }
-
-  set shapes(bool value) {
-    _shapes = value;
-    _prefs?.setBool(_shapesKey, value);
     notifyListeners();
   }
 

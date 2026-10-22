@@ -31,6 +31,14 @@ void main() {
     expect(layout.headerRect.bottom, lessThanOrEqualTo(layout.rect.top - layout.cell * BoardLayout.headroomCells + 1e-6));
   });
 
+  for (final size in const [Size(390, 600), Size(390, 763), Size(430, 860)]) {
+    test('on a phone ($size) the card fills the width', () {
+      final layout = BoardLayout(size, columns: 6, rows: 10);
+      expect(layout.cardRect.width, closeTo(size.width - BoardLayout.padding * 2, 0.5));
+      expect(layout.columnWidth, greaterThanOrEqualTo(layout.cell));
+    });
+  }
+
   test('columnAt maps x to columns and clamps at the edges', () {
     final layout = BoardLayout(const Size(400, 800), columns: 6, rows: 10);
     expect(layout.columnAt(layout.center(0, 0).dx), 0);

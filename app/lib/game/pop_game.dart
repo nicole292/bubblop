@@ -40,8 +40,6 @@ class PopGame extends FlameGame {
     this._config = const RulesConfig(),
   }) {
     _startRound(tutorial: false);
-    _shapes = settings.shapes;
-    settings.addListener(_settingsChanged);
   }
 
   final Settings settings;
@@ -63,7 +61,6 @@ class PopGame extends FlameGame {
   OrbSprites? sprites;
   FragmentProgram? _orbProgram;
   bool _programLoaded = false;
-  bool _shapes = false;
   Rect? _boardArea;
 
   /// Column the player is aiming at, or null when not touching.
@@ -119,16 +116,8 @@ class PopGame extends FlameGame {
     _relayout();
   }
 
-  /// Turning ball shapes on or off rebakes the sprites.
-  void _settingsChanged() {
-    if (settings.shapes == _shapes) return;
-    _shapes = settings.shapes;
-    _relayout(force: true);
-  }
-
   @override
   void onRemove() {
-    settings.removeListener(_settingsChanged);
     sprites?.dispose();
     background.dispose();
     super.onRemove();
@@ -255,7 +244,7 @@ class PopGame extends FlameGame {
     if (_programLoaded && (force || sprites == null || (sprites!.radius - radius).abs() > 0.5)) {
       sprites?.dispose();
       final ratio = DevOptions.pixelRatio;
-      sprites = OrbSprites.bake(radius, ratio, _orbProgram, shapes: _shapes);
+      sprites = OrbSprites.bake(radius, ratio, _orbProgram);
       // New sprites: let the HUD redraw its ball icons with them.
       hud.value = hud.value.copyWith(spritesVersion: hud.value.spritesVersion + 1);
     }

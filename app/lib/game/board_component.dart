@@ -30,6 +30,21 @@ class BoardComponent extends Component {
   final _stroke = Paint()..style = PaintingStyle.stroke;
   final _imagePaint = Paint()..filterQuality = FilterQuality.medium;
 
+  /// Where the held ball hovers: it glides to the aimed column and stays
+  /// there between moves (centred at the start).
+  double? _heldCol;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    final layout = game.layout;
+    if (layout == null) return;
+    final aim = game.aimColumn;
+    final rest = (layout.columns - 1) / 2;
+    final held = _heldCol ?? rest;
+    _heldCol = aim == null ? held : held + (aim - held) * math.min(1.0, dt * 22);
+  }
+
   @override
   void onRemove() {
     _static?.dispose();
@@ -70,7 +85,7 @@ class BoardComponent extends Component {
 
     // Aim: a soft lane of the held ball's colour.
     if (aim != null) {
-      final lane = Rect.fromLTWH(rect.left + aim * cell, rect.top, cell, rect.height).deflate(cell * 0.06);
+      final lane = layout.lane(aim).deflate(cell * 0.06);
       final color = Palette.balls[rules.currentColor];
       _fill.shader = Gradient.linear(lane.topCenter, lane.bottomCenter, [
         color.withValues(alpha: 0.22),
@@ -126,9 +141,10 @@ class BoardComponent extends Component {
     }
     canvas.restore();
 
-    // Held ball, hovering over the aimed column with a gentle bob.
-    if (aim != null) {
-      final held = VisualOrb(Cell.orb(rules.currentColor), aim.toDouble(), layout.rows - 0.1);
+    // Held ball, always waiting right above the lines, gliding to the aimed
+    // column, with a gentle bob.
+    if (!rules.isOver) {
+      final held = VisualOrb(Cell.orb(rules.currentColor), _heldCol ?? (layout.columns - 1) / 2, layout.rows - 0.1);
       final bob = math.sin(time * 5) * cell * 0.04;
       paintOrb(canvas, sprites, layout.center(held.col, held.row).translate(0, bob), held);
     }
@@ -149,12 +165,12 @@ class BoardComponent extends Component {
 
   /// Red tint sliding down from the top of nearly full columns.
   void _paintDanger(Canvas canvas, BoardLayout layout, Board board) {
-    final rect = layout.rect;
     final cell = layout.cell;
     for (var c = 0; c < layout.columns; c++) {
       if (board.height(c) < layout.rows - 2) continue;
       final pulse = 0.7 + 0.3 * math.sin(game.time * 6);
-      final lane = Rect.fromLTWH(rect.left + c * cell, rect.top, cell, cell * 2.2).deflate(cell * 0.06);
+      final top = layout.lane(c);
+      final lane = Rect.fromLTWH(top.left, top.top, top.width, cell * 2.2).deflate(cell * 0.06);
       _fill.shader = Gradient.linear(lane.topCenter, lane.bottomCenter, [
         Palette.danger.withValues(alpha: 0.45 * pulse),
         Palette.danger.withValues(alpha: 0),
@@ -191,13 +207,12 @@ class BoardComponent extends Component {
   /// The next row, already in its shells, bobbing gently in the tray.
   void _paintDockBalls(Canvas canvas, BoardLayout layout, OrbSprites sprites) {
     final rules = game.rules;
-    final rect = layout.rect;
     final cell = layout.cell;
     final y = layout.trayCenterY;
     final row = rules.nextRow;
     final lift = rules.pressure <= 1 ? (0.5 + 0.5 * math.sin(game.time * 8)) * cell * 0.03 : 0.0;
     for (var c = 0; c < row.length; c++) {
-      final at = Offset(rect.left + (c + 0.5) * cell, y);
+      final at = Offset(layout.center(c.toDouble(), 0).dx, y);
       final bob = math.sin(game.time * 1.8 + c * 0.9) * cell * 0.02 - lift;
       final orb = VisualOrb(row[c], c.toDouble(), 0)..scale = 0.62;
       paintOrb(canvas, sprites, at.translate(0, bob), orb);
@@ -267,7 +282,7 @@ class BoardComponent extends Component {
     // Alternate lanes, so columns are easy to tell apart.
     paint.color = Palette.laneAlt;
     for (var c = 1; c < layout.columns; c += 2) {
-      final lane = Rect.fromLTWH(rect.left + c * cell, rect.top, cell, rect.height).deflate(cell * 0.06);
+      final lane = layout.lane(c).deflate(cell * 0.06);
       canvas.drawRRect(RRect.fromRectAndRadius(lane, Radius.circular(cell * 0.42)), paint);
     }
     canvas.restore();
