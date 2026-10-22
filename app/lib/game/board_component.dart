@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flame/components.dart';
-import 'package:flutter/animation.dart' show Curves;
 import 'package:pop_core/pop_core.dart';
 
 import '../render/orb_sprites.dart';
@@ -30,21 +29,6 @@ class BoardComponent extends Component {
   final _fill = Paint();
   final _stroke = Paint()..style = PaintingStyle.stroke;
   final _imagePaint = Paint()..filterQuality = FilterQuality.medium;
-
-  /// The held ball's colour and how long it has been in hand (it pops in).
-  int? _heldColor;
-  double _heldAge = 0;
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    final color = game.rules.currentColor;
-    if (color != _heldColor) {
-      _heldColor = color;
-      _heldAge = 0;
-    }
-    _heldAge += dt;
-  }
 
   @override
   void onRemove() {
@@ -103,7 +87,7 @@ class BoardComponent extends Component {
 
     canvas.save();
     // Hide balls below the floor while a new row slides up.
-    canvas.clipRect(Rect.fromLTRB(rect.left - cell, rect.top - cell * 2, rect.right + cell, rect.bottom));
+    canvas.clipRect(Rect.fromLTRB(rect.left - cell, layout.wellTop, rect.right + cell, rect.bottom));
 
     // Landing guide: a faint ghost ball inside a dashed-feeling ring. Hidden
     // while a move is still animating: the rules board is already ahead of
@@ -142,24 +126,8 @@ class BoardComponent extends Component {
     }
     canvas.restore();
 
-    if (aim != null) _paintHeld(canvas, layout, sprites, aim);
-
     if (!DevOptions.skip('fx')) game.effects.render(canvas);
     canvas.restore();
-  }
-
-  /// The held ball at the top of the aimed lane: it pops in when a new one
-  /// arrives and glows softly in its colour, with a gentle bob.
-  void _paintHeld(Canvas canvas, BoardLayout layout, OrbSprites sprites, int aim) {
-    final color = game.rules.currentColor;
-    final time = game.time;
-    final appear = Curves.easeOutBack.transform(math.min(1.0, _heldAge / 0.3));
-    final bob = math.sin(time * 5) * layout.cell * 0.04;
-    final at = layout.center(aim.toDouble(), layout.rows - 0.1).translate(0, bob);
-    final pulse = 0.5 + 0.5 * math.sin(time * 3);
-    final glow = 1.12 + 0.04 * pulse;
-    sprites.draw(canvas, sprites.halo(color), at, sx: glow * appear, sy: glow * appear, alpha: 0.28 + 0.12 * pulse);
-    paintOrb(canvas, sprites, at, VisualOrb(Cell.orb(color), aim.toDouble(), layout.rows - 0.1)..scale = appear);
   }
 
   /// The board's border lights up in the colour of a pop, stronger in chains.
@@ -172,17 +140,22 @@ class BoardComponent extends Component {
     canvas.drawRRect(card.deflate(layout.cell * 0.03), _stroke);
   }
 
-  /// Red tint sliding down from the top of nearly full columns.
+  /// Red tint sliding down from the top of nearly full columns. A full
+  /// column flashes hard when the next row is about to rise: that rise would
+  /// push its top ball out and end the round.
   void _paintDanger(Canvas canvas, BoardLayout layout, Board board) {
     final cell = layout.cell;
+    final rules = game.rules;
     for (var c = 0; c < layout.columns; c++) {
-      if (board.height(c) < layout.rows - 2) continue;
-      final pulse = 0.7 + 0.3 * math.sin(game.time * 6);
+      final height = board.height(c);
+      if (height < layout.rows - 2) continue;
+      final critical = height >= layout.rows && rules.pressure <= 1 && !rules.isOver;
+      final pulse = critical ? 0.55 + 0.45 * math.sin(game.time * 12) : 0.7 + 0.3 * math.sin(game.time * 6);
       final top = layout.lane(c);
-      final lane = Rect.fromLTWH(top.left, layout.rect.top - cell * 0.5, top.width, cell * 2.7).deflate(cell * 0.06);
+      final lane = Rect.fromLTWH(top.left, top.top, top.width, critical ? top.height : cell * 2.7).deflate(cell * 0.06);
       _fill.shader = Gradient.linear(lane.topCenter, lane.bottomCenter, [
-        Palette.danger.withValues(alpha: 0.45 * pulse),
-        Palette.danger.withValues(alpha: 0),
+        Palette.danger.withValues(alpha: (critical ? 0.6 : 0.45) * pulse),
+        Palette.danger.withValues(alpha: critical ? 0.12 * pulse : 0),
       ]);
       canvas.drawRRect(RRect.fromRectAndRadius(lane, Radius.circular(cell * 0.45)), _fill);
     }

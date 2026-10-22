@@ -296,6 +296,8 @@ class PopGame extends FlameGame {
   }
 
   void _gameOver() {
+    // Show what happened: the board jolts as the round ends.
+    shake = math.max(shake, (layout?.cell ?? 50) * 0.12);
     final last = stats.rounds.isEmpty ? null : stats.rounds.last;
     final isBest = settings.recordRound(rules.score);
     if (isBest) {

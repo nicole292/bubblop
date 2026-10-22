@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -168,8 +170,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               child: ValueListenableBuilder<HudState>(
                 valueListenable: game.hud,
                 // Rebuilds when sprites are baked so the logo balls appear.
-                builder: (context, _, _) =>
-                    HomeScreen(settings: widget.settings, sprites: game.sprites, onPlay: () => _play(), onTap: _tap),
+                builder: (context, _, _) => HomeScreen(
+                  settings: widget.settings,
+                  sprites: game.sprites,
+                  onPlay: () => _play(),
+                  onHowToPlay: () => _play(tutorial: true),
+                  onTap: _tap,
+                ),
               ),
             ),
         ],
@@ -211,38 +218,78 @@ class _BoardSlot extends StatelessWidget {
         onPanEnd: (_) => game.releaseAim(),
         onPanCancel: game.cancelAim,
         child: LayoutBuilder(
-          builder: (context, constraints) => Stack(
-            children: [
-              // The same layout the game draws the card with.
-              Positioned.fromRect(
-                rect: BoardLayout(constraints.biggest, columns: game.config.columns, rows: game.config.rows).headerRect,
-                child: Visibility(
-                  visible: !DevOptions.skip('hud'),
-                  maintainSize: true,
-                  maintainAnimation: true,
-                  maintainState: true,
-                  child: RepaintBoundary(
-                    child: HudBar(hud: hud, sprites: game.sprites, onPause: onPause),
+          builder: (context, constraints) {
+            // The same layout the game draws the card with.
+            final layout = BoardLayout(constraints.biggest, columns: game.config.columns, rows: game.config.rows);
+            final next = _nextSpot(layout);
+            return Stack(
+              children: [
+                Positioned.fromRect(
+                  rect: layout.headerRect,
+                  child: Visibility(
+                    visible: !DevOptions.skip('hud'),
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: RepaintBoundary(
+                      child: HudBar(hud: hud, sprites: game.sprites, onPause: onPause, showNext: next == null),
+                    ),
                   ),
                 ),
-              ),
-              Align(
-                // High on the board, where it is usually empty.
-                alignment: const Alignment(0, -0.55),
-                child: BannerText(text: hud.banner, id: hud.bannerId),
-              ),
-              if (hint != null)
-                IgnorePointer(
-                  child: HintBubble(
-                    text: hint,
-                    top: (game.boardTopInSlot() ?? 40) + 12,
-                    arrowX: column != null && column >= 0 ? game.columnCenterInSlot(column) : null,
+                // The next balls float just above the stack, where you are
+                // already looking, and rise with it.
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                  left: 0,
+                  right: 0,
+                  top: next ?? layout.rect.top,
+                  height: layout.cell * _nextHeightCells,
+                  child: IgnorePointer(
+                    child: AnimatedOpacity(
+                      opacity: next == null || DevOptions.skip('hud') ? 0 : 1,
+                      duration: const Duration(milliseconds: 250),
+                      child: FittedBox(
+                        child: NextBalls(sprites: game.sprites, queue: hud.queue, floating: true),
+                      ),
+                    ),
                   ),
                 ),
-            ],
-          ),
+                Align(
+                  // High on the board, where it is usually empty.
+                  alignment: const Alignment(0, -0.55),
+                  child: BannerText(text: hud.banner, id: hud.bannerId),
+                ),
+                if (hint != null)
+                  IgnorePointer(
+                    child: HintBubble(
+                      text: hint,
+                      top: (game.boardTopInSlot() ?? 40) + 12,
+                      arrowX: column != null && column >= 0 ? game.columnCenterInSlot(column) : null,
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );
+  }
+
+  /// Height of the floating next-balls pill, in rows.
+  static const _nextHeightCells = 0.85;
+
+  /// Top of the floating next-balls pill: a little above the tallest
+  /// column. Null when the stack is too tall to leave it room below the
+  /// held ball (it moves up into the header then).
+  double? _nextSpot(BoardLayout layout) {
+    final board = game.rules.board;
+    var tallest = 0;
+    for (var c = 0; c < layout.columns; c++) {
+      tallest = math.max(tallest, board.height(c));
+    }
+    final stackTop = layout.rect.top + (layout.rows - tallest) * layout.cell;
+    final top = stackTop - layout.cell * (0.3 + _nextHeightCells);
+    return top >= layout.rect.top + layout.cell * 0.2 ? top : null;
   }
 }

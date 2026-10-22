@@ -4,7 +4,7 @@ Status: draft spec for the first prototype. Every number here lives in
 `RulesConfig` (packages/pop_core) so it can be tuned without code changes.
 
 ## Board
-- 6 columns × 10 rows, portrait. Row 0 is the bottom.
+- 6 columns × 11 rows, portrait. Row 0 is the bottom.
 - **A round starts with 1 row of shells at the bottom and 2 rows of ordinary balls on
   top**, coloured so that no group is already complete (v0.3). Early drops can complete
   groups that crack the shells below.

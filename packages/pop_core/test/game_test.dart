@@ -58,7 +58,7 @@ void main() {
     });
 
     test('dropping into a full column is rejected and changes nothing', () {
-      final full = List.filled(10, 'RYRYRY').join('\n');
+      final full = List.filled(const RulesConfig().rows, 'RYRYRY').join('\n');
       final game = gameOn(full.replaceFirst('RYRYRY', 'RYRYR.'), queue: [g, b]);
       final before = game.board.toPicture();
       final result = game.drop(0);
@@ -174,7 +174,8 @@ void main() {
 
   group('game over', () {
     test('a row rising under a full column ends the game', () {
-      final column = List.filled(5, 'R.....\nY.....').join('\n');
+      final rows = const RulesConfig().rows;
+      final column = [for (var row = rows - 1; row >= 0; row--) row.isEven ? 'R.....' : 'Y.....'].join('\n');
       final game = gameOn(column,
           queue: [b, b], config: const RulesConfig(startPressure: 1, minPressure: 1));
       final events = game.drop(1).events;
@@ -187,14 +188,15 @@ void main() {
 
     test('filling the last cell ends the game', () {
       // Colour (col + 2·row) % 4 never puts two equal colours side by side.
+      final top = const RulesConfig().rows - 1;
       final lines = [
-        for (var row = 9; row >= 0; row--)
+        for (var row = top; row >= 0; row--)
           [
             for (var col = 0; col < 6; col++)
-              row == 9 && col == 5 ? '.' : colorLetters[(col + 2 * row) % 4],
+              row == top && col == 5 ? '.' : colorLetters[(col + 2 * row) % 4],
           ].join(),
       ];
-      final game = gameOn(lines.join('\n'), queue: [(5 + 18) % 4]);
+      final game = gameOn(lines.join('\n'), queue: [(5 + 2 * top) % 4]);
       final result = game.drop(5);
       expect(stepsOf(result), isEmpty);
       expect((result.events.last as GameOver).reason, GameOverReason.boardFull);

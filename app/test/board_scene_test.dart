@@ -56,7 +56,7 @@ void main() {
       RgGR..
       RBBB..
     ''');
-    final scene = BoardScene(6, 10)..load(board);
+    final scene = BoardScene(6, RulesConfig.defaultRows)..load(board);
     expect(scene.toBoard().toPicture(), board.toPicture());
   });
 
@@ -71,7 +71,7 @@ void main() {
       '''),
       scriptedQueue: [3],
     );
-    final scene = BoardScene(6, 10)..load(rules.board);
+    final scene = BoardScene(6, RulesConfig.defaultRows)..load(rules.board);
     final phases = PhaseQueue();
     for (final e in rules.drop(4).events) {
       phases.addAll(scene.phasesFor(e));
@@ -114,7 +114,7 @@ void main() {
       '''),
       scriptedQueue: [3],
     );
-    final scene = BoardScene(6, 10)..load(rules.board);
+    final scene = BoardScene(6, RulesConfig.defaultRows)..load(rules.board);
     final phases = PhaseQueue();
     for (final e in rules.drop(4).events) {
       phases.addAll(scene.phasesFor(e));

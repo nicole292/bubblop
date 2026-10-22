@@ -11,9 +11,12 @@ enum RisingRowKind {
 
 /// Every tunable gameplay number. See docs/rules.md.
 class RulesConfig {
+  /// Board height. Hand-drawn boards ([Board.parse]) default to it too.
+  static const defaultRows = 11;
+
   const RulesConfig({
     this.columns = 6,
-    this.rows = 10,
+    this.rows = defaultRows,
     this.matchSize = 4,
     this.startColors = 4,
     this.maxColors = 5,

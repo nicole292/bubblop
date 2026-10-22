@@ -1,4 +1,5 @@
 import 'cell.dart';
+import 'rules_config.dart';
 
 /// Letters used by [Board.parse] and [Board.toPicture] for colours 0–4.
 const colorLetters = ['R', 'Y', 'G', 'B', 'P'];
@@ -19,7 +20,7 @@ class Board {
   /// .r....
   /// RGGB..
   /// ```
-  factory Board.parse(String picture, {int columns = 6, int rows = 10}) {
+  factory Board.parse(String picture, {int columns = 6, int rows = RulesConfig.defaultRows}) {
     final lines = picture
         .split('\n')
         .map((l) => l.trim())

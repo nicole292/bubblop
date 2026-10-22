@@ -3,8 +3,8 @@ import 'dart:ui';
 
 /// Converts between board cells and screen pixels for a given area.
 ///
-/// One card fills the area: header (score and next balls) → headroom (held
-/// orb) → board → tray (rise meter and the next rising row).
+/// One card fills the area: header (score) → board → tray (rise meter and
+/// the next rising row).
 ///
 /// [cell] is a row's height and sets the ball size. Columns ([columnWidth])
 /// may be a little wider than that, so on short screens (a phone browser
@@ -40,8 +40,9 @@ class BoardLayout {
   /// Room at the top of the card for the score and the next balls.
   static const headerCells = 1.3;
 
-  /// Room above the board for the held orb and orbs dropping in.
-  static const headroomCells = 1.0;
+  /// A small gap between the header and the top row. The lanes the player
+  /// sees are exactly the board: a full column looks full.
+  static const headroomCells = 0.12;
 
   /// Room below the board for the tray (the card's lower part).
   static const trayCells = 1.12;
@@ -75,8 +76,7 @@ class BoardLayout {
 
   Rect get rect => origin & Size(columnWidth * columns, cell * rows);
 
-  /// Top of the well and its lanes: just under the header, so the lanes run
-  /// all the way up through the headroom.
+  /// Top of the well and its lanes: just under the header.
   double get wellTop => headerRect.bottom + cell * 0.06;
 
   /// One column's lane, from just under the header to the board's bottom.

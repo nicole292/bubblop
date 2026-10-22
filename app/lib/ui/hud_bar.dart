@@ -13,11 +13,15 @@ import 'type.dart';
 /// Laid out at [designHeight] and scaled to fit the header, so it keeps its
 /// proportions on every screen.
 class HudBar extends StatelessWidget {
-  const HudBar({super.key, required this.hud, required this.sprites, required this.onPause});
+  const HudBar({super.key, required this.hud, required this.sprites, required this.onPause, this.showNext = true});
 
   final HudState hud;
   final OrbSprites? sprites;
   final VoidCallback onPause;
+
+  /// The next balls usually float just above the stack instead; they come
+  /// up here only when the stack is too tall to leave them room.
+  final bool showNext;
 
   static const designHeight = 76.0;
 
@@ -47,7 +51,7 @@ class HudBar extends StatelessWidget {
                       ],
                     ),
                   ),
-                  NextBalls(sprites: sprites, queue: hud.queue),
+                  if (showNext) NextBalls(sprites: sprites, queue: hud.queue),
                 ],
               ),
             ),
@@ -193,16 +197,27 @@ class _SubLine extends StatelessWidget {
 /// The ball you are about to drop, big in a white ring so it is easy to
 /// see at a glance, then the two after it, smaller and lighter.
 class NextBalls extends StatelessWidget {
-  const NextBalls({super.key, required this.sprites, required this.queue});
+  const NextBalls({super.key, required this.sprites, required this.queue, this.floating = false});
   final OrbSprites? sprites;
   final List<int> queue;
+
+  /// Floating over the board: white, with a soft shadow, so it stands out.
+  final bool floating;
+
+  static const height = 56.0;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 56,
+      height: height,
       padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
-      decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(28)),
+      decoration: BoxDecoration(
+        color: floating ? Palette.card.withValues(alpha: 0.92) : Palette.well,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: floating
+            ? const [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: Offset(0, 5))]
+            : null,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -210,10 +225,10 @@ class NextBalls extends StatelessWidget {
             width: 48,
             height: 48,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: Palette.card,
+            decoration: BoxDecoration(
+              color: floating ? Palette.well : Palette.card,
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 6, offset: Offset(0, 2))],
+              boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 6, offset: Offset(0, 2))],
             ),
             child: queue.isEmpty ? null : _Ball(sprites: sprites, color: queue[0], size: 40),
           ),
