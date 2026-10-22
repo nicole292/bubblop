@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:pop_core/pop_core.dart';
 
 /// Developer-only launch options, set with --dart-define. None of these are
@@ -21,6 +22,16 @@ abstract final class DevOptions {
   /// POP_SEED=n deals the same round every time (for comparing screenshots).
   static const _seed = int.fromEnvironment('POP_SEED', defaultValue: -1);
   static int? get seed => _seed < 0 ? null : _seed;
+
+  /// POP_SHOT_SCALE=3 saves screenshots at 3× and bakes images for it, so
+  /// store screenshots come out at exact pixel sizes (phone-frame runs only).
+  static const shotScale = int.fromEnvironment('POP_SHOT_SCALE', defaultValue: 2);
+  static const _bakeScale = int.fromEnvironment('POP_SHOT_SCALE');
+
+  /// Resolution for baked images: the screen's, or the screenshot scale.
+  static double get pixelRatio => _bakeScale > 0
+      ? _bakeScale.toDouble()
+      : WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
 
   /// POP_DEV=true shows the developer bar (4/3-match switch, session stats).
   static const showDevBar = bool.fromEnvironment('POP_DEV');

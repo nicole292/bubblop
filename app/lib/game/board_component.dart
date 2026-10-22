@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flame/components.dart';
-import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:pop_core/pop_core.dart';
 
 import '../render/orb_sprites.dart';
@@ -214,7 +213,7 @@ class BoardComponent extends Component {
     final card = _cardRRect(layout);
     // Room for the shadow around the card.
     final bounds = card.outerRect.inflate(layout.cell * 0.6);
-    final ratio = WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
+    final ratio = DevOptions.pixelRatio;
 
     final recorder = PictureRecorder();
     final canvas = Canvas(recorder)

@@ -1,5 +1,5 @@
 # Codemagic CI (codemagic.io). Lets us build iOS without owning a Mac.
-# See docs/release.md, step 4.
+# See docs/MOBILE_RELEASE_GUIDE.md, part C.
 
 workflows:
   ios-check:
@@ -31,7 +31,7 @@ workflows:
     artifacts:
       - app/build/ios/ipa/*.ipa
 
-  # Signed build, uploaded to TestFlight (docs/release.md, step 4). Needs the
+  # Signed build, uploaded to TestFlight (docs/MOBILE_RELEASE_GUIDE.md, part C). Needs the
   # App Store Connect API key added in Codemagic as an integration named
   # "Bubblop ASC key". The build number comes from app/pubspec.yaml (after +),
   # so raise it before each upload.

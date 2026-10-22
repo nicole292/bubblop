@@ -5,7 +5,6 @@ import 'package:flame/components.dart' show Vector2;
 import 'package:flame/game.dart' show FlameGame;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
-import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:pop_core/pop_core.dart';
 
 import '../render/background.dart';
@@ -255,7 +254,7 @@ class PopGame extends FlameGame {
     final radius = next.cell * 0.44;
     if (_programLoaded && (force || sprites == null || (sprites!.radius - radius).abs() > 0.5)) {
       sprites?.dispose();
-      final ratio = WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
+      final ratio = DevOptions.pixelRatio;
       sprites = OrbSprites.bake(radius, ratio, _orbProgram, shapes: _shapes);
       // New sprites: let the HUD redraw its ball icons with them.
       hud.value = hud.value.copyWith(spritesVersion: hud.value.spritesVersion + 1);

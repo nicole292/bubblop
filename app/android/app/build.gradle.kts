@@ -7,7 +7,7 @@ plugins {
 }
 
 // Release signing key details live in android/key.properties, which is NOT in
-// Git (see docs/release.md). Without it, release builds use the debug key and
+// Git (see docs/MOBILE_RELEASE_GUIDE.md, section 7). Without it, release builds use the debug key and
 // cannot be uploaded to Google Play.
 val keyProperties = Properties().apply {
     val file = rootProject.file("key.properties")
@@ -27,7 +27,7 @@ android {
 
     defaultConfig {
         // Permanent: the application ID can never change after the first
-        // Google Play upload (docs/release.md).
+        // Google Play upload (docs/MOBILE_RELEASE_GUIDE.md).
         applicationId = "com.bubblop.game"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion

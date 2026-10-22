@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Bubblop** · Effective date: October 16, 2026
+**Bubblop** · Effective date: October 22, 2026
 
 Bubblop is a puzzle game. We built it so that it does not need any of your personal
 information.
@@ -15,10 +15,13 @@ The game saves a few things **only on your device** so it works the way you left
 - your sound, vibration and ball-shape settings
 - whether you have completed the tutorial
 
-This information never leaves your device. Uninstalling the game deletes it.
+The game never sends this information anywhere. Uninstalling the game deletes it. If you
+use your phone's own backup (Android backup to your Google account, or iCloud backup), that
+backup may include this small file, under your control; we never receive it.
 
 ## Internet access
-The game works fully offline and does not send data over the internet.
+The game works fully offline and does not send data over the internet. It contains no
+third-party advertising, analytics or tracking code.
 
 ## Children
 The game does not knowingly collect information from anyone, including children under 13.

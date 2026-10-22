@@ -5,6 +5,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
+import '../game/dev_options.dart';
+
 /// Developer-only: shows the app at a phone's size and safe areas inside the
 /// desktop window, and can play a script of taps and screenshots.
 ///
@@ -16,6 +18,8 @@ import 'package:flutter/widgets.dart';
 ///     Commands: `wait S` · `tap X Y` · `down X Y` · `up` · `shot NAME` ·
 ///     `burst NAME COUNT SECONDS_APART`
 ///     Coordinates are logical pixels inside the phone.
+///
+///   --dart-define=POP_SHOT_SCALE=3  saves at 3× (default 2), e.g. 440x956 → 1320×2868.
 class DevPhone extends StatefulWidget {
   const DevPhone({super.key, required this.child});
 
@@ -94,7 +98,7 @@ class _DevPhoneState extends State<DevPhone> {
 
   Future<void> _shot(Directory dir, String name) async {
     final boundary = _key.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    final image = await boundary.toImage(pixelRatio: 2);
+    final image = await boundary.toImage(pixelRatio: DevOptions.shotScale.toDouble());
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
     File('${dir.path}/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());

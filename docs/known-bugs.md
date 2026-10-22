@@ -47,7 +47,7 @@
 - A 3-colour gradient without stops threw during paint.
 
 ## Limitations
-- iOS release builds need cloud CI (Codemagic) or a Mac; see docs/release.md.
+- iOS release builds need cloud CI (Codemagic) or a Mac; see docs/MOBILE_RELEASE_GUIDE.md.
 
 ## Performance: measured 2026-10-15
 Windows 11, Intel UHD Graphics 770 (integrated; the display is not on the RTX 4060),
@@ -63,6 +63,14 @@ active effects.
 | **+ audio, home, tutorial (2026-10-16, 1 run)** | **2.55 ms** | 2.5 | 3.2 | 3.9 | 1 of 3626 |
 
 UI thread (build) for the bright design: 0.9 ms average, 2.0 ms p99, 0 frames over budget.
+
+## Verified 2026-10-22 (release candidate 1.0.0+1)
+- Android emulator (API 37, 1080×2400), release build: launch, first-time tutorial, a miss
+  then the retry, a 0.5 s held press dropping and chaining, Back → pause, background and
+  return (round stays paused), force-stop and relaunch (tutorial not repeated: progress
+  saved). No errors in logcat.
+- App bundle: signed with the upload key, targetSdk 36, minSdk 24, all native libraries
+  16 KB-page aligned, no runtime permissions.
 
 ## Verified 2026-10-15 (bright design)
 - Windows: balls, shells, board, dock, HUD, aiming, pops, a 3-step chain with a cracked
