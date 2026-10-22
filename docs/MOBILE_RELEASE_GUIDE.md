@@ -130,8 +130,10 @@ then invite you as a team member (Play Console **Users and permissions**, App St
 Connect **Users and Access**), and the games can be transferred to your own account later.
 
 ### Google Play Console
-1. Go to **play.google.com/console**, sign in with the Google account that will own the
-   studio's games (one the account holder controls; it can be elishakov.studio@gmail.com).
+1. Go to **play.google.com/console** and sign in with the **account holder's own** Google
+   account (the parent's, not elishakov.studio@gmail.com: that Gmail belongs to someone
+   under 18, and Google can refuse developer sign-up and payments on it). Afterwards,
+   invite elishakov.studio@gmail.com under **Users and permissions**.
 2. Choose **Yourself** (personal account), pay **$25**.
 3. **Developer name** (shown publicly under every game): `Elishakov Studio`. Developer
    email: `elishakov.studio@gmail.com`.
