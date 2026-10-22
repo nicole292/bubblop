@@ -5,6 +5,7 @@ void main() {
   test('defaults: sound and vibration on, no best, tutorial not done', () {
     final s = Settings.memory();
     expect(s.sound, isTrue);
+    expect(s.music, isTrue);
     expect(s.haptics, isTrue);
     expect(s.best, 0);
     expect(s.tutorialDone, isFalse);
@@ -25,9 +26,11 @@ void main() {
     var calls = 0;
     s.addListener(() => calls++);
     s.sound = false;
+    s.music = false;
     s.haptics = false;
     s.tutorialDone = true;
-    expect(calls, 3);
+    expect(calls, 4);
+    expect(s.music, isFalse);
     expect(s.sound, isFalse);
   });
 }

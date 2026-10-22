@@ -69,6 +69,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     const SizedBox(width: 10),
                     RoundIconButton(
+                      icon: settings.music ? Icons.music_note_rounded : Icons.music_off_rounded,
+                      tooltip: 'Music',
+                      onPressed: () {
+                        settings.music = !settings.music;
+                        widget.onTap();
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    RoundIconButton(
                       icon: settings.haptics ? Icons.vibration_rounded : Icons.mobile_off_rounded,
                       tooltip: 'Vibration',
                       onPressed: () {

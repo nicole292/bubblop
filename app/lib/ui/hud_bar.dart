@@ -8,9 +8,9 @@ import '../render/orb_sprites.dart';
 import 'orb_icon.dart';
 import 'type.dart';
 
-/// One white panel above the board: pause (quiet, on the left), score with
-/// best and level under it, and the next balls. The rise countdown lives with
-/// the next row under the board, where it applies.
+/// One white panel above the board: pause (quiet, on the left) and score
+/// with best and level under it. The next balls sit under the board
+/// ([NextBalls]), close to where the play happens.
 class HudBar extends StatelessWidget {
   const HudBar({super.key, required this.hud, required this.sprites, required this.onPause});
 
@@ -44,7 +44,6 @@ class HudBar extends StatelessWidget {
                 ],
               ),
             ),
-            _NextBalls(sprites: sprites, queue: hud.queue),
           ],
         ),
       ),
@@ -184,32 +183,32 @@ class _SubLine extends StatelessWidget {
   }
 }
 
-/// The ball you are holding, then the two after it, in one tinted well.
-class _NextBalls extends StatelessWidget {
-  const _NextBalls({required this.sprites, required this.queue});
+/// The ball you are holding, then the two after it, in one white pill under
+/// the board, so checking them is a glance rather than a look up.
+class NextBalls extends StatelessWidget {
+  const NextBalls({super.key, required this.sprites, required this.queue});
   final OrbSprites? sprites;
   final List<int> queue;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 5, 10, 7),
-      decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(18)),
-      child: Column(
+      padding: const EdgeInsets.fromLTRB(16, 5, 8, 5),
+      decoration: BoxDecoration(
+        color: Palette.card,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
+      ),
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('NEXT', style: PopType.label),
-          const SizedBox(height: 3),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              for (var i = 0; i < queue.length; i++)
-                Padding(
-                  padding: EdgeInsets.only(left: i == 0 ? 0 : 6),
-                  child: _Ball(sprites: sprites, color: queue[i], size: i == 0 ? 34 : 22),
-                ),
-            ],
-          ),
+          const SizedBox(width: 10),
+          for (var i = 0; i < queue.length; i++)
+            Padding(
+              padding: EdgeInsets.only(left: i == 0 ? 0 : 6),
+              child: _Ball(sprites: sprites, color: queue[i], size: i == 0 ? 34 : 22),
+            ),
         ],
       ),
     );

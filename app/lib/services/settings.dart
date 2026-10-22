@@ -8,6 +8,7 @@ class Settings extends ChangeNotifier {
   Settings._(this._prefs);
 
   static const _soundKey = 'sound';
+  static const _musicKey = 'music';
   static const _hapticsKey = 'haptics';
   static const _bestKey = 'best';
   static const _tutorialKey = 'tutorialDone';
@@ -31,6 +32,7 @@ class Settings extends ChangeNotifier {
   factory Settings.memory() => Settings._(null);
 
   late bool _sound = _prefs?.getBool(_soundKey) ?? true;
+  late bool _music = _prefs?.getBool(_musicKey) ?? true;
   late bool _haptics = _prefs?.getBool(_hapticsKey) ?? true;
   late int _best = _prefs?.getInt(_bestKey) ?? 0;
   late bool _tutorialDone = _prefs?.getBool(_tutorialKey) ?? false;
@@ -38,6 +40,9 @@ class Settings extends ChangeNotifier {
   late bool _shapes = _prefs?.getBool(_shapesKey) ?? false;
 
   bool get sound => _sound;
+
+  /// Quiet background music, separate from the sound effects.
+  bool get music => _music;
   bool get haptics => _haptics;
   int get best => _best;
   bool get tutorialDone => _tutorialDone;
@@ -49,6 +54,12 @@ class Settings extends ChangeNotifier {
   set sound(bool value) {
     _sound = value;
     _prefs?.setBool(_soundKey, value);
+    notifyListeners();
+  }
+
+  set music(bool value) {
+    _music = value;
+    _prefs?.setBool(_musicKey, value);
     notifyListeners();
   }
 

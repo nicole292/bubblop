@@ -56,6 +56,12 @@ class PauseMenu extends StatelessWidget {
                     onChanged: (v) => settings.sound = v,
                   ),
                   ToggleRow(
+                    icon: Icons.music_note_rounded,
+                    label: 'Music',
+                    value: settings.music,
+                    onChanged: (v) => settings.music = v,
+                  ),
+                  ToggleRow(
                     icon: Icons.vibration_rounded,
                     label: 'Vibration',
                     value: settings.haptics,

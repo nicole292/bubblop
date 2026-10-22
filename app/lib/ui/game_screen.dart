@@ -154,6 +154,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                         child: _BoardSlot(game: game, stackKey: _stackKey, hud: hud),
                       ),
                     ),
+                    Visibility(
+                      visible: !DevOptions.skip('hud'),
+                      maintainSize: true,
+                      maintainAnimation: true,
+                      maintainState: true,
+                      child: RepaintBoundary(child: NextBalls(sprites: game.sprites, queue: hud.queue)),
+                    ),
                     if (DevOptions.showDevBar)
                       RepaintBoundary(child: DebugBar(game: game))
                     else
