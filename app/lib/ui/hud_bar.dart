@@ -19,7 +19,7 @@ class HudBar extends StatelessWidget {
   final OrbSprites? sprites;
   final VoidCallback onPause;
 
-  static const designHeight = 70.0;
+  static const designHeight = 76.0;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class HudBar extends StatelessWidget {
             width: constraints.maxWidth / scale,
             height: designHeight,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 4, 10, 6),
+              padding: const EdgeInsets.fromLTRB(10, 4, 10, 12),
               child: Row(
                 children: [
                   _PauseButton(onPressed: onPause),

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flutter/animation.dart' show Curves;
 import 'package:pop_core/pop_core.dart';
 
 import '../render/orb_sprites.dart';
@@ -34,6 +35,10 @@ class BoardComponent extends Component {
   /// there between moves (centred at the start).
   double? _heldCol;
 
+  /// The held ball's colour and how long it has been in hand (it pops in).
+  int? _heldColor;
+  double _heldAge = 0;
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -43,6 +48,12 @@ class BoardComponent extends Component {
     final rest = (layout.columns - 1) / 2;
     final held = _heldCol ?? rest;
     _heldCol = aim == null ? held : held + (aim - held) * math.min(1.0, dt * 22);
+    final color = game.rules.currentColor;
+    if (color != _heldColor) {
+      _heldColor = color;
+      _heldAge = 0;
+    }
+    _heldAge += dt;
   }
 
   @override
@@ -141,16 +152,55 @@ class BoardComponent extends Component {
     }
     canvas.restore();
 
-    // Held ball, always waiting right above the lines, gliding to the aimed
-    // column, with a gentle bob.
-    if (!rules.isOver) {
-      final held = VisualOrb(Cell.orb(rules.currentColor), _heldCol ?? (layout.columns - 1) / 2, layout.rows - 0.1);
-      final bob = math.sin(time * 5) * cell * 0.04;
-      paintOrb(canvas, sprites, layout.center(held.col, held.row).translate(0, bob), held);
-    }
+    if (!rules.isOver) _paintHeld(canvas, layout, sprites, aim);
 
     if (!DevOptions.skip('fx')) game.effects.render(canvas);
     canvas.restore();
+  }
+
+  /// The held ball, always waiting right above the lines: it pops in when it
+  /// arrives, glows softly in its colour, casts a small shadow on the card,
+  /// and (until you aim) a little arrow points down into the lanes.
+  void _paintHeld(Canvas canvas, BoardLayout layout, OrbSprites sprites, int? aim) {
+    final color = game.rules.currentColor;
+    final cell = layout.cell;
+    final time = game.time;
+    final col = _heldCol ?? (layout.columns - 1) / 2;
+    final appear = Curves.easeOutBack.transform(math.min(1.0, _heldAge / 0.3));
+    final bob = math.sin(time * 4) * cell * 0.035;
+    final at = layout.center(col, layout.rows + 0.1).translate(0, bob);
+    final r = sprites.radius;
+
+    // Shadow on the card, tighter when the ball bobs low.
+    final shadowY = layout.rect.top - cell * 0.04;
+    _fill.color = Palette.panelShadow.withValues(alpha: 0.18 * appear.clamp(0.0, 1.0));
+    canvas.drawOval(
+        Rect.fromCenter(center: Offset(at.dx, shadowY), width: r * (1.3 + bob / cell), height: r * 0.28), _fill);
+
+    // Soft glow in the ball's colour.
+    final pulse = 0.5 + 0.5 * math.sin(time * 3);
+    final glow = 1.12 + 0.04 * pulse;
+    sprites.draw(canvas, sprites.halo(color), at,
+        sx: glow * appear, sy: glow * appear, alpha: 0.28 + 0.12 * pulse);
+
+    final held = VisualOrb(Cell.orb(color), col, layout.rows + 0.1)..scale = appear;
+    paintOrb(canvas, sprites, at, held);
+
+    // A small arrow under the ball, until you aim.
+    if (aim == null && game.phases.isIdle) {
+      final y = at.dy + r + cell * 0.24 + math.sin(time * 4 + 1) * cell * 0.03;
+      final w = cell * 0.12;
+      final path = Path()
+        ..moveTo(at.dx - w, y)
+        ..lineTo(at.dx, y + w * 0.75)
+        ..lineTo(at.dx + w, y);
+      _stroke
+        ..strokeWidth = cell * 0.05
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = Palette.balls[color].withValues(alpha: 0.55 * appear.clamp(0.0, 1.0));
+      canvas.drawPath(path, _stroke);
+    }
   }
 
   /// The board's border lights up in the colour of a pop, stronger in chains.

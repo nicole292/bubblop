@@ -14,8 +14,8 @@ void main() {
       // Room for the held orb above the board and the tray below it.
       expect(layout.cardTop, greaterThanOrEqualTo(0));
       expect(layout.headerRect.bottom, lessThanOrEqualTo(layout.rect.top - layout.cell * BoardLayout.headroomCells + 1e-6));
-      // Tray balls are drawn at 62% of a ball (radius 0.44 cell).
-      expect(layout.trayCenterY + layout.cell * 0.44 * 0.62, lessThanOrEqualTo(layout.cardBottom));
+      // Tray balls are drawn at 62% of a ball.
+      expect(layout.trayCenterY + layout.ballRadius * 0.62, lessThanOrEqualTo(layout.cardBottom));
       expect(layout.cardBottom, lessThanOrEqualTo(size.height));
     });
   }

@@ -240,7 +240,7 @@ class PopGame extends FlameGame {
     if (area == null || area.isEmpty) return;
     final next = BoardLayout(area.size,
         columns: _config.columns, rows: _config.rows, offset: area.topLeft);
-    final radius = next.cell * 0.44;
+    final radius = next.ballRadius;
     if (_programLoaded && (force || sprites == null || (sprites!.radius - radius).abs() > 0.5)) {
       sprites?.dispose();
       final ratio = DevOptions.pixelRatio;

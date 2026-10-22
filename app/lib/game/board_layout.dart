@@ -41,7 +41,7 @@ class BoardLayout {
   static const headerCells = 1.3;
 
   /// Room above the board for the held orb and orbs dropping in.
-  static const headroomCells = 1.0;
+  static const headroomCells = 1.25;
 
   /// Room below the board for the tray (the card's lower part).
   static const trayCells = 1.12;
@@ -60,6 +60,9 @@ class BoardLayout {
 
   /// Row height; balls are sized from it.
   final double cell;
+
+  /// Ball radius: a little under half a row, so stacked balls almost touch.
+  double get ballRadius => cell * 0.47;
 
   /// Column width (at least [cell]).
   final double columnWidth;
