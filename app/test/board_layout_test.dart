@@ -12,23 +12,24 @@ void main() {
       expect(layout.rect.right, lessThanOrEqualTo(size.width));
       expect(layout.rect.bottom, lessThanOrEqualTo(size.height));
       // Room for the held orb above the board and the tray below it.
-      expect(layout.rect.top, greaterThanOrEqualTo(layout.cell * BoardLayout.headroomCells));
+      expect(layout.cardTop, greaterThanOrEqualTo(0));
+      expect(layout.headerRect.bottom, lessThanOrEqualTo(layout.rect.top - layout.cell * BoardLayout.headroomCells + 1e-6));
       // Tray balls are drawn at 62% of a ball (radius 0.44 cell).
       expect(layout.trayCenterY + layout.cell * 0.44 * 0.62, lessThanOrEqualTo(layout.cardBottom));
       expect(layout.cardBottom, lessThanOrEqualTo(size.height));
     });
   }
 
-  for (final width in const [320.0, 390.0, 430.0, 1200.0]) {
-    test('preferredHeight gives a full-width board with no spare height at $width', () {
-      final height = BoardLayout.preferredHeight(width, columns: 6, rows: 10);
-      final layout = BoardLayout(Size(width, height), columns: 6, rows: 10);
-      final expectedCell = ((width - BoardLayout.padding * 2) / 6).clamp(0.0, BoardLayout.maxCell);
-      expect(layout.cell, closeTo(expectedCell, 0.001));
-      expect(layout.rect.top - layout.cell * BoardLayout.headroomCells,
-          closeTo(BoardLayout.padding, 0.5));
-    });
-  }
+  test('on a phone the card covers most of the screen', () {
+    const size = Size(390, 763);
+    final layout = BoardLayout(size, columns: 6, rows: 10);
+    final card = layout.cardRect;
+    expect(card.width * card.height, greaterThan(size.width * size.height * 0.75));
+    expect(card.top, greaterThanOrEqualTo(0));
+    expect(card.bottom, lessThanOrEqualTo(size.height));
+    // The header sits above the room for the held orb.
+    expect(layout.headerRect.bottom, lessThanOrEqualTo(layout.rect.top - layout.cell * BoardLayout.headroomCells + 1e-6));
+  });
 
   test('columnAt maps x to columns and clamps at the edges', () {
     final layout = BoardLayout(const Size(400, 800), columns: 6, rows: 10);

@@ -8,9 +8,10 @@ import '../render/orb_sprites.dart';
 import 'orb_icon.dart';
 import 'type.dart';
 
-/// One white panel above the board: pause (quiet, on the left) and score
-/// with best and level under it. The next balls sit under the board
-/// ([NextBalls]), close to where the play happens.
+/// The header at the top of the board card: pause (quiet, on the left),
+/// score with best and level under it, and the next balls on the right,
+/// just above where they drop. Laid out at [designHeight] and scaled to fit
+/// the header, so it keeps its proportions on every screen.
 class HudBar extends StatelessWidget {
   const HudBar({super.key, required this.hud, required this.sprites, required this.onPause});
 
@@ -18,35 +19,41 @@ class HudBar extends StatelessWidget {
   final OrbSprites? sprites;
   final VoidCallback onPause;
 
+  static const designHeight = 80.0;
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
-        decoration: BoxDecoration(
-          color: Palette.card,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
-        ),
-        child: Row(
-          children: [
-            _PauseButton(onPressed: onPause),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = (constraints.maxHeight / designHeight).clamp(0.5, 1.25);
+        return FittedBox(
+          fit: BoxFit.contain,
+          child: SizedBox(
+            width: constraints.maxWidth / scale,
+            height: designHeight,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+              child: Row(
                 children: [
-                  _Score(value: hud.score, gain: hud.gain, gainId: hud.gainId),
-                  const SizedBox(height: 2),
-                  _SubLine(best: hud.best, level: hud.level),
+                  _PauseButton(onPressed: onPause),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _Score(value: hud.score, gain: hud.gain, gainId: hud.gainId),
+                        _SubLine(best: hud.best, level: hud.level),
+                      ],
+                    ),
+                  ),
+                  NextBalls(sprites: sprites, queue: hud.queue),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -183,8 +190,8 @@ class _SubLine extends StatelessWidget {
   }
 }
 
-/// The ball you are holding, then the two after it, in one white pill under
-/// the board, so checking them is a glance rather than a look up.
+/// The ball you are holding, big in a white ring, then the two after it,
+/// smaller and lighter, in one tinted pill.
 class NextBalls extends StatelessWidget {
   const NextBalls({super.key, required this.sprites, required this.queue});
   final OrbSprites? sprites;
@@ -193,22 +200,33 @@ class NextBalls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 5, 8, 5),
-      decoration: BoxDecoration(
-        color: Palette.card,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
-      ),
+      height: 52,
+      padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
+      decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(26)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('NEXT', style: PopType.label),
-          const SizedBox(width: 10),
-          for (var i = 0; i < queue.length; i++)
-            Padding(
-              padding: EdgeInsets.only(left: i == 0 ? 0 : 6),
-              child: _Ball(sprites: sprites, color: queue[i], size: i == 0 ? 34 : 22),
+          // The ball in hand.
+          Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: Palette.card,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 6, offset: Offset(0, 2))],
             ),
+            child: queue.isEmpty ? null : _Ball(sprites: sprites, color: queue[0], size: 36),
+          ),
+          for (var i = 1; i < queue.length; i++) ...[
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_left_rounded, size: 16, color: Palette.inkSoft),
+            const SizedBox(width: 2),
+            Opacity(
+              opacity: i == 1 ? 1 : 0.7,
+              child: _Ball(sprites: sprites, color: queue[i], size: i == 1 ? 26 : 22),
+            ),
+          ],
         ],
       ),
     );

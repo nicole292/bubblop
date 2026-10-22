@@ -36,8 +36,9 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late final game = PopGame(settings: widget.settings, sfx: widget.sfx, haptics: widget.haptics);
   final _stackKey = GlobalKey();
-  _Mode _mode =
-      DevOptions.demo.isNotEmpty || DevOptions.isBench || DevOptions.startPlaying ? _Mode.playing : _Mode.home;
+  _Mode _mode = DevOptions.demo.isNotEmpty || DevOptions.isBench || DevOptions.startPlaying
+      ? _Mode.playing
+      : _Mode.home;
 
   @override
   void initState() {
@@ -128,47 +129,25 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         children: [
           Positioned.fill(child: GameWidget(game: game)),
           SafeArea(
-            child: LayoutBuilder(builder: (context, constraints) {
-              final boardMax = BoardLayout.preferredHeight(constraints.maxWidth,
-                  columns: game.config.columns, rows: game.config.rows);
-              return ValueListenableBuilder<HudState>(
-                valueListenable: game.hud,
-                builder: (context, hud, _) => Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Visibility(
-                      visible: !DevOptions.skip('hud'),
-                      maintainSize: true,
-                      maintainAnimation: true,
-                      maintainState: true,
-                      child: RepaintBoundary(
-                        child: HudBar(hud: hud, sprites: game.sprites, onPause: () {
-                          _tap();
-                          _pause();
-                        }),
-                      ),
+            child: ValueListenableBuilder<HudState>(
+              valueListenable: game.hud,
+              builder: (context, hud, _) => Column(
+                children: [
+                  Expanded(
+                    child: _BoardSlot(
+                      game: game,
+                      stackKey: _stackKey,
+                      hud: hud,
+                      onPause: () {
+                        _tap();
+                        _pause();
+                      },
                     ),
-                    Flexible(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxHeight: boardMax),
-                        child: _BoardSlot(game: game, stackKey: _stackKey, hud: hud),
-                      ),
-                    ),
-                    Visibility(
-                      visible: !DevOptions.skip('hud'),
-                      maintainSize: true,
-                      maintainAnimation: true,
-                      maintainState: true,
-                      child: RepaintBoundary(child: NextBalls(sprites: game.sprites, queue: hud.queue)),
-                    ),
-                    if (DevOptions.showDevBar)
-                      RepaintBoundary(child: DebugBar(game: game))
-                    else
-                      const SizedBox(height: 12),
-                  ],
-                ),
-              );
-            }),
+                  ),
+                  if (DevOptions.showDevBar) RepaintBoundary(child: DebugBar(game: game)),
+                ],
+              ),
+            ),
           ),
           ValueListenableBuilder<HudState>(
             valueListenable: game.hud,
@@ -189,12 +168,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               child: ValueListenableBuilder<HudState>(
                 valueListenable: game.hud,
                 // Rebuilds when sprites are baked so the logo balls appear.
-                builder: (context, _, _) => HomeScreen(
-                  settings: widget.settings,
-                  sprites: game.sprites,
-                  onPlay: () => _play(),
-                  onTap: _tap,
-                ),
+                builder: (context, _, _) =>
+                    HomeScreen(settings: widget.settings, sprites: game.sprites, onPlay: () => _play(), onTap: _tap),
               ),
             ),
         ],
@@ -204,14 +179,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 }
 
 /// Fills the space the board may use, reports it to the game after each
-/// layout, turns touches into aiming and dropping, and hosts banners and
-/// tutorial hints.
+/// layout, turns touches into aiming and dropping, and hosts the card's
+/// header, banners and tutorial hints.
 class _BoardSlot extends StatelessWidget {
-  const _BoardSlot({required this.game, required this.stackKey, required this.hud});
+  const _BoardSlot({required this.game, required this.stackKey, required this.hud, required this.onPause});
 
   final PopGame game;
   final GlobalKey stackKey;
   final HudState hud;
+  final VoidCallback onPause;
 
   @override
   Widget build(BuildContext context) {
@@ -234,22 +210,37 @@ class _BoardSlot extends StatelessWidget {
         onPanUpdate: (d) => game.aimAt(d.localPosition.dx),
         onPanEnd: (_) => game.releaseAim(),
         onPanCancel: game.cancelAim,
-        child: Stack(
-          children: [
-            Align(
-              // High on the board, where it is usually empty.
-              alignment: const Alignment(0, -0.55),
-              child: BannerText(text: hud.banner, id: hud.bannerId),
-            ),
-            if (hint != null)
-              IgnorePointer(
-                child: HintBubble(
-                  text: hint,
-                  top: (game.boardTopInSlot() ?? 40) + 12,
-                  arrowX: column != null && column >= 0 ? game.columnCenterInSlot(column) : null,
+        child: LayoutBuilder(
+          builder: (context, constraints) => Stack(
+            children: [
+              // The same layout the game draws the card with.
+              Positioned.fromRect(
+                rect: BoardLayout(constraints.biggest, columns: game.config.columns, rows: game.config.rows).headerRect,
+                child: Visibility(
+                  visible: !DevOptions.skip('hud'),
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  child: RepaintBoundary(
+                    child: HudBar(hud: hud, sprites: game.sprites, onPause: onPause),
+                  ),
                 ),
               ),
-          ],
+              Align(
+                // High on the board, where it is usually empty.
+                alignment: const Alignment(0, -0.55),
+                child: BannerText(text: hud.banner, id: hud.bannerId),
+              ),
+              if (hint != null)
+                IgnorePointer(
+                  child: HintBubble(
+                    text: hint,
+                    top: (game.boardTopInSlot() ?? 40) + 12,
+                    arrowX: column != null && column >= 0 ? game.columnCenterInSlot(column) : null,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

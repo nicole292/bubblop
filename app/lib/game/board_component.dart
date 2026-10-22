@@ -58,8 +58,12 @@ class BoardComponent extends Component {
     if (!DevOptions.skip('board')) {
       _ensureStatic(layout);
       final image = _static!;
-      canvas.drawImageRect(image, Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-          _staticBounds, _imagePaint);
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+        _staticBounds,
+        _imagePaint,
+      );
       _paintPulse(canvas, layout);
       _paintDanger(canvas, layout, board);
     }
@@ -200,16 +204,11 @@ class BoardComponent extends Component {
     }
   }
 
-  /// The board card: the board, then the rise meter and the next-row tray.
-  RRect _cardRRect(BoardLayout layout) {
-    final rect = layout.rect;
-    final cell = layout.cell;
-    return RRect.fromLTRBR(rect.left - cell * 0.2, rect.top - cell * 0.2, rect.right + cell * 0.2,
-        layout.cardBottom, Radius.circular(cell * 0.5));
-  }
+  /// The card: header, board, then the rise meter and the next-row tray.
+  RRect _cardRRect(BoardLayout layout) => RRect.fromRectAndRadius(layout.cardRect, Radius.circular(layout.cell * 0.5));
 
   void _ensureStatic(BoardLayout layout) {
-    if (_static != null && _staticFor == layout.rect) return;
+    if (_static != null && _staticFor == layout.cardRect) return;
     final card = _cardRRect(layout);
     // Room for the shadow around the card.
     final bounds = card.outerRect.inflate(layout.cell * 0.6);
@@ -224,7 +223,7 @@ class BoardComponent extends Component {
     _static?.dispose();
     _static = picture.toImageSync((bounds.width * ratio).ceil(), (bounds.height * ratio).ceil());
     picture.dispose();
-    _staticFor = layout.rect;
+    _staticFor = layout.cardRect;
     _staticBounds = bounds;
   }
 
@@ -242,6 +241,22 @@ class BoardComponent extends Component {
       ..maskFilter = null
       ..color = Palette.card;
     canvas.drawRRect(card, paint);
+
+    // A soft rule under the header.
+    final header = layout.headerRect;
+    paint.color = Palette.well;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTRB(
+          header.left + cell * 0.35,
+          header.bottom - cell * 0.03,
+          header.right - cell * 0.35,
+          header.bottom + cell * 0.03,
+        ),
+        Radius.circular(cell * 0.03),
+      ),
+      paint,
+    );
 
     // The well the balls sit in.
     final well = RRect.fromRectAndRadius(rect.inflate(cell * 0.07), Radius.circular(cell * 0.42));

@@ -134,118 +134,152 @@ def note(semitones_from_c5):
     return 523.25 * 2 ** (semitones_from_c5 / 12)
 
 
+def chord(semis, dur, g=0.25, attack=0.02, decay=0.4, partials=None):
+    return gain(mix(*[tone(note(s), dur, attack=attack, decay=decay, partials=partials or SOFT) for s in semis]), g)
+
+
 def effects():
     os.makedirs(OUT, exist_ok=True)
 
-    # Pops: a round marimba note that "bloops" up into pitch, with a quiet
-    # bell an octave above for sparkle.
+    # Pops: a bright, bubbly marimba "bloop" (pitch springs up into the note)
+    # with a twinkle an octave and a fifth above.
     pentatonic = [0, 2, 4, 7, 9, 12, 14, 16]
     for step, semis in enumerate(pentatonic):
-        f = note(semis - 5)
-        body = tone(f, 0.45, attack=0.004, decay=0.11, partials=MARIMBA, bend=-3, bend_time=0.012)
-        shine = gain(tone(f * 2, 0.35, attack=0.008, decay=0.08, partials=BELL), 0.16)
-        save(f"pop_{step}", lowpass(mix(body, shine, offsets=[0, 0.01]), 5000), peak=0.62)
+        f = note(semis)
+        body = tone(f, 0.4, attack=0.003, decay=0.09, partials=MARIMBA, bend=-6, bend_time=0.014)
+        twinkle = gain(tone(f * 3, 0.3, attack=0.005, decay=0.06, partials=BELL), 0.12)
+        save(f"pop_{step}", lowpass(mix(body, twinkle, offsets=[0, 0.025]), 7000), peak=0.62)
 
-    # Landing: a soft, low wooden "tok".
-    save("land", tone(196, 0.16, attack=0.003, decay=0.035, partials=((1, 1.0, 1.0), (2.6, 0.12, 0.3)),
-                      bend=4, bend_time=0.01), peak=0.38, room=0.1)
+    # Landing: a soft, round "boop".
+    save("land", tone(note(-5), 0.16, attack=0.003, decay=0.04, partials=((1, 1.0, 1.0), (2, 0.15, 0.4)),
+                      bend=-4, bend_time=0.012), peak=0.36, room=0.1)
 
-    # Shell bubble breaking: a glassy chime and a little bubble.
-    chime = mix(tone(note(19), 0.6, decay=0.16, partials=BELL),
-                gain(tone(note(26), 0.5, decay=0.12, partials=BELL), 0.5), offsets=[0, 0.03])
-    bubble = gain(tone(note(7), 0.12, attack=0.003, decay=0.03, bend=-7, bend_time=0.015), 0.6)
-    save("crack", lowpass(mix(bubble, chime, offsets=[0, 0.012]), 6000), peak=0.5)
+    # Shell bubble breaking: a sparkly upward "ting-ting-ting".
+    tings = [gain(tone(note(s), 0.45, decay=0.1, partials=BELL), 0.9 - 0.15 * k)
+             for k, s in enumerate((19, 24, 28))]
+    bubble = gain(tone(note(7), 0.1, attack=0.003, decay=0.025, bend=-9, bend_time=0.012), 0.6)
+    save("crack", lowpass(mix(bubble, *tings, offsets=[0, 0.01, 0.05, 0.09]), 8000), peak=0.48)
 
-    # A row rising: a gentle upward swell of two soft notes.
-    swell = mix(tone(note(-17), 0.5, attack=0.12, decay=0.18, partials=SOFT, bend=-5, bend_time=0.15),
-                gain(tone(note(-10), 0.5, attack=0.14, decay=0.18, partials=SOFT, bend=-5, bend_time=0.15), 0.6))
-    save("rise", swell, peak=0.42)
+    # A row rising: a cheerful upward slide into a little chime.
+    slide = tone(note(-5), 0.3, attack=0.03, decay=0.12, partials=SOFT, bend=-7, bend_time=0.08)
+    chime = gain(tone(note(12), 0.4, decay=0.1, partials=BELL), 0.5)
+    save("rise", mix(slide, chime, offsets=[0, 0.12]), peak=0.42)
 
-    # Rejected drop (full column): two soft, low, falling notes -- a polite "nope".
-    nope = mix(tone(note(-8), 0.18, decay=0.05, partials=MARIMBA),
-               tone(note(-12), 0.25, decay=0.07, partials=MARIMBA), offsets=[0, 0.09])
-    save("deny", lowpass(nope, 2500), peak=0.32, room=0.12)
+    # Rejected drop (full column): two soft falling notes, a friendly "uh-uh".
+    nope = mix(tone(note(-1), 0.16, decay=0.045, partials=MARIMBA),
+               tone(note(-5), 0.22, decay=0.06, partials=MARIMBA), offsets=[0, 0.1])
+    save("deny", lowpass(nope, 3000), peak=0.32, room=0.12)
 
-    # UI tap: a tiny, soft woodblock.
-    save("tap", lowpass(tone(note(7), 0.1, attack=0.002, decay=0.02, partials=MARIMBA), 4000), peak=0.32, room=0.08)
+    # UI tap: a tiny bubbly "pip".
+    save("tap", lowpass(tone(note(12), 0.09, attack=0.002, decay=0.018, partials=MARIMBA, bend=-5, bend_time=0.008),
+                        6000), peak=0.32, room=0.08)
 
-    # Praise sparkle: a quick rising run of little bells.
-    run = [gain(tone(note(s), 0.5, decay=0.12, partials=BELL), 0.8 + 0.05 * k) for k, s in enumerate((12, 16, 19, 24))]
-    save("praise", lowpass(mix(*run, offsets=[0, 0.055, 0.11, 0.165]), 6000), peak=0.48, room=0.3)
+    # Praise: a quick sparkling run up to a bright little chord.
+    run = [gain(tone(note(s), 0.4, decay=0.09, partials=BELL), 0.75) for s in (12, 14, 16, 19, 21)]
+    top = chord((24, 28, 31), 0.8, g=0.45, attack=0.005, decay=0.2, partials=BELL)
+    save("praise", lowpass(mix(*run, top, offsets=[0, 0.045, 0.09, 0.135, 0.18, 0.23]), 8000), peak=0.5, room=0.3)
 
-    # Level up: a warm arpeggio with a soft chord underneath.
-    arp = [tone(note(s), 0.7, decay=0.18, partials=BELL) for s in (0, 4, 7, 12)]
-    pad = gain(mix(*[tone(note(s), 0.9, attack=0.08, decay=0.3, partials=SOFT) for s in (-12, -5, 4)]), 0.25)
-    save("levelup", lowpass(mix(pad, *arp, offsets=[0, 0, 0.08, 0.16, 0.24]), 6000), peak=0.52, room=0.3)
+    # Level up: "ta-da!" -- two quick pickup notes, then a bright major chord.
+    pick = [tone(note(s), 0.3, decay=0.08, partials=MARIMBA) for s in (7, 11)]
+    tada = mix(chord((0, 4, 7, 12), 1.0, g=0.5, attack=0.005, decay=0.3, partials=BELL),
+               chord((-12, -5), 1.0, g=0.4, attack=0.01, decay=0.35))
+    sparkle = [gain(tone(note(s), 0.3, decay=0.07, partials=BELL), 0.35) for s in (24, 28, 31, 36)]
+    save("levelup", lowpass(mix(*pick, tada, *sparkle, offsets=[0, 0.09, 0.18, 0.3, 0.36, 0.42, 0.48]), 8000),
+         peak=0.55, room=0.3)
 
-    # New best: a longer, happier run that lands on a bright chord.
-    run = [tone(note(s), 0.6, decay=0.16, partials=BELL) for s in (0, 4, 7, 12, 16, 19)]
-    final = mix(*[gain(tone(note(s), 1.4, attack=0.01, decay=0.4, partials=BELL), 0.6) for s in (12, 16, 19, 24)])
-    pad = gain(mix(*[tone(note(s), 1.6, attack=0.1, decay=0.5, partials=SOFT) for s in (-12, -5, 4)]), 0.25)
-    save("newbest", lowpass(mix(*run, final, pad, offsets=[0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.44, 0.3]), 6000),
-         peak=0.55, room=0.35)
+    # New best: a happy fanfare that climbs, trills and lands on a big chord.
+    notes = (0, 4, 7, 12, 7, 12, 16, 19)
+    run = [tone(note(s), 0.35, decay=0.1, partials=MARIMBA) for s in notes]
+    trill = [gain(tone(note(s), 0.2, decay=0.05, partials=BELL), 0.5) for s in (24, 26, 24, 26, 24)]
+    final = mix(chord((12, 16, 19, 24), 1.6, g=0.6, attack=0.005, decay=0.45, partials=BELL),
+                chord((-12, -5, 0), 1.6, g=0.4, attack=0.02, decay=0.5))
+    offs = [0.08 * k for k in range(len(notes))] + [0.66 + 0.05 * k for k in range(5)] + [0.92]
+    save("newbest", lowpass(mix(*run, *trill, final, offsets=offs), 8000), peak=0.55, room=0.35)
 
-    # Game over: gentle and descending (not punishing), settling on a soft chord.
-    down = [tone(note(s), 0.8, decay=0.22, partials=SOFT) for s in (7, 4, 2, 0)]
-    rest = gain(mix(*[tone(note(s), 1.6, attack=0.06, decay=0.5, partials=SOFT) for s in (-12, -5, 0, 4)]), 0.35)
-    save("gameover", lowpass(mix(*down, rest, offsets=[0, 0.16, 0.32, 0.48, 0.48]), 3500), peak=0.45, room=0.35)
+    # Game over: gentle and warm, never sad -- a little descent that lands
+    # on a soft major chord.
+    down = [tone(note(s), 0.6, decay=0.16, partials=MARIMBA) for s in (12, 7, 4)]
+    rest = chord((-12, -5, 0, 4, 7), 1.6, g=0.35, attack=0.04, decay=0.5)
+    save("gameover", lowpass(mix(*down, rest, offsets=[0, 0.18, 0.36, 0.54]), 4500), peak=0.45, room=0.35)
 
 
 def music():
-    """A slow, quiet, seamlessly looping piece: a soft pad drifting through
-    four chords, a low root, and a few sparse music-box notes on top."""
+    """A light, happy, seamlessly looping tune at an easy-going tempo:
+    soft pads, a bouncing marimba arpeggio, a round bass and a music-box
+    melody over C - G - Am - F."""
     os.makedirs(MUSIC_OUT, exist_ok=True)
     rate = MUSIC_RATE
-    rnd = random.Random(7)
-    chord_len = 8.0
-    # Cmaj9, Am7, Fmaj7, Gsus/add9 -- semitones from C5, voiced low.
-    chords = [(-24, -12, -5, -1, 2), (-27, -15, -8, -5, -1), (-31, -19, -8, -5, 0), (-29, -17, -10, -5, 2)]
-    progression = chords * 2
-    length = chord_len * len(progression)
-    n = int(length * rate)
-    tail = int(6 * rate)
+    beat = 60 / 100
+    bar = beat * 4
+    # Chord roots and chord tones (semitones from C5), one chord per bar.
+    C, G, Am, F = (0, (0, 4, 7)), (-5, (-5, -1, 2)), (-3, (-3, 0, 4)), (-7, (-7, -3, 0))
+    bars = [C, G, Am, F, C, G, F, G] * 2
+    n = int(bar * len(bars) * rate)
+    tail = int(4 * rate)
     out = [0.0] * (n + tail)
 
     def add(track, start_s, g):
         start = int(start_s * rate)
         for i, s in enumerate(track):
             j = start + i
-            out[j % n if j >= n + tail else j] += s * g
+            out[j - n if j >= n + tail else j] += s * g
 
     def pad_voice(freq, dur):
-        """A slow-breathing sine with a faint octave and a slight detune chorus."""
         m = int(dur * rate)
         res = [0.0] * m
-        p1 = p2 = p3 = 0.0
+        p1 = p2 = 0.0
         for i in range(m):
-            t = i / rate
-            e = math.sin(math.pi * t / dur) ** 2
+            e = math.sin(math.pi * i / m) ** 2
             p1 += TAU * freq / rate
-            p2 += TAU * freq * 1.003 / rate
-            p3 += TAU * freq * 2 / rate
-            res[i] = e * (math.sin(p1) + 0.6 * math.sin(p2) + 0.12 * math.sin(p3))
+            p2 += TAU * freq * 1.004 / rate
+            res[i] = e * (math.sin(p1) + 0.5 * math.sin(p2))
         return res
 
-    pentatonic = [0, 2, 4, 7, 9, 12, 14]
-    for k, chord in enumerate(progression):
-        start = k * chord_len - 2.0  # chords overlap and crossfade
-        dur = chord_len + 4.0
-        for semis in chord[1:]:
-            add(pad_voice(note(semis), dur), start % length, 0.11)
-        add(pad_voice(note(chord[0]), dur), start % length, 0.16)
-        # Two or three sparse music-box notes per chord, picked from the chord.
-        times = sorted(rnd.sample([0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5], rnd.choice((2, 3))))
-        for t in times:
-            semis = rnd.choice([s for s in pentatonic if (s - chord[2]) % 12 in {(c - chord[2]) % 12 for c in chord} or s in (7, 14)])
-            bell = tone(note(semis), 2.5, attack=0.01, decay=0.6, partials=BELL, rate=rate)
-            add(bell, k * chord_len + t, 0.07)
+    cache = {}
+
+    def pluck(semis, dur, partials, decay):
+        key = (semis, dur, partials, decay)
+        if key not in cache:
+            cache[key] = tone(note(semis), dur, attack=0.004, decay=decay, partials=partials, rate=rate)
+        return cache[key]
+
+    # Melody: (beat, semitones from C5, length in beats), one list per bar.
+    tune = [
+        [(0, 4, 1), (1, 7, 1), (2, 12, 1.5), (3.5, 7, 0.5)],
+        [(0, 14, 1), (1, 11, 1), (2, 7, 2)],
+        [(0, 12, 1), (1, 9, 1), (2, 4, 1), (3, 7, 1)],
+        [(0, 9, 1.5), (1.5, 7, 0.5), (2, 5, 1), (3, 4, 1)],
+        [(0, 4, 1), (1, 7, 1), (2, 12, 1), (3, 16, 1)],
+        [(0, 14, 1.5), (1.5, 12, 0.5), (2, 11, 1), (3, 14, 1)],
+        [(0, 12, 1), (1, 9, 1), (2, 5, 1), (3, 9, 1)],
+        [(0, 7, 2), (2, 11, 1), (3, 14, 1)],
+    ]
+    # The second half rests for two bars, then answers.
+    answer = [[], []] + tune[2:]
+
+    for k, (root, tones) in enumerate(bars):
+        t0 = k * bar
+        # Pad: the chord, softly, an octave down.
+        for s in tones:
+            add(pad_voice(note(s - 12), bar + 1.2), (t0 - 0.6) % (n / rate), 0.07)
+        # Bass: root on beats 1 and 3, a fifth on the "and" of 4.
+        add(pluck(root - 24, 1.0, SOFT, 0.25), t0, 0.32)
+        add(pluck(root - 24, 0.8, SOFT, 0.2), t0 + 2 * beat, 0.26)
+        add(pluck(root - 17, 0.5, SOFT, 0.12), t0 + 3.5 * beat, 0.18)
+        # Arpeggio: bouncing eighth notes through the chord.
+        pattern = [tones[0], tones[1], tones[2], tones[1] + 12, tones[2], tones[1], tones[0] + 12, tones[2]]
+        for e, s in enumerate(pattern):
+            add(pluck(s - 12, 0.5, MARIMBA, 0.12), t0 + e * beat / 2, 0.13 if e % 2 == 0 else 0.09)
+        # Melody.
+        for b, s, d in (tune if k < 8 else answer)[k % 8]:
+            add(pluck(s, max(0.6, d * beat + 0.4), BELL, 0.22 + 0.1 * d), t0 + b * beat, 0.2)
 
     # Wrap the overflow into the start so the loop is seamless.
     for i in range(tail):
         out[i] += out[n + i]
     track = out[:n]
-    track = lowpass(track + track[: int(2.0 * rate)], 3200, rate)
-    track = reverb(track, wet=0.6, size=2.2, tail=0, rate=rate)
+    track = lowpass(track + track[: int(2.0 * rate)], 5000, rate)
+    track = reverb(track, wet=0.45, size=1.6, tail=0, rate=rate)
     # The reverbed copy of the first 2 s is folded back so the loop stays seamless.
     head = track[n:]
     track = track[:n]
@@ -253,7 +287,7 @@ def music():
         w = i / len(head)
         track[i] = track[i] * w + s * (1 - w)
     m = max(abs(s) for s in track)
-    write_wav(os.path.join(MUSIC_OUT, "calm.wav"), [s * 0.7 / m for s in track], rate)
+    write_wav(os.path.join(MUSIC_OUT, "theme.wav"), [s * 0.7 / m for s in track], rate)
 
 
 if __name__ == "__main__":

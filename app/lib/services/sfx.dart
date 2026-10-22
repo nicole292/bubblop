@@ -32,7 +32,7 @@ class Sfx {
         _sources[name] = await soloud.loadAsset('assets/sfx/$name.wav');
       }
       _ready = true;
-      _music = await soloud.loadAsset('assets/music/calm.wav');
+      _music = await soloud.loadAsset('assets/music/theme.wav');
       _settings.addListener(_syncMusic);
       // Music pauses while the app is in the background.
       AppLifecycleListener(
