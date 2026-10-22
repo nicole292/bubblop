@@ -9,7 +9,7 @@ import 'buttons.dart';
 import 'orb_icon.dart';
 import 'type.dart';
 
-/// The first thing players see: a deep, glowing backdrop with glossy balls
+/// The first thing players see: a light, glowing sky with glossy balls
 /// drifting up, the bouncing logo, a best-score chip, one big shining Play
 /// button and a quiet "How to play". Nothing to read, nothing to sign up for.
 class HomeScreen extends StatefulWidget {
@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF241F6B), Color(0xFF3D2CA8), Color(0xFF7448D8)],
+          colors: [Palette.skyTop, Palette.skyMid, Palette.skyBottom],
         ),
       ),
       child: Stack(
@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 gradient: RadialGradient(
                   center: Alignment(0, -0.3),
                   radius: 0.75,
-                  colors: [Color(0x557FA8FF), Color(0x00000000)],
+                  colors: [Color(0x66FFFFFF), Color(0x00FFFFFF)],
                 ),
               ),
             ),
@@ -119,10 +119,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const Spacer(flex: 3),
                   _Logo(clock: _clock, sprites: widget.sprites),
                   const SizedBox(height: 14),
-                  Text(
-                    'DROP  •  MATCH  •  CHAIN',
-                    style: PopType.of(14, 900, color: const Color(0xCCFFFFFF), spacing: 2.5),
-                  ),
+                  Text('DROP  •  MATCH  •  CHAIN', style: PopType.of(14, 900, color: Colors.white, spacing: 2.5)),
                   const Spacer(flex: 3),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 44),
@@ -165,9 +162,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
 /// Frosted glass: a faint white fill with a brighter edge.
 BoxDecoration _glass(double radius) => BoxDecoration(
-  color: const Color(0x1FFFFFFF),
+  color: const Color(0x33FFFFFF),
   borderRadius: BorderRadius.circular(radius),
-  border: Border.all(color: const Color(0x40FFFFFF), width: 1.2),
+  border: Border.all(color: const Color(0x80FFFFFF), width: 1.2),
+  boxShadow: const [BoxShadow(color: Color(0x143A2D9E), blurRadius: 10, offset: Offset(0, 3))],
 );
 
 class _BestChip extends StatelessWidget {
