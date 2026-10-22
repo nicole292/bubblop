@@ -111,9 +111,64 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
               const Spacer(),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 14),
+                child: _Signature(),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The maker's name, barely there: thin white letters that surface one by
+/// one, linger faintly, then dissolve. Easy to miss; there if you look.
+/// It plays as soon as the app opens, and again on each return home.
+class _Signature extends StatefulWidget {
+  const _Signature();
+
+  @override
+  State<_Signature> createState() => _SignatureState();
+}
+
+class _SignatureState extends State<_Signature> with SingleTickerProviderStateMixin {
+  static const _word = 'elishakov';
+  static const _total = 4400.0;
+
+  late final _controller = AnimationController(vsync: this, duration: Duration(milliseconds: _total.round()))
+    ..forward();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final ms = _controller.value * _total;
+          // Everything fades out together at the end.
+          final out = 1 - Curves.easeInOut.transform(((ms - 3000) / 1200).clamp(0.0, 1.0));
+          if (out <= 0) return const SizedBox(height: 16);
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < _word.length; i++)
+                Opacity(
+                  // From the first frame, letter by letter, 90 ms apart, each easing in
+                  // over 600 ms.
+                  opacity: 0.28 * out * Curves.easeOut.transform(((ms - 100 - i * 90) / 600).clamp(0.0, 1.0)),
+                  child: Text(_word[i], style: PopType.of(12, 600, color: Colors.white, spacing: 3)),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

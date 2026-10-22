@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
@@ -39,7 +40,9 @@ class OrbSprites {
     }
   }
 
-  factory OrbSprites.bake(double radius, double pixelRatio, FragmentProgram? program) {
+  /// [shapes] adds a white symbol to every ball (the colour-blind option);
+  /// shells show it through their glass.
+  factory OrbSprites.bake(double radius, double pixelRatio, FragmentProgram? program, {bool shapes = false}) {
     final size = (radius * pad * 2 * pixelRatio).ceil();
     final rPx = radius * pixelRatio;
     final full = Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble());
@@ -84,6 +87,7 @@ class OrbSprites {
         } else {
           centred(canvas, (cv) => paintBall(cv, radius, c));
         }
+        if (shapes) centred(canvas, (cv) => _paintSymbol(cv, radius, c));
       });
       balls.add(ball);
       shells.add(picture((canvas) {
@@ -94,6 +98,7 @@ class OrbSprites {
           shaderPass(canvas, const Color(0xFFFFFFFF), 1);
         } else {
           centred(canvas, (cv) => paintShell(cv, radius, c));
+          if (shapes) centred(canvas, (cv) => _paintSymbol(cv, radius, c));
         }
       }));
     }
@@ -144,6 +149,51 @@ class OrbSprites {
     for (final image in [..._balls, ..._shells, ..._halos, stone, shadow]) {
       image.dispose();
     }
+  }
+
+  /// One shape per colour, so balls can be told apart without colour:
+  /// triangle, star, square, plus, ring (in [Palette.balls] order).
+  static void _paintSymbol(Canvas canvas, double r, int color) {
+    final s = r * 0.36;
+    final path = Path();
+    switch (color) {
+      case 0:
+        path
+          ..moveTo(0, -s)
+          ..lineTo(s * 0.95, s * 0.7)
+          ..lineTo(-s * 0.95, s * 0.7)
+          ..close();
+      case 1:
+        for (var i = 0; i < 10; i++) {
+          final a = -math.pi / 2 + i * math.pi / 5;
+          final d = i.isEven ? s * 1.05 : s * 0.45;
+          final p = Offset(math.cos(a) * d, math.sin(a) * d + s * 0.06);
+          i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
+        }
+        path.close();
+      case 2:
+        path.addRRect(RRect.fromRectAndRadius(
+            Rect.fromCenter(center: Offset.zero, width: s * 1.5, height: s * 1.5), Radius.circular(s * 0.22)));
+      case 3:
+        final w = s * 0.5;
+        path
+          ..addRRect(RRect.fromRectAndRadius(
+              Rect.fromCenter(center: Offset.zero, width: s * 1.9, height: w), Radius.circular(w * 0.3)))
+          ..addRRect(RRect.fromRectAndRadius(
+              Rect.fromCenter(center: Offset.zero, width: w, height: s * 1.9), Radius.circular(w * 0.3)));
+      default:
+        path
+          ..fillType = PathFillType.evenOdd
+          ..addOval(Rect.fromCircle(center: Offset.zero, radius: s * 0.9))
+          ..addOval(Rect.fromCircle(center: Offset.zero, radius: s * 0.5));
+    }
+    // A soft dark edge keeps white readable on the light yellow ball.
+    canvas.drawPath(
+        path.shift(Offset(0, r * 0.03)),
+        Paint()
+          ..color = const Color(0x40000000)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.05));
+    canvas.drawPath(path, Paint()..color = const Color(0xF2FFFFFF));
   }
 
   /// A soft coloured glow, used when a group is about to pop.

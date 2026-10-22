@@ -86,8 +86,10 @@ class BoardComponent extends Component {
     // Hide balls below the floor while a new row slides up.
     canvas.clipRect(Rect.fromLTRB(rect.left - cell, rect.top - cell * 2, rect.right + cell, rect.bottom));
 
-    // Landing guide: a faint ghost ball inside a dashed-feeling ring.
-    if (aim != null) {
+    // Landing guide: a faint ghost ball inside a dashed-feeling ring. Hidden
+    // while a move is still animating: the rules board is already ahead of
+    // the picture then, so the ring would float above the settling balls.
+    if (aim != null && game.phases.isIdle) {
       final row = rules.landingRow(aim);
       if (row != null) {
         final color = Palette.balls[rules.currentColor];

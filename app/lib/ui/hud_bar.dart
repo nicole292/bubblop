@@ -109,19 +109,26 @@ class _ScoreState extends State<_Score> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        AnimatedBuilder(
-          animation: _bump,
-          builder: (context, child) {
-            final t = _bump.value;
-            // A quick swell over the first third, then settle.
-            final s = _bump.isAnimating && t < 0.3 ? 1 + 0.1 * math.sin(math.pi * t / 0.3) : 1.0;
-            return Transform.scale(scale: s, alignment: Alignment.centerLeft, child: child);
-          },
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(end: widget.value.toDouble()),
-            duration: const Duration(milliseconds: 450),
-            curve: Curves.easeOutCubic,
-            builder: (context, v, _) => Text('${v.round()}', style: PopType.score),
+        // Very long scores shrink to fit rather than overflow the panel.
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: AnimatedBuilder(
+              animation: _bump,
+              builder: (context, child) {
+                final t = _bump.value;
+                // A quick swell over the first third, then settle.
+                final s = _bump.isAnimating && t < 0.3 ? 1 + 0.1 * math.sin(math.pi * t / 0.3) : 1.0;
+                return Transform.scale(scale: s, alignment: Alignment.centerLeft, child: child);
+              },
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(end: widget.value.toDouble()),
+                duration: const Duration(milliseconds: 450),
+                curve: Curves.easeOutCubic,
+                builder: (context, v, _) => Text('${v.round()}', style: PopType.score),
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 8),

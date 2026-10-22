@@ -1,5 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../game/board_layout.dart';
 import '../game/dev_options.dart';
@@ -88,8 +89,39 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     setState(() => _mode = _Mode.home);
   }
 
+  /// Android back and Escape: pause a round, resume from pause, leave a
+  /// finished round for home. On the home screen back leaves the app.
+  void _back() {
+    switch (_mode) {
+      case _Mode.playing:
+        if (game.hud.value.isOver) {
+          _home();
+        } else {
+          _tap();
+          _pause();
+        }
+      case _Mode.paused:
+        _resume();
+      case _Mode.home:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    return PopScope(
+      canPop: _mode == _Mode.home,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back();
+      },
+      child: CallbackShortcuts(
+        bindings: {const SingleActivator(LogicalKeyboardKey.escape): _back},
+        child: Focus(autofocus: true, child: _screen()),
+      ),
+    );
+  }
+
+  Widget _screen() {
     return Scaffold(
       body: Stack(
         key: _stackKey,
@@ -189,7 +221,7 @@ class _BoardSlot extends StatelessWidget {
         // Tap a column, or drag to aim and release to drop.
         behavior: HitTestBehavior.opaque,
         onTapDown: (d) => game.aimAt(d.localPosition.dx),
-        onTapUp: (_) => game.releaseAim(),
+        onTapUp: (d) => game.releaseAim(d.localPosition.dx),
         onTapCancel: game.cancelAim,
         onPanStart: (d) => game.aimAt(d.localPosition.dx),
         onPanUpdate: (d) => game.aimAt(d.localPosition.dx),

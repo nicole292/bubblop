@@ -20,14 +20,15 @@ fallback in `app/lib/render/orb_material.dart`). Effects: `app/lib/render/effect
 | Use | Colour |
 |---|---|
 | Balls | Cherry `#FF4757`, Sunflower `#FFC312`, Fresh green `#2ED573`, Sky blue `#1E90FF`, Grape `#9B59F6` (the 5th, from level 5) |
-| Sky | `#5CC8FF` → `#7FA8FF` → `#A98BFF` |
+| Sky | `#5CC8FF` в†’ `#7FA8FF` в†’ `#A98BFF` |
 | Cards | White, soft shadow `#3A2D9E` at 33% |
 | Text | Ink `#26285A`, soft ink `#7B80B0`; white on the sky |
 | Accent | Purple `#7B5CFF` (level pill, banner outline) |
-| Button | Orange `#FFA62B` → pink `#FF5C8A` |
+| Button | Orange `#FFA62B` в†’ pink `#FF5C8A` |
 
 The ball colours differ in brightness as well as hue. Colour is the only cue on a ball,
-so a colour-blind option should be considered later (Stage 4 settings).
+so the pause menu has a colour-blind option, **Ball shapes** (off by default): a white
+triangle, star, square, plus or ring baked onto each colour.
 
 ## Pieces
 | Piece | Look |
@@ -37,10 +38,11 @@ so a colour-blind option should be considered later (Stage 4 settings).
 | Board | One white rounded card with a close, soft shadow. It holds the pale well (alternating rounded lane stripes), the rise meter and the next-row tray. Static parts are baked into one image per layout |
 | Next row | The next row's shells at 62% size in the tray at the bottom of the card, bobbing gently; they lift with the pulse on the last drop |
 | Rise meter | One segment per drop between the board and the tray: purple segments are drops left, red for the last two (pulsing on the last). |
-| Background | Sky gradient, three soft colour blobs (pink, mint, peach), six small, faint rising bubbles, and the word "elishakov" repeated in slanted rows, barely visible (white at 6%) |
+| Background | Sky gradient, three soft colour blobs (pink, mint, peach), six small, faint rising bubbles |
+| Credit | "elishakov" in thin, widely spaced white letters at 28% at the bottom of the home screen: the letters surface one by one from the moment the app opens, linger, then dissolve (again on each return home). Meant to be easy to miss; never over the play area |
 | HUD | One white panel: a quiet pause button (44 px, tinted circle), the score (rolls up, small bump, a gold "+N" chip for each gain) with best and LEVEL under it, and NEXT (held ball large, then two small) in a tinted well |
 | Round over | A white card that bounces in, a big score, a gold "New best!" pill, stats, and a chunky gradient Play again button that presses down |
-| Text | Nunito (SIL OFL 1.1), weights 800–900, tabular figures for scores |
+| Text | Nunito (SIL OFL 1.1), weights 800вЂ“900, tabular figures for scores |
 
 ## Feedback
 | Moment | Effect |
@@ -49,8 +51,8 @@ so a colour-blind option should be considered later (Stage 4 settings).
 | Land | Squash and a tiny puff of dust |
 | Match (highlight) | Balls swell slightly and lean 12% of the way toward their group's centre (a squeeze) with a soft halo; shells next to them start to crack |
 | Pop | Balloon pop: each ball puffs up and vanishes in a quick disc of light. One or two confetti bits per ball in its colour, a soft ring per group, a few gold sparkles, and a small "+points" tag (the total also lands in the HUD) |
-| Bigger group / later step | Intensity `(1 + 0.22·(n−4)) · (1 + 0.45·(step−1))`, capped at 3.4: more and faster confetti, bigger rings and light, more sparkles, a higher pop note and stronger vibration |
-| Chain step 2+ | A gold sparkle trail arcs from the previous burst to this one; a bouncy "×step" with a coloured outline; the board's border flashes in the popped colour, stronger each step; from step 3, a small screen shake (at most 5 px). Older labels clear quickly |
+| Bigger group / later step | Intensity `(1 + 0.22В·(nв€’4)) В· (1 + 0.45В·(stepв€’1))`, capped at 3.4: more and faster confetti, bigger rings and light, more sparkles, a higher pop note and stronger vibration |
+| Chain step 2+ | A gold sparkle trail arcs from the previous burst to this one; a bouncy "Г—step" with a coloured outline; the board's border flashes in the popped colour, stronger each step; from step 3, a small screen shake (at most 5 px). Older labels clear quickly |
 | Shell crack | Cracks spread over the bubble from the side that was hit; it pops into lavender droplets with a ring in the ball's colour; the freed ball boings out and settles |
 | Danger | A soft red tint pulsing down nearly full columns |
 

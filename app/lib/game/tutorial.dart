@@ -11,7 +11,9 @@ abstract final class Tutorial {
         seed: seed,
         config: config,
         board: Board.parse(board),
-        scriptedQueue: const [3],
+        // Blue until the lesson lands: a miss never touches the bottom row,
+        // so the next blue in the same column still makes the match.
+        scriptedQueue: const [3, 3, 3],
       );
 
   static const board = '''

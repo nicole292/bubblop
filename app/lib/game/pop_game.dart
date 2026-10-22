@@ -41,6 +41,8 @@ class PopGame extends FlameGame {
     this._config = const RulesConfig(),
   }) {
     _startRound(tutorial: false);
+    _shapes = settings.shapes;
+    settings.addListener(_settingsChanged);
   }
 
   final Settings settings;
@@ -62,6 +64,7 @@ class PopGame extends FlameGame {
   OrbSprites? sprites;
   FragmentProgram? _orbProgram;
   bool _programLoaded = false;
+  bool _shapes = false;
   Rect? _boardArea;
 
   /// Column the player is aiming at, or null when not touching.
@@ -117,8 +120,16 @@ class PopGame extends FlameGame {
     _relayout();
   }
 
+  /// Turning ball shapes on or off rebakes the sprites.
+  void _settingsChanged() {
+    if (settings.shapes == _shapes) return;
+    _shapes = settings.shapes;
+    _relayout(force: true);
+  }
+
   @override
   void onRemove() {
+    settings.removeListener(_settingsChanged);
     sprites?.dispose();
     background.dispose();
     super.onRemove();
@@ -183,7 +194,11 @@ class PopGame extends FlameGame {
 
   void cancelAim() => aimColumn = null;
 
-  void releaseAim() {
+  /// Drops at the aimed column. A tap passes where it lifted ([x], relative
+  /// to the board slot): the gesture arena may have cancelled the aim just
+  /// before (a press held over 0.1 s cancels the unused drag on release).
+  void releaseAim([double? x]) {
+    if (x != null) aimAt(x);
     final column = aimColumn;
     aimColumn = null;
     if (column != null) dropAt(column);
@@ -241,7 +256,7 @@ class PopGame extends FlameGame {
     if (_programLoaded && (force || sprites == null || (sprites!.radius - radius).abs() > 0.5)) {
       sprites?.dispose();
       final ratio = WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
-      sprites = OrbSprites.bake(radius, ratio, _orbProgram);
+      sprites = OrbSprites.bake(radius, ratio, _orbProgram, shapes: _shapes);
       // New sprites: let the HUD redraw its ball icons with them.
       hud.value = hud.value.copyWith(spritesVersion: hud.value.spritesVersion + 1);
     }
