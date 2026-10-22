@@ -26,6 +26,7 @@ bubble to break it open and free the ball inside, which can set off an even bigg
 ★ One-thumb play: drag to aim, release to drop
 ★ Big, juicy chain reactions with sound and vibration
 ★ Beat your best score: every round takes just a few minutes
+★ Colour-blind friendly: optional shapes on every ball
 ★ Plays offline · No account needed · No data collected
 
 ## Category / tags

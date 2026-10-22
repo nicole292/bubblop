@@ -12,7 +12,7 @@ has no accounts, no analytics, no advertising and no tracking.
 ## What stays on your device
 The game saves a few things **only on your device** so it works the way you left it:
 - your best score and the number of games played
-- your sound and vibration settings
+- your sound, vibration and ball-shape settings
 - whether you have completed the tutorial
 
 This information never leaves your device. Uninstalling the game deletes it.

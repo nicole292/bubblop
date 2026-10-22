@@ -30,3 +30,38 @@ workflows:
           cd ipa && zip -qry Bubblop-unsigned.ipa Payload
     artifacts:
       - app/build/ios/ipa/*.ipa
+
+  # Signed build, uploaded to TestFlight (docs/release.md, step 4). Needs the
+  # App Store Connect API key added in Codemagic as an integration named
+  # "Bubblop ASC key". The build number comes from app/pubspec.yaml (after +),
+  # so raise it before each upload.
+  ios-release:
+    name: iOS release (TestFlight)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Bubblop ASC key
+    environment:
+      flutter: 3.47.7
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bubblop.game
+    scripts:
+      - name: Rules tests
+        working_directory: packages/pop_core
+        script: dart pub get && dart test
+      - name: Use the App Store signing profile
+        script: xcode-project use-profiles
+      - name: App packages and tests
+        working_directory: app
+        script: flutter pub get && flutter analyze && flutter test
+      - name: Build signed .ipa
+        working_directory: app
+        script: flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - app/build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

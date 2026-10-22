@@ -55,9 +55,11 @@ types; per-phone downloads measured at 18–22 MB).
    **iOS build check** that runs all tests and compiles iOS without signing. That proves
    the iOS build works.
 3. To ship: join the Apple Developer Program ($99/year), create the app in App Store
-   Connect, add the App Store Connect API key to Codemagic, and switch to a signed
-   workflow (Codemagic's docs cover "automatic code signing"). It uploads to TestFlight,
-   where you install it on an iPhone.
+   Connect, and add an App Store Connect API key to Codemagic as an integration named
+   **Bubblop ASC key**. In Codemagic's code signing settings, generate (or upload) an
+   Apple Distribution certificate and fetch the App Store profile for `com.bubblop.game`.
+   Then run the **iOS release (TestFlight)** workflow in `codemagic.yaml`: it signs the
+   build and uploads it to TestFlight, where you install it on an iPhone.
 4. A Mac becomes necessary only if an iOS-specific bug needs hands-on debugging.
 
 ## 4b. Play on your own iPhone for free (no Apple Developer Program)
