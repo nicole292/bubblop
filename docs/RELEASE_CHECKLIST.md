@@ -16,10 +16,11 @@ Tick items as you go (in VS Code: change `[ ]` to `[x]`). Details for each step 
 
 ## Before anything else
 - [ ] Copy the key password from `app/android/key.properties` into a password manager [7]
-- [ ] Back up `C:\Users\User\pop-upload-key.jks` to two places off this PC [7]
+- [x] Backup 1: `D:\Bubblop key backup\` (key, password file, README), done 2026-10-26
+- [ ] Backup 2: copy that folder to Google Drive or a USB stick (off this PC) [7]
 - [x] Studio inbox created: elishakov.studio@gmail.com [9A]
-- [ ] Switch on GitHub Pages (Settings → Pages → main, /docs) [9A]
-- [ ] Check both pages open: nicole292.github.io/bubblop/ and …/privacy.html [9A]
+- [x] Switch on GitHub Pages (Settings → Pages → main, /docs) [9A]
+- [x] Check both pages open: nicole292.github.io/bubblop/ and …/privacy.html [9A]
 - [ ] Decide: keep the GitHub repo public, or move the pages and make it private [12]
 
 ## Google Play
