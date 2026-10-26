@@ -26,10 +26,10 @@ Tick items as you go (in VS Code: change `[ ]` to `[x]`). Details for each step 
 ## Google Play
 - [x] Create Play Console account, pay $25 [8]
 - [x] Identity (and phone) verification approved [8]
-- [ ] Create app "Bubblop: Drop & Pop Puzzle", Game, Free [9B.1]
-- [ ] App content: privacy policy, ads, app access, content rating, target audience, data safety, advertising ID, other declarations [9B.2]
-- [ ] Main store listing: texts, icon, feature graphic, 5 screenshots [9B.3]
-- [ ] Internal testing: upload `app-release.aab`, accept Play App Signing, install on your phone [9B.4]
+- [x] Create app "Bubblop: Drop & Pop Puzzle", Game, Free [9B.1]
+- [x] App content: privacy policy, ads, app access, content rating, target audience, data safety, advertising ID, other declarations [9B.2]
+- [x] Main store listing: texts, icon, feature graphic, 5 screenshots [9B.3]
+- [x] Internal testing: upload `app-release.aab`, accept Play App Signing, install on your phone [9B.4]
 - [ ] Real-phone checks: sound, vibration, smoothness, best score after reopening, pause on a call [6]
 - [ ] Closed testing release sent for review [9B.5]
 - [ ] 12+ testers opted in (list names here): …
