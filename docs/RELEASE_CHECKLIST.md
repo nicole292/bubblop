@@ -23,8 +23,8 @@ Tick items as you go (in VS Code: change `[ ]` to `[x]`). Details for each step 
 - [ ] Decide: keep the GitHub repo public, or move the pages and make it private [12]
 
 ## Google Play
-- [ ] Create Play Console account, pay $25 [8]
-- [ ] Identity (and phone) verification approved [8]
+- [x] Create Play Console account, pay $25 [8]
+- [x] Identity (and phone) verification approved [8]
 - [ ] Create app "Bubblop: Drop & Pop Puzzle", Game, Free [9B.1]
 - [ ] App content: privacy policy, ads, app access, content rating, target audience, data safety, advertising ID, other declarations [9B.2]
 - [ ] Main store listing: texts, icon, feature graphic, 5 screenshots [9B.3]

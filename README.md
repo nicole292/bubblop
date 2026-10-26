@@ -93,3 +93,12 @@ services/              settings (saved), sound effects (SoLoud), haptics
 ui/                    home screen, HUD, pause menu, hints, banners, game-over panel, debug bar
 tools/make_sfx.py      generates every sound effect from scratch (python tools/make_sfx.py)
 ```
+
+Background music (app/assets/music/, played in a fixed order set in
+app/lib/services/sfx.dart), all used under the
+Pixabay Content License (free for commercial use, no credit required; the
+files may not be redistributed on their own):
+
+- "Chill Music Loop" by xtremefreddy (Pixabay, track 183100)
+- "Puzzle Game – Bright Casual Video Game Music" by Cyberwave Orchestra (Pixabay, track 249202)
+- Video game music by maksymmalko (Pixabay, track 564544)
