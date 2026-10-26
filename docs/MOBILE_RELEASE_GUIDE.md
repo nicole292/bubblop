@@ -31,9 +31,9 @@ Written for a first release. Work through it with the checklist in
 | iOS: `ITSAppUsesNonExemptEncryption = NO` (`Info.plist`) | The game uses no encryption, so App Store Connect stops asking the export-compliance question on every upload. |
 | `codemagic.yaml`: new **iOS release (TestFlight)** workflow | Builds, signs and uploads the iPhone version from the cloud, so you don't need a Mac. |
 | Android upload key and `key.properties` | Google Play only accepts signed bundles. |
-| Privacy policy update (`docs\store\privacy-policy.md`, `docs\privacy.html`) | Lists the ball-shape setting, mentions phone backups, and states that there is no third-party ad, analytics or tracking code (verified: the only libraries are the game engine, sound and on-device storage). |
+| Privacy policy update (`docs\store\privacy-policy.md`, `docs\privacy.html`) | Lists the saved settings (sound, music, vibration), mentions phone backups, and states that there is no third-party ad, analytics or tracking code (verified: the only libraries are the game engine, sound and on-device storage). The music is three Pixabay tracks, used under the Pixabay Content License. |
 | Store screenshots tool (`tools\make_store_assets.py`) and a 3× option for the screenshot driver | So the store images can be remade after updates. |
-| Game fixes earlier today | Taps that sometimes did nothing, a tutorial that could stall, Android Back button, colour-blind ball shapes; see `docs\known-bugs.md`. |
+| Game fixes earlier today | Taps that sometimes did nothing, a tutorial that could stall, Android Back button; see `docs\known-bugs.md`. Later: new layout, background music (Pixabay), softer sounds. |
 
 ## 3. Build commands
 
@@ -62,7 +62,7 @@ downloaded from the build page.
 
 | File | Path |
 |---|---|
-| Android bundle for Google Play | `app\build\app\outputs\bundle\release\app-release.aab` (54 MB; phones download ~20 MB) |
+| Android bundle for Google Play | `app\build\app\outputs\bundle\release\app-release.aab` (71 MB including the music; a single-phone install is about 40 MB) |
 | Android test APK | `app\build\app\outputs\flutter-apk\app-release.apk` |
 | Android upload key | `C:\Users\User\pop-upload-key.jks` |
 | Key password | `app\android\key.properties` (`storePassword` line) |

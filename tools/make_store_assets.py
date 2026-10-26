@@ -95,7 +95,7 @@ def main():
 
     # Google Play feature graphic: the home screen's logo, cropped to 1024x500.
     home = Image.open(RAW / 'home.png').convert('RGB')
-    c, ch = int(home.height * 0.385), int(home.width * 500 / 1024)
+    c, ch = int(home.height * 0.365), int(home.width * 500 / 1024)
     home.crop((0, c - ch // 2, home.width, c - ch // 2 + ch)).resize((1024, 500), Image.LANCZOS).save(
         OUT / 'play-feature-graphic-1024x500.png', optimize=True)
 

@@ -19,14 +19,14 @@
 - **Taps sometimes did nothing:** a press held longer than ~0.1 s without moving dropped
   no ball (touch and mouse). On release the gesture arena cancels the unused drag, which
   cleared the aim just before the tap's "up" arrived. A tap now drops where it lifted.
-  Checked across touch/mouse Г— 8 movement distances Г— 5 hold times, and in the real app.
+  Checked across touch/mouse × 8 movement distances × 5 hold times, and in the real app.
 - **Tutorial could stall:** only the first ball was scripted blue, so after a miss the
   "try dropping it here" hint pointed at a column where a random colour might not pop.
   The first three balls are now blue (test/tutorial_test.dart).
 - The landing ring could float above settling balls when tapping mid-chain (it follows
   the rules board, which is a move ahead); it now shows only once the board is still.
-- Colour-blind option: **Ball shapes** in the pause menu puts a white triangle, star,
-  square, plus or ring on each colour (off by default; saved).
+- Colour-blind option: **Ball shapes** in the pause menu put a white triangle, star,
+  square, plus or ring on each colour (removed again on 2026-10-23).
 - Very long scores now shrink to fit the score panel instead of overflowing.
 - Android back during a round closed the app; it now pauses (back again resumes, and
   from a finished round it goes home). Escape does the same on PC and web.
@@ -51,18 +51,25 @@
 
 ## Performance: measured 2026-10-15
 Windows 11, Intel UHD Graphics 770 (integrated; the display is not on the RTX 4060),
-profile build, window 430Г—900 at 150% scaling. 60 s auto-play benchmark
+profile build, window 430×900 at 150% scaling. 60 s auto-play benchmark
 (`--profile --dart-define=POP_BENCH=60`): drops every 0.2 s, ~80 chain steps, up to 193
 active effects.
 
 | Raster (GPU) per frame | avg | p50 | p90 | p99 | frames > 16.7 ms |
 |---|---|---|---|---|---|
 | Dark design, before HUD fix | 13.7 ms | 13.5 | 17.5 | 20.8 | 533 of 3598 |
-| Dark design, after HUD fix | 5.6 ms | 5.6 | 6.9 | 8.6вЂ“9.0 | 1вЂ“2 of ~3620 |
-| Bright design (2 runs) | 2.8 ms | 2.8 | 3.6вЂ“3.7 | 4.5 | 0вЂ“1 of ~3640 |
+| Dark design, after HUD fix | 5.6 ms | 5.6 | 6.9 | 8.6–9.0 | 1–2 of ~3620 |
+| Bright design (2 runs) | 2.8 ms | 2.8 | 3.6–3.7 | 4.5 | 0–1 of ~3640 |
 | **+ audio, home, tutorial (2026-10-16, 1 run)** | **2.55 ms** | 2.5 | 3.2 | 3.9 | 1 of 3626 |
 
 UI thread (build) for the bright design: 0.9 ms average, 2.0 ms p99, 0 frames over budget.
+
+## Verified 2026-10-26 (release candidate 1.0.0+1, new layout and music)
+- Android emulator (API 37), release build: home, tutorial, held press → ×2 chain, Back →
+  pause (Sound / Music / Vibration), background and return stays paused, force-stop and
+  relaunch skips the tutorial (saved). No game errors in logcat; all three songs bundled.
+- App bundle (71 MB): signed with the upload key, targetSdk 36, 16 KB-aligned native code,
+  no runtime permissions.
 
 ## Verified 2026-10-22 (release candidate 1.0.0+1)
 - Android emulator (API 37, 1080×2400), release build: launch, first-time tutorial, a miss
@@ -75,5 +82,5 @@ UI thread (build) for the bright design: 0.9 ms average, 2.0 ms p99, 0 frames ov
 ## Verified 2026-10-15 (bright design)
 - Windows: balls, shells, board, dock, HUD, aiming, pops, a 3-step chain with a cracked
   shell (chain demo), the round-over card, and restart. No errors in the run log.
-- Android emulator (API 37, 1080Г—2400, debug build): the shader renders, layout, the chain
+- Android emulator (API 37, 1080×2400, debug build): the shader renders, layout, the chain
   demo plays, no Flutter errors in the log.

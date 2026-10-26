@@ -51,8 +51,8 @@ bubble to break it open and free the ball inside, which can set off an even bigg
 ★ Learn in seconds, with a short guided first round
 ★ One-thumb play: tap a column, or drag to aim and release to drop
 ★ Big, juicy chain reactions with sound and vibration
+★ Relaxing background music (turn it off any time)
 ★ Beat your best score: every round takes just a few minutes
-★ Colour-blind friendly: optional shapes on every ball
 ★ Plays offline · No account needed · No ads · No data collected
 
 ### Graphics (in docs/store/assets/)
@@ -116,6 +116,6 @@ played, settings and "tutorial done" on the device only.
 | App Privacy → Data collection | **No, we do not collect data from this app** → shows "Data Not Collected" |
 | Age rating | Answer **None** / **No** to every item (no violence, no gambling, no user-generated content, no messaging, no web access, no ads). Expected result: **4+** |
 | Export compliance | Already answered in the app (`ITSAppUsesNonExemptEncryption = NO`), so App Store Connect should not ask |
-| Content rights | **No**, the app does not contain third-party content needing rights (the font, Nunito, is under the SIL Open Font License, included in the app) |
+| Content rights | **Yes**, the app contains third-party content, and **yes**, you have the rights: the background music is three Pixabay tracks under the Pixabay Content License (free for commercial use in apps, no credit required; credited in README.md), and the font Nunito is under the SIL Open Font License |
 | Made for Kids | **No** (leave unticked; it is a general-audience game) |
 | Sign-in required for review | **No** |
