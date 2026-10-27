@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../game/hud_state.dart';
 import '../game/palette.dart';
 import '../render/orb_sprites.dart';
+import 'goal_icon.dart';
 import 'orb_icon.dart';
 import 'type.dart';
 
@@ -47,7 +48,10 @@ class HudBar extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _Score(value: hud.score, gain: hud.gain, gainId: hud.gainId),
-                        _SubLine(best: hud.best, level: hud.level),
+                        if (hud.isLevel)
+                          _GoalLine(level: hud.levelNumber!, goals: hud.goals)
+                        else
+                          _SubLine(best: hud.best, level: hud.level),
                       ],
                     ),
                   ),
@@ -189,6 +193,39 @@ class _SubLine extends StatelessWidget {
           decoration: const BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
         ),
         Text('LEVEL $level', style: PopType.level),
+      ],
+    );
+  }
+}
+
+/// Level mode: the level number, then each goal's progress ("23/40"),
+/// ticking green when met.
+class _GoalLine extends StatelessWidget {
+  const _GoalLine({required this.level, required this.goals});
+  final int level;
+  final List<GoalView> goals;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text('LEVEL $level', style: PopType.level),
+        for (final g in goals) ...[
+          Container(
+            width: 3,
+            height: 3,
+            margin: const EdgeInsets.symmetric(horizontal: 7),
+            decoration: const BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
+          ),
+          g.met
+              ? const Icon(Icons.check_circle_rounded, size: 14, color: Palette.success)
+              : GoalIcon(kind: g.goal.kind, size: 14),
+          const SizedBox(width: 3),
+          Text(
+            goalCount(g.goal, g.progress),
+            style: PopType.of(12, 900, color: g.met ? Palette.success : Palette.ink, numbers: true),
+          ),
+        ],
       ],
     );
   }

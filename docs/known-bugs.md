@@ -1,6 +1,10 @@
 # Known bugs and limitations
 
 ## Open
+- **Campaign difficulty is bot-calibrated, not yet played through by people.** Chain ×3
+  levels (10, 15, 20, 24, 26, 28, 30) are the hardest for the bot (15–26%); people who set
+  up chains on purpose should find them easier. Adjust targets after testers play.
+- Gift opening reuses the existing "new best" sound; level complete reuses "level up".
 - **Unexplained once (2026-10-16):** on Windows, `tutorialDone` was found saved as true
   although no tutorial had been finished there. It could not be reproduced from a clean
   state (the tutorial starts and the home screen blocks taps correctly). Watch for it.

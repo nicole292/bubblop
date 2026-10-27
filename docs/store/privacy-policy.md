@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Bubblop** · Effective date: October 22, 2026
+**Bubblop** · Effective date: October 27, 2026
 
 Bubblop is a puzzle game. We built it so that it does not need any of your personal
 information.
@@ -12,6 +12,7 @@ has no accounts, no analytics, no advertising and no tracking.
 ## What stays on your device
 The game saves a few things **only on your device** so it works the way you left it:
 - your best score and the number of games played
+- your level progress, coins, achievements and chosen ball and sky styles
 - your sound, music and vibration settings
 - whether you have completed the tutorial
 

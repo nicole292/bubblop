@@ -33,6 +33,10 @@ abstract final class DevOptions {
       ? _bakeScale.toDouble()
       : WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
 
+  /// POP_PROGRESS=n starts phone-frame screenshot runs with levels 1..n
+  /// completed (in memory only; a player's saved progress is never used).
+  static const progressLevels = int.fromEnvironment('POP_PROGRESS');
+
   /// POP_DEV=true shows the developer bar (4/3-match switch, session stats).
   static const showDevBar = bool.fromEnvironment('POP_DEV');
 

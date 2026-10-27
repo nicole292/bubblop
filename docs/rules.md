@@ -50,9 +50,39 @@ Status: draft spec for the first prototype. Every number here lives in
 - Cracked shell: 5 × k².
 - Board fully cleared after a move: +1000 × level.
 
-## Levels
+## Levels (in-round difficulty)
 - Level up every 30 orbs cleared.
 - Colour 5 is introduced at level 5.
+- In the campaign the same thing happens, but the banner says "Speed up!" so it is not
+  confused with the campaign level number.
+
+## Campaign (30 levels)
+Defined in `packages/pop_core/lib/src/levels.dart`; same rules as Endless, no new mechanics.
+- Each level has a **fixed deal** (seed): every attempt gets the same balls and rows.
+- Goals, all of which must be met before the round ends:
+  - **Score** N points (the round's score),
+  - **Pop** N balls (balls popped in groups; cracked shells don't count),
+  - **Chain** ×N (a chain of N steps from one drop).
+- The level is **won the moment its goals are met** (after that move plays out), even if
+  the same move would also have ended the round. A round that ends first is a loss and
+  records nothing.
+- Levels 1–20 have one goal (score, pop and chain are each introduced alone, small targets
+  first); 21–30 raise the targets and combine two familiar goals.
+- Targets and seeds were set with `dart run tool/levels.dart` (a greedy bot that never plans
+  chains): early levels are won by the bot ~95–100% of the time, later ones 15–85%. A
+  winning move list for every level is in `test/level_solutions.dart`, and
+  `levels_test.dart` replays it, so every level is proven winnable.
+- Level 1 plays on the tutorial board for a player who hasn't done the tutorial.
+
+## Rewards (app, cosmetic only)
+- First clear of a level: 10 coins (levels 1–9), 15 (10–19), 20 (20–30). Replays pay
+  nothing more and only keep the best score.
+- Gift box after levels 3, 6, 9, 12, 15, 18, 21, 24, 27: 30–75 coins (fixed, shown).
+- Special gift after 10, 20, 30: 100 coins plus Candy balls / Sunset sky / Twilight sky.
+- Achievements (each once): First win 20, Chain reaction 20, Complete 5 levels 40,
+  Complete 10 levels 60, Personal best (Endless) 30, All 30 levels 250 coins.
+- Coins unlock Jewel balls (250), Neon balls (400) and the Mint sky (200). No purchases.
+- Everything is saved on the device the moment it is earned (`app/lib/progress/`).
 
 ## Game over
 - A rising row would push any cell above row 9 → game over.

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../game/hud_state.dart';
 import '../game/palette.dart';
 import 'buttons.dart';
+import 'level_result_panel.dart';
 import 'type.dart';
 
 /// Round result on a white card that bounces in, with a big Play again.
@@ -76,6 +77,10 @@ class GameOverPanel extends StatelessWidget {
                 ],
               ),
             ),
+            if (hud.achievements.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              AchievementChips(achievements: hud.achievements),
+            ],
             const SizedBox(height: 22),
             BigButton(label: 'Play again', icon: Icons.replay_rounded, onPressed: onPlayAgain),
             const SizedBox(height: 10),

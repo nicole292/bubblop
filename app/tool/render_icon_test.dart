@@ -54,7 +54,7 @@ void _background(Canvas canvas) {
     rect,
     Paint()
       ..shader = Gradient.linear(Offset.zero, const Offset(size * 0.4, size),
-          const [Palette.skyTop, Palette.skyMid, Palette.skyBottom], const [0, 0.5, 1]),
+          [Palette.skyTop, Palette.skyMid, Palette.skyBottom], const [0, 0.5, 1]),
   );
   // A soft light patch top-left and a warm one bottom-right.
   for (final (c, r, color) in const [

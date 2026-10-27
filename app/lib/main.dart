@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'dev/shot_driver.dart';
+import 'game/dev_options.dart';
 import 'game/palette.dart';
+import 'progress/progress.dart';
 import 'services/haptics.dart';
 import 'services/settings.dart';
 import 'services/sfx.dart';
@@ -13,16 +15,25 @@ Future<void> main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   // Phone-frame test runs never touch the player's saved progress.
   final settings = DevPhone.enabled ? (Settings.memory()..tutorialDone = true) : await Settings.load();
+  final progress = DevPhone.enabled ? Progress.memory() : await Progress.load();
+  if (DevPhone.enabled) {
+    for (var level = 1; level <= DevOptions.progressLevels; level++) {
+      progress.completeLevel(level, score: 1000);
+    }
+  }
+  // The chosen ball set and sky colour everything from the first frame.
+  Palette.apply(balls: progress.balls, sky: progress.sky);
   final sfx = Sfx(settings);
   await sfx.init();
-  final app = PopApp(settings: settings, sfx: sfx, haptics: Haptics(settings));
+  final app = PopApp(settings: settings, progress: progress, sfx: sfx, haptics: Haptics(settings));
   runApp(DevPhone.enabled ? DevPhone(child: app) : app);
 }
 
 class PopApp extends StatelessWidget {
-  const PopApp({super.key, required this.settings, required this.sfx, required this.haptics});
+  const PopApp({super.key, required this.settings, required this.progress, required this.sfx, required this.haptics});
 
   final Settings settings;
+  final Progress progress;
   final Sfx sfx;
   final Haptics haptics;
 
@@ -37,7 +48,7 @@ class PopApp extends StatelessWidget {
         scaffoldBackgroundColor: Palette.skyTop,
         colorScheme: ColorScheme.fromSeed(seedColor: Palette.accent),
       ),
-      home: GameScreen(settings: settings, sfx: sfx, haptics: haptics),
+      home: GameScreen(settings: settings, progress: progress, sfx: sfx, haptics: haptics),
     );
   }
 }

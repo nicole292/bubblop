@@ -29,6 +29,10 @@ dart test
 # Balance simulator (compares rule settings over many seeded games)
 dart run tool/simulate.dart
 
+# Campaign calibration: bot win rate per level; --tune picks seeds and rewrites
+# test/level_solutions.dart (one proven winning line per level)
+dart run tool/levels.dart
+
 # App tests (layout, animation playback matches rules, stats)
 cd C:\dev\project_pop\app
 flutter test
@@ -70,7 +74,8 @@ flutter run -d windows --dart-define=POP_PHONE=390x844+47+34 --dart-define=POP_P
   --dart-define=POP_SEED=7 "--dart-define=POP_SHOT=wait 2; tap 221 450; wait 1; shot board"
 ```
 Script commands: `wait S`, `tap X Y`, `down X Y`, `up`, `shot NAME`, `burst NAME COUNT SECONDS`
-(coordinates in logical pixels inside the phone).
+(coordinates in logical pixels inside the phone). `POP_PROGRESS=12` starts these runs with
+levels 1–12 completed (in memory only); `POP_SHOT_SCALE=3` saves at 3×.
 
 ## App structure (`app/lib`)
 ```
@@ -89,8 +94,10 @@ render/effects.dart    pooled playful effects (confetti, sparkles, rings, puffs,
 render/background.dart bright sky, colour blobs, floating bubbles
 shaders/ball.frag      glossy ball and shell bubble material
 game/tutorial.dart     the guided first round
+progress/              campaign progress, coins, achievements, cosmetics (saved), level rewards
 services/              settings (saved), sound effects (SoLoud), haptics
-ui/                    home screen, HUD, pause menu, hints, banners, game-over panel, debug bar
+ui/                    home, level map + goal card, level results + gift box, achievements,
+                       style, HUD, pause menu, hints, banners, game-over panel, debug bar
 tools/make_sfx.py      generates every sound effect from scratch (python tools/make_sfx.py)
 ```
 

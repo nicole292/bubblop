@@ -1,3 +1,16 @@
+import 'package:pop_core/pop_core.dart';
+
+import '../progress/achievements.dart';
+import '../progress/progress.dart';
+
+/// One level goal and how far the round has got towards it.
+class GoalView {
+  const GoalView(this.goal, this.progress);
+  final LevelGoal goal;
+  final int progress;
+  bool get met => progress >= goal.target;
+}
+
 /// Everything the Flutter HUD shows, published by [PopGame].
 class HudState {
   const HudState({
@@ -18,6 +31,10 @@ class HudState {
     this.hint,
     this.hintColumn,
     this.newBest = false,
+    this.levelNumber,
+    this.goals = const [],
+    this.levelClear,
+    this.achievements = const [],
   });
 
   /// Displayed score: grows as each chain step finishes animating.
@@ -57,6 +74,20 @@ class HudState {
   /// True when the finished round set a new best score.
   final bool newBest;
 
+  /// The campaign level being played, or null in Endless.
+  final int? levelNumber;
+  bool get isLevel => levelNumber != null;
+
+  /// The level's goals with their progress (empty in Endless).
+  final List<GoalView> goals;
+
+  /// Set when the level is won, once its victory moment has played. A level
+  /// round that ends with [isOver] and no [levelClear] was lost.
+  final LevelClear? levelClear;
+
+  /// Achievements unlocked during this round, for the results card.
+  final List<Achievement> achievements;
+
   HudState copyWith({
     int? score,
     int? gain,
@@ -76,6 +107,9 @@ class HudState {
     int? hintColumn,
     bool clearHint = false,
     bool? newBest,
+    List<GoalView>? goals,
+    LevelClear? levelClear,
+    List<Achievement>? achievements,
   }) {
     return HudState(
       score: score ?? this.score,
@@ -95,6 +129,10 @@ class HudState {
       hint: clearHint ? null : hint ?? this.hint,
       hintColumn: clearHint ? null : hintColumn ?? this.hintColumn,
       newBest: newBest ?? this.newBest,
+      levelNumber: levelNumber,
+      goals: goals ?? this.goals,
+      levelClear: levelClear ?? this.levelClear,
+      achievements: achievements ?? this.achievements,
     );
   }
 }

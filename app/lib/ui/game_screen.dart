@@ -3,31 +3,44 @@ import 'dart:math' as math;
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pop_core/pop_core.dart';
 
 import '../game/board_layout.dart';
 import '../game/dev_options.dart';
 import '../game/hud_state.dart';
 import '../game/pop_game.dart';
+import '../progress/progress.dart';
 import '../services/haptics.dart';
 import '../services/settings.dart';
 import '../services/sfx.dart';
+import 'achievements_screen.dart';
 import 'banner_text.dart';
 import 'debug_bar.dart';
 import 'game_over_panel.dart';
 import 'hint_bubble.dart';
 import 'home_screen.dart';
 import 'hud_bar.dart';
+import 'level_result_panel.dart';
+import 'level_select_screen.dart';
 import 'pause_menu.dart';
+import 'style_screen.dart';
 
-enum _Mode { home, playing, paused }
+enum _Mode { home, levels, achievements, style, playing, paused }
 
 /// The app's single screen. The game canvas fills it (background, board,
 /// effects); the HUD, menus and hints are laid out on top. An invisible
 /// board slot tells the game where to draw the board.
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, required this.settings, required this.sfx, required this.haptics});
+  const GameScreen({
+    super.key,
+    required this.settings,
+    required this.progress,
+    required this.sfx,
+    required this.haptics,
+  });
 
   final Settings settings;
+  final Progress progress;
   final Sfx sfx;
   final Haptics haptics;
 
@@ -36,11 +49,19 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
-  late final game = PopGame(settings: widget.settings, sfx: widget.sfx, haptics: widget.haptics);
+  late final game = PopGame(
+    settings: widget.settings,
+    progress: widget.progress,
+    sfx: widget.sfx,
+    haptics: widget.haptics,
+  );
   final _stackKey = GlobalKey();
   _Mode _mode = DevOptions.demo.isNotEmpty || DevOptions.isBench || DevOptions.startPlaying
       ? _Mode.playing
       : _Mode.home;
+
+  /// A level whose goal card should open when the level map appears.
+  int? _openLevel;
 
   @override
   void initState() {
@@ -68,11 +89,27 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     widget.haptics.tap();
   }
 
-  void _play({bool? tutorial}) {
+  /// Starts a round: Endless, or the campaign [level].
+  void _play({bool? tutorial, LevelDef? level}) {
     _tap();
-    game.restart(tutorial: tutorial);
+    game.restart(tutorial: tutorial, level: level);
     game.resumeEngine();
     setState(() => _mode = _Mode.playing);
+  }
+
+  void _deny() {
+    widget.sfx.deny();
+    widget.haptics.deny();
+  }
+
+  /// Shows a menu screen over the (still running) game canvas.
+  void _show(_Mode mode, {int? openLevel}) {
+    _tap();
+    game.resumeEngine();
+    setState(() {
+      _mode = mode;
+      _openLevel = openLevel;
+    });
   }
 
   void _pause() {
@@ -105,6 +142,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         }
       case _Mode.paused:
         _resume();
+      case _Mode.levels || _Mode.achievements || _Mode.style:
+        _show(_Mode.home);
       case _Mode.home:
         break;
     }
@@ -153,15 +192,33 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           ),
           ValueListenableBuilder<HudState>(
             valueListenable: game.hud,
-            builder: (context, hud, _) => hud.isOver && _mode == _Mode.playing
-                ? GameOverPanel(hud: hud, onPlayAgain: () => _play(tutorial: false), onHome: _home)
-                : const SizedBox.shrink(),
+            builder: (context, hud, _) {
+              if (!hud.isOver || _mode != _Mode.playing) return const SizedBox.shrink();
+              if (hud.isLevel) {
+                final level = hud.levelNumber!;
+                return LevelResultPanel(
+                  hud: hud,
+                  onNext: () => _show(_Mode.levels, openLevel: level + 1),
+                  onReplay: () => _play(tutorial: false, level: Campaign.level(level)),
+                  // "LEVEL n" opens that level's goal card, with the map behind it.
+                  onLevels: () => _show(
+                    _Mode.levels,
+                    openLevel: widget.progress.allCompleted ? null : widget.progress.currentLevel,
+                  ),
+                  onGiftOpen: () {
+                    widget.sfx.newBest();
+                    widget.haptics.big();
+                  },
+                );
+              }
+              return GameOverPanel(hud: hud, onPlayAgain: () => _play(tutorial: false), onHome: _home);
+            },
           ),
           if (_mode == _Mode.paused)
             PauseMenu(
               settings: widget.settings,
               onResume: _resume,
-              onRestart: () => _play(tutorial: false),
+              onRestart: () => _play(tutorial: false, level: game.level),
               onHowToPlay: () => _play(tutorial: true),
               onHome: _home,
             ),
@@ -172,11 +229,49 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 // Rebuilds when sprites are baked so the logo balls appear.
                 builder: (context, _, _) => HomeScreen(
                   settings: widget.settings,
+                  progress: widget.progress,
                   sprites: game.sprites,
-                  onPlay: () => _play(),
+                  // "LEVEL n" opens that level's goal card, with the map behind it.
+                  onLevels: () => _show(
+                    _Mode.levels,
+                    openLevel: widget.progress.allCompleted ? null : widget.progress.currentLevel,
+                  ),
+                  onEndless: () => _play(),
+                  onAchievements: () => _show(_Mode.achievements),
+                  onStyle: () => _show(_Mode.style),
                   onHowToPlay: () => _play(tutorial: true),
                   onTap: _tap,
                 ),
+              ),
+            ),
+          if (_mode == _Mode.levels || _mode == _Mode.achievements || _mode == _Mode.style)
+            Positioned.fill(
+              child: ListenableBuilder(
+                listenable: widget.progress,
+                builder: (context, _) => switch (_mode) {
+                  _Mode.levels => LevelSelectScreen(
+                      progress: widget.progress,
+                      openLevel: _openLevel,
+                      onBack: () => _show(_Mode.home),
+                      onPlay: (level) => _play(level: level),
+                      onTap: _tap,
+                      onDeny: _deny,
+                    ),
+                  _Mode.achievements => AchievementsScreen(
+                      progress: widget.progress,
+                      onBack: () => _show(_Mode.home),
+                    ),
+                  _ => StyleScreen(
+                      progress: widget.progress,
+                      onBack: () => _show(_Mode.home),
+                      onTap: _tap,
+                      onBought: () {
+                        widget.sfx.praise();
+                        widget.haptics.big();
+                      },
+                      onDeny: _deny,
+                    ),
+                },
               ),
             ),
         ],

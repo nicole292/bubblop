@@ -35,6 +35,10 @@ class BoardScene {
   void Function()? onRose;
   void Function(int level)? onLevelUp;
 
+  /// The banner for an in-round level-up. Level mode says "Speed up!" so it
+  /// isn't confused with the campaign's level number.
+  String Function(int level) levelUpText = (level) => 'Level $level!';
+
   int? shakeColumn;
   double shakeTime = 0;
 
@@ -90,7 +94,7 @@ class BoardScene {
           ],
         LevelUp(:final level) => [
             Phase(0, onStart: () {
-              onBanner?.call('Level $level!');
+              onBanner?.call(levelUpText(level));
               onLevelUp?.call(level);
             }),
           ],

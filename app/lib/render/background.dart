@@ -23,15 +23,21 @@ class SkyBackground {
   void resize(Size size) {
     if (size == _size || size.isEmpty) return;
     _size = size;
-    _gradient = Paint()
-      ..shader = Gradient.linear(Offset.zero, Offset(size.width * 0.3, size.height),
-          const [Palette.skyTop, Palette.skyMid, Palette.skyBottom], const [0, 0.5, 1]);
+    restyle();
     _blobs?.dispose();
     _blobs = _bakeBlobs(size);
     _bubbles.clear();
     for (var i = 0; i < 6; i++) {
       _bubbles.add(_reset(_Bubble(), anywhere: true));
     }
+  }
+
+  /// Repaints the gradient in the current sky colours ([Palette.apply]).
+  void restyle() {
+    if (_size.isEmpty) return;
+    _gradient = Paint()
+      ..shader = Gradient.linear(Offset.zero, Offset(_size.width * 0.3, _size.height),
+          [Palette.skyTop, Palette.skyMid, Palette.skyBottom], const [0, 0.5, 1]);
   }
 
   _Bubble _reset(_Bubble b, {bool anywhere = false}) {

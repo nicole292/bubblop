@@ -9,6 +9,8 @@ import 'package:pop_core/pop_core.dart';
 
 import '../render/background.dart';
 import '../render/effects.dart';
+import '../progress/achievements.dart';
+import '../progress/progress.dart';
 import '../render/orb_sprites.dart';
 import '../services/haptics.dart';
 import '../services/settings.dart';
@@ -32,17 +34,24 @@ import 'tutorial.dart';
 /// The Flame canvas covers the whole screen (background, board, effects);
 /// the Flutter HUD sits on top and tells the game where the board goes via
 /// [setBoardArea].
+///
+/// A round is either Endless or a campaign [level]: then a [LevelTracker]
+/// follows its goals, and the round ends as a win the moment they are met.
 class PopGame extends FlameGame {
   PopGame({
     required this.settings,
+    required this.progress,
     required this.sfx,
     required this.haptics,
     this._config = const RulesConfig(),
   }) {
     _startRound(tutorial: false);
+    _style = (progress.balls, progress.sky);
+    progress.addListener(_progressChanged);
   }
 
   final Settings settings;
+  final Progress progress;
   final Sfx sfx;
   final Haptics haptics;
 
@@ -92,6 +101,19 @@ class PopGame extends FlameGame {
   TutorialStep _tutorial = TutorialStep.off;
   double _hintTimer = 0;
 
+  /// The campaign level being played, or null in Endless.
+  LevelDef? level;
+  LevelTracker? _tracker;
+
+  /// The goals were met: input stops while the winning move plays out.
+  bool _levelWon = false;
+
+  /// Achievements unlocked this round, shown on the results card.
+  final _roundAchievements = <Achievement>[];
+
+  /// The ball set and sky the sprites and background were drawn with.
+  late (Object, Object) _style;
+
   // POP_BENCH only: auto-play and frame timing (see dev_options.dart).
   FrameBench? _bench;
   double _benchTime = 0;
@@ -116,8 +138,20 @@ class PopGame extends FlameGame {
     _relayout();
   }
 
+  /// A new ball set or sky was chosen: recolour the palette, rebake the
+  /// balls and repaint the sky.
+  void _progressChanged() {
+    final style = (progress.balls, progress.sky);
+    if (style == _style) return;
+    _style = style;
+    Palette.apply(balls: progress.balls, sky: progress.sky);
+    background.restyle();
+    _relayout(force: true);
+  }
+
   @override
   void onRemove() {
+    progress.removeListener(_progressChanged);
     sprites?.dispose();
     background.dispose();
     super.onRemove();
@@ -162,21 +196,25 @@ class PopGame extends FlameGame {
     return layout.rect.top - area.top;
   }
 
-  /// Starts a fresh round. The first round on a new install is the tutorial.
-  void restart({RulesConfig? config, bool? tutorial}) {
+  /// Starts a fresh round: Endless, or the campaign [level] when given. The
+  /// first round on a new install is the tutorial (level 1 plays on the
+  /// tutorial board then).
+  void restart({RulesConfig? config, bool? tutorial, LevelDef? level}) {
     if (config != null) {
       _config = config;
       _relayout(force: true);
     }
     phases.clear();
     effects.clear();
-    _startRound(tutorial: tutorial ?? !settings.tutorialDone);
+    this.level = level;
+    final firstTime = !settings.tutorialDone;
+    _startRound(tutorial: tutorial ?? (firstTime && (level == null || level.number == 1)));
   }
 
   /// [x] is relative to the board slot.
   void aimAt(double x) {
     final layout = this.layout;
-    if (rules.isOver || layout == null) return;
+    if (rules.isOver || _levelWon || layout == null) return;
     aimColumn = layout.columnAt(x + (_boardArea?.left ?? 0));
   }
 
@@ -193,6 +231,7 @@ class PopGame extends FlameGame {
   }
 
   void dropAt(int column) {
+    if (_levelWon) return;
     if (!phases.isIdle) phases.speed = Timings.fastForward;
     final result = rules.drop(column);
     if (!result.accepted) {
@@ -204,7 +243,19 @@ class PopGame extends FlameGame {
       return;
     }
     stats.recordMove(result);
-    if (rules.isOver) {
+    final chain = result.events.whereType<ChainStep>().length;
+    final chainAchievement = progress.recordChain(chain);
+    if (chainAchievement != null) _roundAchievements.add(chainAchievement);
+    final tracker = _tracker;
+    tracker?.record(result);
+    final won = tracker != null && tracker.complete;
+    if (won) {
+      // The goals are met: this move plays out, then the level is won (even
+      // if the same move also ended the round).
+      _levelWon = true;
+      aimColumn = null;
+    }
+    if (rules.isOver && !won) {
       final summary = stats.finishRound(score: rules.score, moves: rules.moves);
       debugPrint('Round over score ${summary.score}, moves ${summary.moves}, '
           'best chain ${summary.longestChain}');
@@ -216,6 +267,7 @@ class PopGame extends FlameGame {
     }
     final popped = result.events.any((e) => e is ChainStep);
     phases.addAll([Phase(0, onStart: () => _afterMove(popped))]);
+    if (won) phases.addAll([Phase(Timings.levelWinDelay, onEnd: _levelComplete)]);
     _publishRulesState();
   }
 
@@ -253,9 +305,14 @@ class PopGame extends FlameGame {
   }
 
   void _startRound({required bool tutorial}) {
-    final seed = DevOptions.seed ?? math.Random().nextInt(1 << 31);
+    final level = this.level;
+    // A level always deals the same balls and rows (its fixed seed).
+    final seed = level?.seed ?? DevOptions.seed ?? math.Random().nextInt(1 << 31);
     rules = DevOptions.demoGame(_config) ??
         (tutorial ? Tutorial.game(_config, seed) : Game(seed: seed, config: _config));
+    _tracker = level == null ? null : LevelTracker(level);
+    _levelWon = false;
+    _roundAchievements.clear();
     scene = BoardScene(_config.columns, _config.rows)
       ..onPoints = (points) {
         if (points <= 0) return;
@@ -272,6 +329,7 @@ class PopGame extends FlameGame {
         sfx.levelUp();
         haptics.big();
       }
+      ..levelUpText = (level == null ? (n) => 'Level $n!' : (_) => 'Speed up!')
       ..load(rules.board);
     aimColumn = null;
     boardLight = 0;
@@ -287,8 +345,49 @@ class PopGame extends FlameGame {
       spritesVersion: hud.value.spritesVersion,
       hint: _tutorial == TutorialStep.drop ? Tutorial.dropHint : null,
       hintColumn: _tutorial == TutorialStep.drop ? Tutorial.dropColumn : null,
+      levelNumber: level?.number,
+      goals: _goalViews(),
     );
     _publishRulesState();
+  }
+
+  List<GoalView> _goalViews() {
+    final tracker = _tracker;
+    if (tracker == null) return const [];
+    return [for (final g in tracker.level.goals) GoalView(g, tracker.progress(g))];
+  }
+
+  /// The level's goals are met and the winning move has played: record the
+  /// win (rewards are granted and saved right here) and celebrate.
+  void _levelComplete() {
+    final level = this.level;
+    final tracker = _tracker;
+    if (level == null || tracker == null) return;
+    final clear = progress.completeLevel(level.number, score: tracker.score);
+    if (clear == null) return;
+    _roundAchievements.addAll(clear.achievements);
+    sfx.levelUp();
+    haptics.big();
+    _celebrate();
+    hud.value = hud.value.copyWith(
+      isOver: true,
+      goals: _goalViews(),
+      levelClear: clear,
+      achievements: List.of(_roundAchievements),
+      longestChain: tracker.bestChain,
+      moves: rules.moves,
+      clearHint: true,
+    );
+    _tutorial = TutorialStep.off;
+  }
+
+  /// Confetti in every ball colour behind the results card.
+  void _celebrate() {
+    final area = _boardArea;
+    if (area == null) return;
+    for (var i = 0; i < Palette.balls.length; i++) {
+      effects.confetti(area.center.translate((i - 2) * 40.0, -40), Palette.balls[i], count: 14, power: 2.5);
+    }
   }
 
   void _banner(String text) {
@@ -296,20 +395,32 @@ class PopGame extends FlameGame {
   }
 
   void _gameOver() {
+    // A won level shows its victory card instead.
+    if (_levelWon) return;
     // Show what happened: the board jolts as the round ends.
     shake = math.max(shake, (layout?.cell ?? 50) * 0.12);
     final last = stats.rounds.isEmpty ? null : stats.rounds.last;
+    if (level != null) {
+      // A lost level: nothing is recorded, the Endless best is untouched.
+      sfx.gameOver();
+      hud.value = hud.value.copyWith(
+        isOver: true,
+        goals: _goalViews(),
+        achievements: List.of(_roundAchievements),
+        longestChain: last?.longestChain ?? 0,
+        moves: last?.moves ?? rules.moves,
+        clearHint: true,
+      );
+      _tutorial = TutorialStep.off;
+      return;
+    }
     final isBest = settings.recordRound(rules.score);
     if (isBest) {
       sfx.newBest();
       haptics.big();
-      final area = _boardArea;
-      if (area != null) {
-        // A celebration burst behind the results card.
-        for (var i = 0; i < Palette.balls.length; i++) {
-          effects.confetti(area.center.translate((i - 2) * 40.0, -40), Palette.balls[i], count: 14, power: 2.5);
-        }
-      }
+      final best = progress.recordPersonalBest();
+      if (best != null) _roundAchievements.add(best);
+      _celebrate();
     } else {
       sfx.gameOver();
     }
@@ -317,6 +428,7 @@ class PopGame extends FlameGame {
       isOver: true,
       best: settings.best,
       newBest: isBest,
+      achievements: List.of(_roundAchievements),
       longestChain: last?.longestChain ?? 0,
       moves: last?.moves ?? rules.moves,
       clearHint: true,
@@ -327,6 +439,8 @@ class PopGame extends FlameGame {
   // --- Tutorial -----------------------------------------------------------
 
   void _afterMove(bool popped) {
+    // Goal progress ticks up once the move has finished playing.
+    if (_tracker != null) hud.value = hud.value.copyWith(goals: _goalViews());
     if (_tutorial == TutorialStep.drop) {
       if (popped) {
         // The key lesson is learned; don't force the tutorial again.

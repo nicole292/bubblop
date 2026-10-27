@@ -1,11 +1,14 @@
 import 'dart:ui';
 
+import '../progress/cosmetics.dart';
+
 /// "Bright & Bouncy" colour tokens. Every screen uses these.
 abstract final class Palette {
-  // Sky behind everything: bright, airy, a little playful.
-  static const skyTop = Color(0xFF5CC8FF);
-  static const skyMid = Color(0xFF7FA8FF);
-  static const skyBottom = Color(0xFFA98BFF);
+  // Sky behind everything: bright, airy, a little playful. Set by the
+  // chosen sky cosmetic ([apply]).
+  static Color skyTop = Cosmetics.day.colors[0];
+  static Color skyMid = Cosmetics.day.colors[1];
+  static Color skyBottom = Cosmetics.day.colors[2];
 
   // Board card.
   static const card = Color(0xFFFFFFFF);
@@ -22,17 +25,22 @@ abstract final class Palette {
   static const pipEmpty = Color(0xFFDDE2FA);
   static const gold = Color(0xFFFFB020);
   static const danger = Color(0xFFFF4D5E);
+  static const success = Color(0xFF22C55E);
+  static const coin = Color(0xFFFFB020);
   static const buttonStart = Color(0xFFFFA62B);
   static const buttonEnd = Color(0xFFFF5C8A);
 
-  /// Cherry, Sunflower, Fresh green, Sky blue, Grape — in colour-index order.
-  /// Chosen to differ in brightness as well as hue, since colour is the only
-  /// cue on a ball.
-  static const balls = [
-    Color(0xFFFF4757),
-    Color(0xFFFFC312),
-    Color(0xFF2ED573),
-    Color(0xFF1E90FF),
-    Color(0xFF9B59F6),
-  ];
+  /// The ball colours in colour-index order, from the chosen ball set
+  /// ([apply]). Classic: cherry, sunflower, fresh green, sky blue, grape.
+  /// Every set differs in brightness as well as hue, since colour is the
+  /// only cue on a ball.
+  static List<Color> balls = Cosmetics.classic.colors;
+
+  /// Switches to the player's chosen ball set and sky.
+  static void apply({required Cosmetic balls, required Cosmetic sky}) {
+    Palette.balls = balls.colors;
+    skyTop = sky.colors[0];
+    skyMid = sky.colors[1];
+    skyBottom = sky.colors[2];
+  }
 }

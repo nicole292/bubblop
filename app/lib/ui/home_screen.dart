@@ -3,28 +3,40 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../game/palette.dart';
+import '../progress/progress.dart';
 import '../render/orb_sprites.dart';
 import '../services/settings.dart';
 import 'buttons.dart';
+import 'glass.dart';
 import 'orb_icon.dart';
 import 'type.dart';
 
 /// The first thing players see: a light, glowing sky with glossy balls
-/// drifting up, the bouncing logo, a best-score chip, one big shining Play
-/// button and a quiet "How to play". Nothing to read, nothing to sign up for.
+/// drifting up, the bouncing logo, coins and best score, one big shining
+/// Levels button, Endless beside it, and three quiet round buttons
+/// (achievements, style, how to play). Nothing to read, nothing to sign up
+/// for.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.settings,
+    required this.progress,
     required this.sprites,
-    required this.onPlay,
+    required this.onLevels,
+    required this.onEndless,
+    required this.onAchievements,
+    required this.onStyle,
     required this.onHowToPlay,
     required this.onTap,
   });
 
   final Settings settings;
+  final Progress progress;
   final OrbSprites? sprites;
-  final VoidCallback onPlay;
+  final VoidCallback onLevels;
+  final VoidCallback onEndless;
+  final VoidCallback onAchievements;
+  final VoidCallback onStyle;
   final VoidCallback onHowToPlay;
   final VoidCallback onTap;
 
@@ -49,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final settings = widget.settings;
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -75,16 +87,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           SafeArea(
             child: ListenableBuilder(
-              listenable: settings,
+              listenable: Listenable.merge([settings, widget.progress]),
               builder: (context, _) => Column(
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                     child: Row(
                       children: [
-                        if (settings.best > 0) _BestChip(best: settings.best),
+                        CoinChip(coins: widget.progress.coins),
+                        if (settings.best > 0) ...[const SizedBox(width: 8), _BestChip(best: settings.best)],
                         const Spacer(),
-                        _GlassIcon(
+                        GlassIconButton(
                           icon: settings.sound ? Icons.volume_up_rounded : Icons.volume_off_rounded,
                           tooltip: 'Sound',
                           off: !settings.sound,
@@ -94,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           },
                         ),
                         const SizedBox(width: 8),
-                        _GlassIcon(
+                        GlassIconButton(
                           icon: settings.music ? Icons.music_note_rounded : Icons.music_off_rounded,
                           tooltip: 'Music',
                           off: !settings.music,
@@ -104,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           },
                         ),
                         const SizedBox(width: 8),
-                        _GlassIcon(
+                        GlassIconButton(
                           icon: settings.haptics ? Icons.vibration_rounded : Icons.mobile_off_rounded,
                           tooltip: 'Vibration',
                           off: !settings.haptics,
@@ -131,24 +144,58 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: _ShinyButton(
                         clock: _clock,
                         child: BigButton(
-                          label: 'PLAY',
+                          label: widget.progress.allCompleted ? 'LEVELS' : 'LEVEL ${widget.progress.currentLevel}',
                           icon: Icons.play_arrow_rounded,
                           height: 76,
-                          onPressed: widget.onPlay,
+                          onPressed: widget.onLevels,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  _GlassPill(
-                    label: 'How to play',
-                    icon: Icons.lightbulb_rounded,
-                    onPressed: () {
-                      widget.onTap();
-                      widget.onHowToPlay();
-                    },
-                  ),
+                  const SizedBox(height: 16),
+                  GlassPill(label: 'Endless', icon: Icons.all_inclusive_rounded, onPressed: widget.onEndless),
                   const Spacer(flex: 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: GlassIconButton(
+                          icon: Icons.emoji_events_rounded,
+                          tooltip: 'Achievements',
+                          label: 'Awards',
+                          size: 52,
+                          onPressed: widget.onAchievements,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 100,
+                        child: GlassIconButton(
+                          icon: Icons.palette_rounded,
+                          tooltip: 'Style',
+                          label: 'Style',
+                          size: 52,
+                          onPressed: widget.onStyle,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 100,
+                        child: GlassIconButton(
+                          icon: Icons.lightbulb_rounded,
+                          tooltip: 'How to play',
+                          label: 'How to play',
+                          size: 52,
+                          onPressed: () {
+                            widget.onTap();
+                            widget.onHowToPlay();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
                   const Padding(padding: EdgeInsets.only(bottom: 14), child: _Signature()),
                 ],
               ),
@@ -160,14 +207,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-/// Frosted glass: a faint white fill with a brighter edge.
-BoxDecoration _glass(double radius) => BoxDecoration(
-  color: const Color(0x33FFFFFF),
-  borderRadius: BorderRadius.circular(radius),
-  border: Border.all(color: const Color(0x80FFFFFF), width: 1.2),
-  boxShadow: const [BoxShadow(color: Color(0x143A2D9E), blurRadius: 10, offset: Offset(0, 3))],
-);
-
 class _BestChip extends StatelessWidget {
   const _BestChip({required this.best});
   final int best;
@@ -177,7 +216,7 @@ class _BestChip extends StatelessWidget {
     return Container(
       height: 44,
       padding: const EdgeInsets.fromLTRB(7, 0, 16, 0),
-      decoration: _glass(22),
+      decoration: glass(22),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -197,57 +236,6 @@ class _BestChip extends StatelessWidget {
           const SizedBox(width: 8),
           Text('$best', style: PopType.of(20, 900, color: Colors.white, numbers: true)),
         ],
-      ),
-    );
-  }
-}
-
-class _GlassIcon extends StatelessWidget {
-  const _GlassIcon({required this.icon, required this.tooltip, required this.off, required this.onPressed});
-  final IconData icon;
-  final String tooltip;
-  final bool off;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: _glass(22),
-          child: Icon(icon, size: 22, color: off ? const Color(0x80FFFFFF) : Colors.white),
-        ),
-      ),
-    );
-  }
-}
-
-class _GlassPill extends StatelessWidget {
-  const _GlassPill({required this.label, required this.icon, required this.onPressed});
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        height: 46,
-        padding: const EdgeInsets.symmetric(horizontal: 22),
-        decoration: _glass(23),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: const Color(0xFFFFD45C)),
-            const SizedBox(width: 8),
-            Text(label, style: PopType.of(16, 800, color: Colors.white)),
-          ],
-        ),
       ),
     );
   }
