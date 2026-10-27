@@ -300,7 +300,7 @@ Connect **Users and Access**), and the games can be transferred to your own acco
    `POP_PROGRESS=11` starts with levels 1–11 done (in memory only). `POP_STYLE=shape.hearts` buys
    and uses that style for the run (the 1.2.0 shots use Hearts). Shots land in
    `app\build\shots\`. Copy the ones you want into `app\build\store_raw\` with the names
-   listed in `tools\make_store_assets.py` (`chain`, `map`, `level_card`, `gift`, `style`,
+   listed in `tools\make_store_assets.py` (`chain`, `map`, `level_card`, `gift`, `style`, `chain_hearts`,
    `home`). The chain, goal card and gift come from playing level 10 with its recorded
    winning moves (`packages\pop_core\test\level_solutions.dart`). Ask me if you'd rather I
    do it.

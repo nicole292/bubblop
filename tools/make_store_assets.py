@@ -27,6 +27,7 @@ SHOTS = [
     ('level_card', 'Clear goals, fun twists'),
     ('gift', 'Win gifts and new styles'),
     ('style', 'Unlock new shapes, colours and skies'),
+    ('chain_hearts', 'Play with cute shapes'),
     ('home', 'Plays offline, no ads'),
 ]
 

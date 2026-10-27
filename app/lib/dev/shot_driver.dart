@@ -16,8 +16,8 @@ import '../game/dev_options.dart';
 ///
 ///   --dart-define=POP_SHOT="wait 2; shot home; tap 195 700; wait 1; shot board"
 ///     Plays the script, saves PNGs to build/shots/ and quits.
-///     Commands: `wait S` · `tap X Y` · `down X Y` · `up` · `shot NAME` ·
-///     `burst NAME COUNT SECONDS_APART`
+///     Commands: `wait S` · `tap X Y` · `down X Y` · `up` · `scroll X Y DY` ·
+///     `shot NAME` · `burst NAME COUNT SECONDS_APART`
 ///     Coordinates are logical pixels inside the phone.
 ///
 ///   --dart-define=POP_SHOT_SCALE=3  saves at 3× (default 2), e.g. 440x956 → 1320×2868.
@@ -69,6 +69,12 @@ class _DevPhoneState extends State<DevPhone> {
           GestureBinding.instance.handlePointerEvent(PointerDownEvent(pointer: ++_pointer, position: _held!));
         case 'up':
           GestureBinding.instance.handlePointerEvent(PointerUpEvent(pointer: _pointer, position: _held!));
+        case 'scroll':
+          // A mouse-wheel scroll of DY pixels at X Y, e.g. down a list.
+          GestureBinding.instance.handlePointerEvent(PointerScrollEvent(
+              position: _global(Offset(double.parse(parts[1]), double.parse(parts[2]))),
+              scrollDelta: Offset(0, double.parse(parts[3]))));
+          await _wait(0.1);
         case 'shot':
           await _shot(dir, parts[1]);
         case 'burst':
