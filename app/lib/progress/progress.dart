@@ -71,9 +71,11 @@ class Progress extends ChangeNotifier {
     }
     _owned.addAll(prefs.getStringList(_ownedKey) ?? const []);
     _balls = Cosmetics.byId(prefs.getString(_ballsKey) ?? '') ?? Cosmetics.defaultBalls;
+    _shape = Cosmetics.byId(prefs.getString(_shapeKey) ?? '') ?? Cosmetics.defaultShape;
     _sky = Cosmetics.byId(prefs.getString(_skyKey) ?? '') ?? Cosmetics.defaultSky;
-    if (!owns(_balls)) _balls = Cosmetics.defaultBalls;
-    if (!owns(_sky)) _sky = Cosmetics.defaultSky;
+    if (!owns(_balls) || _balls.kind != CosmeticKind.balls) _balls = Cosmetics.defaultBalls;
+    if (!owns(_shape) || _shape.kind != CosmeticKind.shape) _shape = Cosmetics.defaultShape;
+    if (!owns(_sky) || _sky.kind != CosmeticKind.sky) _sky = Cosmetics.defaultSky;
   }
 
   static const _completedKey = 'progress.completed';
@@ -83,6 +85,7 @@ class Progress extends ChangeNotifier {
   static const _achievementsKey = 'progress.achievements';
   static const _ownedKey = 'style.owned';
   static const _ballsKey = 'style.balls';
+  static const _shapeKey = 'style.shape';
   static const _skyKey = 'style.sky';
 
   final SharedPreferences? _prefs;
@@ -113,6 +116,7 @@ class Progress extends ChangeNotifier {
   final _achievements = <AchievementId>{};
   final _owned = <String>{};
   Cosmetic _balls = Cosmetics.defaultBalls;
+  Cosmetic _shape = Cosmetics.defaultShape;
   Cosmetic _sky = Cosmetics.defaultSky;
 
   // --- Levels -------------------------------------------------------------
@@ -211,7 +215,7 @@ class Progress extends ChangeNotifier {
     return a;
   }
 
-  /// An Endless round set a new best score.
+  /// A Classic round set a new best score.
   Achievement? recordPersonalBest() {
     final a = _unlockAchievement(AchievementId.personalBest);
     if (a != null) {
@@ -241,8 +245,13 @@ class Progress extends ChangeNotifier {
   bool owns(Cosmetic c) => c.unlock is FreeUnlock || _owned.contains(c.id);
 
   Cosmetic get balls => _balls;
+  Cosmetic get shape => _shape;
   Cosmetic get sky => _sky;
-  Cosmetic selected(CosmeticKind kind) => kind == CosmeticKind.balls ? _balls : _sky;
+  Cosmetic selected(CosmeticKind kind) => switch (kind) {
+        CosmeticKind.balls => _balls,
+        CosmeticKind.shape => _shape,
+        CosmeticKind.sky => _sky,
+      };
 
   /// Unlocks a coin cosmetic. Returns false if it isn't for sale, is
   /// already owned, or the player can't afford it.
@@ -259,10 +268,13 @@ class Progress extends ChangeNotifier {
   /// Uses an owned cosmetic. Returns false if it isn't owned.
   bool select(Cosmetic c) {
     if (!owns(c)) return false;
-    if (c.kind == CosmeticKind.balls) {
-      _balls = c;
-    } else {
-      _sky = c;
+    switch (c.kind) {
+      case CosmeticKind.balls:
+        _balls = c;
+      case CosmeticKind.shape:
+        _shape = c;
+      case CosmeticKind.sky:
+        _sky = c;
     }
     _save();
     notifyListeners();
@@ -279,6 +291,7 @@ class Progress extends ChangeNotifier {
     prefs.setStringList(_achievementsKey, [for (final a in _achievements) a.name]);
     prefs.setStringList(_ownedKey, _owned.toList());
     prefs.setString(_ballsKey, _balls.id);
+    prefs.setString(_shapeKey, _shape.id);
     prefs.setString(_skyKey, _sky.id);
   }
 }

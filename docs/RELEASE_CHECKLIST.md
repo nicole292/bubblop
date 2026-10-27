@@ -31,8 +31,9 @@ Tick items as you go (in VS Code: change `[ ]` to `[x]`). Details for each step 
 - [x] Main store listing: texts, icon, feature graphic, 5 screenshots [9B.3]
 - [x] Internal testing: upload `app-release.aab`, accept Play App Signing, install on your phone [9B.4]
 - [ ] Real-phone checks: sound, vibration, smoothness, best score after reopening, pause on a call [6]
-- [ ] Main store listing: replace the screenshots with the 6 new ones and paste the new description lines (1.1.1)
-- [ ] Closed testing release with `Bubblop 1.1.1 (upload this).aab` sent for review [9B.5]
+- [ ] Main store listing: replace the screenshots with the 6 new ones and paste the new description lines (1.2.0)
+- [x] Closed testing track live with 1.0.0, published 2026-10-27 [9B.5]
+- [ ] Closed testing update with `Bubblop 1.2.0 (upload this).aab` (build 4) sent for review [9B.5]
 - [ ] 12+ testers opted in (list names here): …
 - [ ] Day 1 of 14: ____ · Day 14: ____
 - [ ] Apply for production access [9B.6]

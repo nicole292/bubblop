@@ -402,6 +402,10 @@ class LevelIntro extends StatelessWidget {
                       _GoalRow(goal: goal),
                       const SizedBox(height: 8),
                     ],
+                    if (level.drops != null || level.setup != LevelSetup.normal) ...[
+                      _Twists(level: level),
+                      const SizedBox(height: 8),
+                    ],
                     const SizedBox(height: 8),
                     _RewardRow(rewards: rewards, completed: completed, best: progress.bestScore(level.number)),
                     const SizedBox(height: 18),
@@ -445,6 +449,50 @@ class _GoalRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The level's extra rules, as small tags: "In 45 drops", "Shell wall".
+class _Twists extends StatelessWidget {
+  const _Twists({required this.level});
+  final LevelDef level;
+
+  @override
+  Widget build(BuildContext context) {
+    final drops = level.drops;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 6,
+      children: [
+        if (drops != null) _tag(Icons.water_drop_rounded, 'In $drops drops'),
+        if (level.setup != LevelSetup.normal) _tag(_setupIcon(level.setup), level.setup.about),
+      ],
+    );
+  }
+
+  static IconData _setupIcon(LevelSetup setup) => switch (setup) {
+        LevelSetup.wall => Icons.bubble_chart_rounded,
+        LevelSetup.calm => Icons.palette_rounded,
+        LevelSetup.rush => Icons.keyboard_double_arrow_up_rounded,
+        LevelSetup.normal => Icons.circle,
+      };
+
+  Widget _tag(IconData icon, String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF4D6),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Palette.gold, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: Palette.ink),
+            const SizedBox(width: 5),
+            Text(text, style: PopType.of(14, 900)),
+          ],
+        ),
+      );
 }
 
 class _RewardRow extends StatelessWidget {

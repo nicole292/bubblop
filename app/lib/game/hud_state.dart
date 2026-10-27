@@ -32,6 +32,7 @@ class HudState {
     this.hintColumn,
     this.newBest = false,
     this.levelNumber,
+    this.dropsLeft,
     this.goals = const [],
     this.levelClear,
     this.achievements = const [],
@@ -78,6 +79,9 @@ class HudState {
   final int? levelNumber;
   bool get isLevel => levelNumber != null;
 
+  /// Drops left on a level with a drop limit, otherwise null.
+  final int? dropsLeft;
+
   /// The level's goals with their progress (empty in Endless).
   final List<GoalView> goals;
 
@@ -107,6 +111,7 @@ class HudState {
     int? hintColumn,
     bool clearHint = false,
     bool? newBest,
+    int? dropsLeft,
     List<GoalView>? goals,
     LevelClear? levelClear,
     List<Achievement>? achievements,
@@ -130,6 +135,7 @@ class HudState {
       hintColumn: clearHint ? null : hintColumn ?? this.hintColumn,
       newBest: newBest ?? this.newBest,
       levelNumber: levelNumber,
+      dropsLeft: dropsLeft ?? this.dropsLeft,
       goals: goals ?? this.goals,
       levelClear: levelClear ?? this.levelClear,
       achievements: achievements ?? this.achievements,

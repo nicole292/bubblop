@@ -70,6 +70,9 @@ enum GameOverReason {
 
   /// Every column is full.
   boardFull,
+
+  /// A level's drop limit was used up ([Game.dropLimit]).
+  outOfDrops,
 }
 
 class GameOver extends GameEvent {

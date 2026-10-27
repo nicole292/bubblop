@@ -4,7 +4,9 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 import '../game/palette.dart';
+import '../progress/cosmetics.dart';
 import 'orb_material.dart';
+import 'piece_shapes.dart';
 
 /// Pre-rendered images for everything drawn many times per frame: balls,
 /// shells, halos and the shadow. Each is rendered once per screen size (balls
@@ -41,11 +43,14 @@ class OrbSprites {
   }
 
   /// [shapes] adds a white symbol to every ball (the colour-blind option);
-  /// shells show it through their glass.
-  factory OrbSprites.bake(double radius, double pixelRatio, FragmentProgram? program, {bool shapes = false}) {
+  /// shells show it through their glass. [shape] is the piece outline: any
+  /// shape but a ball gets the same material, cut to that outline.
+  factory OrbSprites.bake(double radius, double pixelRatio, FragmentProgram? program,
+      {bool shapes = false, PieceShape shape = PieceShape.ball}) {
     final size = (radius * pad * 2 * pixelRatio).ceil();
     final rPx = radius * pixelRatio;
     final full = Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble());
+    final outline = piecePath(shape, rPx)?.shift(Offset(size / 2, size / 2));
 
     Image picture(void Function(Canvas canvas) paint) {
       final recorder = PictureRecorder();
@@ -65,11 +70,11 @@ class OrbSprites {
       canvas.restore();
     }
 
-    void shaderPass(Canvas canvas, Color color, double mode) {
+    void shaderPass(Canvas canvas, Color color, double mode, {double scale = 1}) {
       final shader = program!.fragmentShader()
         ..setFloat(0, size.toDouble())
         ..setFloat(1, size.toDouble())
-        ..setFloat(2, rPx)
+        ..setFloat(2, rPx * scale)
         ..setFloat(3, color.r)
         ..setFloat(4, color.g)
         ..setFloat(5, color.b)
@@ -80,9 +85,44 @@ class OrbSprites {
 
     final balls = <Image>[];
     final shells = <Image>[];
+    /// A shaped piece: the ball material drawn a little larger and cut to the
+    /// outline, with a soft contour so neighbours never merge.
+    void shapedBall(Canvas canvas, Path outline, int c) {
+      canvas.save();
+      canvas.clipPath(outline);
+      if (program != null) {
+        shaderPass(canvas, Palette.balls[c], 0, scale: shapeCover);
+      } else {
+        centred(canvas, (cv) => paintBall(cv, radius * shapeCover, c));
+      }
+      canvas.drawPath(
+          outline,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = rPx * 0.12
+            ..color = const Color(0x24000000));
+      canvas.restore();
+    }
+
+    /// Frosted glass over a shaped piece, with a white rim along the outline.
+    void shapedShell(Canvas canvas, Path outline) {
+      canvas.save();
+      canvas.clipPath(outline);
+      canvas.drawPath(outline, Paint()..color = const Color(0x80FFFFFF));
+      canvas.drawPath(
+          outline,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = rPx * 0.26
+            ..color = const Color(0xF2FFFFFF));
+      canvas.restore();
+    }
+
     for (var c = 0; c < Palette.balls.length; c++) {
       final ball = picture((canvas) {
-        if (program != null) {
+        if (outline != null) {
+          shapedBall(canvas, outline, c);
+        } else if (program != null) {
           shaderPass(canvas, Palette.balls[c], 0);
         } else {
           centred(canvas, (cv) => paintBall(cv, radius, c));
@@ -91,7 +131,10 @@ class OrbSprites {
       });
       balls.add(ball);
       shells.add(picture((canvas) {
-        if (program != null) {
+        if (outline != null) {
+          canvas.drawImage(ball, Offset.zero, Paint());
+          shapedShell(canvas, outline);
+        } else if (program != null) {
           // The full-size ball under frosted glass, so every cell reads
           // as the same size.
           canvas.drawImage(ball, Offset.zero, Paint());

@@ -49,7 +49,7 @@ class HudBar extends StatelessWidget {
                       children: [
                         _Score(value: hud.score, gain: hud.gain, gainId: hud.gainId),
                         if (hud.isLevel)
-                          _GoalLine(level: hud.levelNumber!, goals: hud.goals)
+                          _GoalLine(level: hud.levelNumber!, goals: hud.goals, dropsLeft: hud.dropsLeft)
                         else
                           _SubLine(best: hud.best, level: hud.level),
                       ],
@@ -199,11 +199,13 @@ class _SubLine extends StatelessWidget {
 }
 
 /// Level mode: the level number, then each goal's progress ("23/40"),
-/// ticking green when met.
+/// ticking green when met, then the drops left on a level with a limit
+/// (red when only a few remain).
 class _GoalLine extends StatelessWidget {
-  const _GoalLine({required this.level, required this.goals});
+  const _GoalLine({required this.level, required this.goals, this.dropsLeft});
   final int level;
   final List<GoalView> goals;
+  final int? dropsLeft;
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +226,20 @@ class _GoalLine extends StatelessWidget {
           Text(
             goalCount(g.goal, g.progress),
             style: PopType.of(12, 900, color: g.met ? Palette.success : Palette.ink, numbers: true),
+          ),
+        ],
+        if (dropsLeft case final drops?) ...[
+          Container(
+            width: 3,
+            height: 3,
+            margin: const EdgeInsets.symmetric(horizontal: 7),
+            decoration: const BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
+          ),
+          Icon(Icons.water_drop_rounded, size: 13, color: drops <= 5 ? Palette.danger : Palette.inkSoft),
+          const SizedBox(width: 2),
+          Text(
+            '$drops',
+            style: PopType.of(12, 900, color: drops <= 5 ? Palette.danger : Palette.ink, numbers: true),
           ),
         ],
       ],

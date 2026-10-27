@@ -37,6 +37,10 @@ abstract final class DevOptions {
   /// completed (in memory only; a player's saved progress is never used).
   static const progressLevels = int.fromEnvironment('POP_PROGRESS');
 
+  /// POP_STYLE=shape.hearts,balls.candy buys (with the run's coins) and uses
+  /// these cosmetics in phone-frame screenshot runs.
+  static const style = String.fromEnvironment('POP_STYLE');
+
   /// POP_DEV=true shows the developer bar (4/3-match switch, session stats).
   static const showDevBar = bool.fromEnvironment('POP_DEV');
 

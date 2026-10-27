@@ -83,28 +83,43 @@ class GlassIconButton extends StatelessWidget {
   }
 }
 
-/// A glass pill with an icon and a label (secondary actions on the sky).
+/// A glass pill with a label and an optional icon (secondary actions on
+/// the sky). [wide] fills the available width, with the content centred.
 class GlassPill extends StatelessWidget {
-  const GlassPill({super.key, required this.label, required this.icon, required this.onPressed, this.iconColor});
+  const GlassPill({
+    super.key,
+    required this.label,
+    this.icon,
+    required this.onPressed,
+    this.iconColor,
+    this.wide = false,
+    this.height = 48,
+  });
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final VoidCallback onPressed;
   final Color? iconColor;
+  final bool wide;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        height: 48,
+        height: height,
+        width: wide ? double.infinity : null,
         padding: const EdgeInsets.symmetric(horizontal: 22),
-        decoration: glass(24),
+        decoration: glass(height / 2),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: wide ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: iconColor ?? const Color(0xFFFFD45C)),
-            const SizedBox(width: 8),
-            Text(label, style: PopType.of(16, 800, color: Colors.white)),
+            if (icon != null) ...[
+              Icon(icon, size: height * 0.42, color: iconColor ?? const Color(0xFFFFD45C)),
+              const SizedBox(width: 8),
+            ],
+            Text(label, style: PopType.of(height / 3, 800, color: Colors.white)),
           ],
         ),
       ),

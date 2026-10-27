@@ -13,9 +13,9 @@ import 'type.dart';
 
 /// The first thing players see: a light, glowing sky with glossy balls
 /// drifting up, the bouncing logo, coins and best score, one big shining
-/// Levels button, Endless beside it, and three quiet round buttons
-/// (achievements, style, how to play). Nothing to read, nothing to sign up
-/// for.
+/// Levels button, Classic (no goals, just play) below it, and three quiet
+/// round buttons (achievements, style, how to play). Nothing to read,
+/// nothing to sign up for.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -23,7 +23,7 @@ class HomeScreen extends StatefulWidget {
     required this.progress,
     required this.sprites,
     required this.onLevels,
-    required this.onEndless,
+    required this.onClassic,
     required this.onAchievements,
     required this.onStyle,
     required this.onHowToPlay,
@@ -34,7 +34,7 @@ class HomeScreen extends StatefulWidget {
   final Progress progress;
   final OrbSprites? sprites;
   final VoidCallback onLevels;
-  final VoidCallback onEndless;
+  final VoidCallback onClassic;
   final VoidCallback onAchievements;
   final VoidCallback onStyle;
   final VoidCallback onHowToPlay;
@@ -153,7 +153,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  GlassPill(label: 'Endless', icon: Icons.all_inclusive_rounded, onPressed: widget.onEndless),
+                  // Classic: the glass pill of the round buttons, as wide as Levels.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 44),
+                    child: GlassPill(
+                      label: 'Classic',
+                      icon: Icons.all_inclusive_rounded,
+                      wide: true,
+                      onPressed: widget.onClassic,
+                    ),
+                  ),
                   const Spacer(flex: 2),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -207,6 +216,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
+/// The best Classic score, next to the coins.
 class _BestChip extends StatelessWidget {
   const _BestChip({required this.best});
   final int best;

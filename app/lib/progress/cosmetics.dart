@@ -1,6 +1,10 @@
 import 'dart:ui';
 
-enum CosmeticKind { balls, sky }
+enum CosmeticKind { balls, shape, sky }
+
+/// The outline of every piece on the board. Colour still tells pieces apart;
+/// the shape is purely decorative and the same for all five colours.
+enum PieceShape { ball, jelly, heart, star, flower }
 
 /// How a cosmetic is obtained: free from the start, from a level's special
 /// gift, or with coins.
@@ -22,19 +26,22 @@ class CoinUnlock extends Unlock {
   final int price;
 }
 
-/// A ball colour set (5 colours, in colour-index order) or a sky (top,
-/// middle, bottom of the background gradient). Purely decorative.
+/// A ball colour set (5 colours, in colour-index order), a piece shape
+/// ([shape], no colours) or a sky (top, middle, bottom of the background
+/// gradient). Purely decorative.
 class Cosmetic {
-  const Cosmetic(this.id, this.kind, this.name, this.colors, this.unlock);
+  const Cosmetic(this.id, this.kind, this.name, this.colors, this.unlock, {this.shape = PieceShape.ball});
 
   final String id;
   final CosmeticKind kind;
   final String name;
   final List<Color> colors;
   final Unlock unlock;
+  final PieceShape shape;
 }
 
-/// Everything a player can collect. Each ball set has its own character
+/// Everything a player can collect. Shapes change only the piece outline,
+/// never the colours. Each ball set has its own character
 /// (Classic bright, Candy soft and light, Jewel deep with amber and jade,
 /// Neon electric with lime, cyan and orange) so the sets look clearly
 /// different, while the five colours within a set stay far apart in hue and
@@ -74,6 +81,17 @@ abstract final class Cosmetics {
     Color(0xFF7A3CFF),
   ], CoinUnlock(400));
 
+  static const bubbles =
+      Cosmetic('shape.bubbles', CosmeticKind.shape, 'Bubbles', [], FreeUnlock(), shape: PieceShape.ball);
+  static const jelly =
+      Cosmetic('shape.jelly', CosmeticKind.shape, 'Jelly', [], CoinUnlock(150), shape: PieceShape.jelly);
+  static const hearts =
+      Cosmetic('shape.hearts', CosmeticKind.shape, 'Hearts', [], CoinUnlock(250), shape: PieceShape.heart);
+  static const stars =
+      Cosmetic('shape.stars', CosmeticKind.shape, 'Stars', [], CoinUnlock(300), shape: PieceShape.star);
+  static const flowers =
+      Cosmetic('shape.flowers', CosmeticKind.shape, 'Flowers', [], CoinUnlock(350), shape: PieceShape.flower);
+
   static const day = Cosmetic('sky.day', CosmeticKind.sky, 'Day', [
     Color(0xFF5CC8FF),
     Color(0xFF7FA8FF),
@@ -98,9 +116,14 @@ abstract final class Cosmetics {
     Color(0xFFC77DDB),
   ], GiftUnlock(30));
 
-  static const all = [classic, candy, jewel, neon, day, mint, sunset, twilight];
+  static const all = [
+    classic, candy, jewel, neon, //
+    bubbles, jelly, hearts, stars, flowers,
+    day, mint, sunset, twilight,
+  ];
 
   static const defaultBalls = classic;
+  static const defaultShape = bubbles;
   static const defaultSky = day;
 
   static List<Cosmetic> ofKind(CosmeticKind kind) => [for (final c in all) if (c.kind == kind) c];

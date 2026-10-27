@@ -155,8 +155,10 @@ void main() {
     test('defaults are owned and selected', () {
       final p = Progress.memory();
       expect(p.balls, Cosmetics.classic);
+      expect(p.shape, Cosmetics.bubbles);
       expect(p.sky, Cosmetics.day);
       expect(p.owns(Cosmetics.classic), isTrue);
+      expect(p.owns(Cosmetics.bubbles), isTrue);
       expect(p.owns(Cosmetics.jewel), isFalse);
     });
 
@@ -180,6 +182,20 @@ void main() {
       expect(p.sky, Cosmetics.day);
       expect(p.select(Cosmetics.sunset), isTrue, reason: 'won at level 20');
       expect(p.sky, Cosmetics.sunset);
+    });
+
+    test('a shape is bought and used on its own, keeping the ball colours', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final p = Progress.from(prefs);
+      expect(p.select(Cosmetics.hearts), isFalse, reason: 'not owned');
+      clearUpTo(p, 12);
+      expect(p.buy(Cosmetics.jelly), isTrue);
+      expect(p.select(Cosmetics.jelly), isTrue);
+      expect(p.shape, Cosmetics.jelly);
+      expect(p.balls, Cosmetics.classic);
+      expect(p.selected(CosmeticKind.shape), Cosmetics.jelly);
+      expect(Progress.from(prefs).shape, Cosmetics.jelly);
     });
   });
 
@@ -214,9 +230,11 @@ void main() {
     });
 
     test('a damaged selection falls back to the defaults', () async {
-      SharedPreferences.setMockInitialValues({'style.balls': 'balls.neon', 'style.sky': 'nonsense'});
+      SharedPreferences.setMockInitialValues(
+          {'style.balls': 'balls.neon', 'style.shape': 'balls.classic', 'style.sky': 'nonsense'});
       final p = Progress.from(await SharedPreferences.getInstance());
       expect(p.balls, Cosmetics.classic, reason: 'neon is not owned');
+      expect(p.shape, Cosmetics.bubbles, reason: 'a ball set is not a shape');
       expect(p.sky, Cosmetics.day);
     });
   });

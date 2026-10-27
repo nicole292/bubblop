@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'dev/shot_driver.dart';
 import 'game/dev_options.dart';
 import 'game/palette.dart';
+import 'progress/cosmetics.dart';
 import 'progress/progress.dart';
 import 'services/haptics.dart';
 import 'services/settings.dart';
@@ -20,9 +21,15 @@ Future<void> main() async {
     for (var level = 1; level <= DevOptions.progressLevels; level++) {
       progress.completeLevel(level, score: 1000);
     }
+    for (final id in DevOptions.style.split(',')) {
+      final cosmetic = Cosmetics.byId(id);
+      if (cosmetic == null) continue;
+      progress.buy(cosmetic);
+      progress.select(cosmetic);
+    }
   }
-  // The chosen ball set and sky colour everything from the first frame.
-  Palette.apply(balls: progress.balls, sky: progress.sky);
+  // The chosen ball set, shape and sky style everything from the first frame.
+  Palette.apply(balls: progress.balls, shape: progress.shape, sky: progress.sky);
   final sfx = Sfx(settings);
   await sfx.init();
   final app = PopApp(settings: settings, progress: progress, sfx: sfx, haptics: Haptics(settings));

@@ -241,7 +241,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     _Mode.levels,
                     openLevel: widget.progress.allCompleted ? null : widget.progress.currentLevel,
                   ),
-                  onEndless: () => _play(),
+                  onClassic: () => _play(),
                   onAchievements: () => _show(_Mode.achievements),
                   onStyle: () => _show(_Mode.style),
                   onHowToPlay: () => _play(tutorial: true),

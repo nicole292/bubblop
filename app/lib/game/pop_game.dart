@@ -46,7 +46,7 @@ class PopGame extends FlameGame {
     this._config = const RulesConfig(),
   }) {
     _startRound(tutorial: false);
-    _style = (progress.balls, progress.sky);
+    _style = (progress.balls, progress.shape, progress.sky);
     progress.addListener(_progressChanged);
   }
 
@@ -112,7 +112,7 @@ class PopGame extends FlameGame {
   final _roundAchievements = <Achievement>[];
 
   /// The ball set and sky the sprites and background were drawn with.
-  late (Object, Object) _style;
+  late (Object, Object, Object) _style;
 
   // POP_BENCH only: auto-play and frame timing (see dev_options.dart).
   FrameBench? _bench;
@@ -138,13 +138,13 @@ class PopGame extends FlameGame {
     _relayout();
   }
 
-  /// A new ball set or sky was chosen: recolour the palette, rebake the
-  /// balls and repaint the sky.
+  /// A new ball set, shape or sky was chosen: restyle the palette, rebake
+  /// the balls and repaint the sky.
   void _progressChanged() {
-    final style = (progress.balls, progress.sky);
+    final style = (progress.balls, progress.shape, progress.sky);
     if (style == _style) return;
     _style = style;
-    Palette.apply(balls: progress.balls, sky: progress.sky);
+    Palette.apply(balls: progress.balls, shape: progress.shape, sky: progress.sky);
     background.restyle();
     _relayout(force: true);
   }
@@ -296,7 +296,7 @@ class PopGame extends FlameGame {
     if (_programLoaded && (force || sprites == null || (sprites!.radius - radius).abs() > 0.5)) {
       sprites?.dispose();
       final ratio = DevOptions.pixelRatio;
-      sprites = OrbSprites.bake(radius, ratio, _orbProgram);
+      sprites = OrbSprites.bake(radius, ratio, _orbProgram, shape: Palette.shape);
       // New sprites: let the HUD redraw its ball icons with them.
       hud.value = hud.value.copyWith(spritesVersion: hud.value.spritesVersion + 1);
     }
@@ -309,7 +309,9 @@ class PopGame extends FlameGame {
     // A level always deals the same balls and rows (its fixed seed).
     final seed = level?.seed ?? DevOptions.seed ?? math.Random().nextInt(1 << 31);
     rules = DevOptions.demoGame(_config) ??
-        (tutorial ? Tutorial.game(_config, seed) : Game(seed: seed, config: _config));
+        (tutorial
+            ? Tutorial.game(_config, seed)
+            : level?.newGame(base: _config) ?? Game(seed: seed, config: _config));
     _tracker = level == null ? null : LevelTracker(level);
     _levelWon = false;
     _roundAchievements.clear();
@@ -578,7 +580,8 @@ class PopGame extends FlameGame {
       level: rules.level,
       queue: rules.queue,
       pressure: rules.pressure,
-      pressureMax: _config.pressureInterval(rules.level),
+      pressureMax: rules.config.pressureInterval(rules.level),
+      dropsLeft: rules.dropsLeft,
       best: settings.best,
     );
   }

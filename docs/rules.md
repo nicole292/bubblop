@@ -35,6 +35,8 @@ Status: draft spec for the first prototype. Every number here lives in
 - A countdown starts at 9 pips. Every drop ticks it by 1.
 - At 0, **after the move has fully resolved**, a row of 6 shells rises from the bottom
   and pushes everything up by one. The countdown resets to the current level's interval.
+- If a column is full when the row would rise, the round ends, unless that drop popped
+  something: then the row waits one more drop, a last chance to make room.
 - Interval: 9 at level 1, down 1 every **2** levels, minimum 4 (9, 9, 8, 8, 7, 7, 6, 6, 5…).
 - **The next row is visible** before it rises, so its shell colours can be planned for.
   Rows are generated one rise ahead; a level-up affects the row after the previewed one.
@@ -57,17 +59,25 @@ Status: draft spec for the first prototype. Every number here lives in
   confused with the campaign level number.
 
 ## Campaign (30 levels)
-Defined in `packages/pop_core/lib/src/levels.dart`; same rules as Endless, no new mechanics.
+Defined in `packages/pop_core/lib/src/levels.dart`; same rules as Endless, plus a few
+per-level twists.
 - Each level has a **fixed deal** (seed): every attempt gets the same balls and rows.
 - Goals, all of which must be met before the round ends:
   - **Score** N points (the round's score),
   - **Pop** N balls (balls popped in groups; cracked shells don't count),
-  - **Chain** ×N (a chain of N steps from one drop).
+  - **Chain** ×N (a chain of N steps from one drop),
+  - **Crack** N shells (shells cracked open next to a pop).
+- Some levels have a **drop limit** ("in 45 drops"): the round ends when it is used up
+  (levels 6, 12, 16, 17, 18, 29).
+- Some levels have a **setup** twist, shown on the level card:
+  - **Shell wall**: starts with 3 rows of shells and 1 open row (levels 8, 13, 19, 22, 23, 27),
+  - **Three colours**: only 3 colours all round, for long chains (levels 10, 17, 25),
+  - **Fast rows**: the row countdown starts at 6 instead of 9 (levels 14, 20, 26, 30).
 - The level is **won the moment its goals are met** (after that move plays out), even if
   the same move would also have ended the round. A round that ends first is a loss and
   records nothing.
-- Levels 1–20 have one goal (score, pop and chain are each introduced alone, small targets
-  first); 21–30 raise the targets and combine two familiar goals.
+- Levels 1–20 have one goal (score, pop, chain and crack are each introduced alone, small
+  targets first); 21–30 raise the targets and combine two familiar goals.
 - Targets and seeds were set with `dart run tool/levels.dart` (a greedy bot that never plans
   chains): early levels are won by the bot ~95–100% of the time, later ones 15–85%. A
   winning move list for every level is in `test/level_solutions.dart`, and
@@ -80,7 +90,7 @@ Defined in `packages/pop_core/lib/src/levels.dart`; same rules as Endless, no ne
 - Gift box after levels 3, 6, 9, 12, 15, 18, 21, 24, 27: 30–75 coins (fixed, shown).
 - Special gift after 10, 20, 30: 100 coins plus Candy balls / Sunset sky / Twilight sky.
 - Achievements (each once): First win 20, Chain reaction 20, Complete 5 levels 40,
-  Complete 10 levels 60, Personal best (Endless) 30, All 30 levels 250 coins.
+  Complete 10 levels 60, Personal best (Classic) 30, All 30 levels 250 coins.
 - Coins unlock Jewel balls (250), Neon balls (400) and the Mint sky (200). No purchases.
 - Everything is saved on the device the moment it is earned (`app/lib/progress/`).
 

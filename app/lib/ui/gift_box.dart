@@ -208,7 +208,11 @@ class _GiftBoxState extends State<GiftBox> with TickerProviderStateMixin {
             CosmeticSwatch(cosmetic: cosmetic, height: 34),
             const SizedBox(height: 6),
             Text(
-              cosmetic.kind == CosmeticKind.balls ? 'New balls: ${cosmetic.name}!' : 'New sky: ${cosmetic.name}!',
+              switch (cosmetic.kind) {
+                CosmeticKind.balls => 'New balls: ${cosmetic.name}!',
+                CosmeticKind.shape => 'New shapes: ${cosmetic.name}!',
+                CosmeticKind.sky => 'New sky: ${cosmetic.name}!',
+              },
               style: PopType.of(16, 1000, color: Palette.accent),
             ),
             const SizedBox(height: 4),

@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:project_pop/progress/cosmetics.dart';
+import 'package:project_pop/render/piece_shapes.dart';
 
 /// CIELAB colour (perceived lightness and hue), for measuring how different
 /// two colours look.
@@ -54,6 +55,32 @@ void main() {
       expect(sky.colors.length, 3, reason: sky.name);
       for (final c in sky.colors) {
         expect(lab(c)[0], inInclusiveRange(50, 85), reason: '${sky.name}: too dark or too pale');
+      }
+    }
+  });
+
+  test('every shape fills its cell without touching a neighbour', () {
+    const r = 100.0;
+    // Balls are 0.47 of a cell, so half a cell is 1.064 radii.
+    for (final set in Cosmetics.ofKind(CosmeticKind.shape)) {
+      expect(set.colors, isEmpty, reason: '${set.name}: shapes keep the chosen colours');
+      final path = piecePath(set.shape, r);
+      if (set.shape == PieceShape.ball) {
+        expect(path, isNull);
+        continue;
+      }
+      final bounds = path!.getBounds();
+      expect(bounds.width, inInclusiveRange(r * 1.7, r * 2.12), reason: set.name);
+      expect(bounds.height, inInclusiveRange(r * 1.7, r * 2.12), reason: set.name);
+      for (final edge in [bounds.left, bounds.top, -bounds.right, -bounds.bottom]) {
+        expect(edge, greaterThanOrEqualTo(-r * 1.064), reason: '${set.name} reaches into the next cell');
+      }
+      // The material is drawn out to shapeCover radii; the outline must stay inside it.
+      for (final metric in path.computeMetrics()) {
+        for (var d = 0.0; d < metric.length; d += 2) {
+          expect(metric.getTangentForOffset(d)!.position.distance, lessThanOrEqualTo(r * shapeCover),
+              reason: '${set.name} pokes out of its shading');
+        }
       }
     }
   });

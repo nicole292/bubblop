@@ -20,11 +20,13 @@ import 'package:pop_core/pop_core.dart';
 const attempts = 80;
 
 /// Wanted bot win rate (0–1) per level: near-certain at first, then easing
-/// down. Chain ×3 levels get a lower floor (the bot seldom chains).
+/// down. Chain ×3 and ×4 levels get a lower floor (the bot seldom chains).
 (double, double) band(LevelDef level) {
   final n = level.number;
   final chain3 = level.goals.any((g) => g.kind == GoalKind.chain && g.target >= 3);
+  final chain4 = level.goals.any((g) => g.kind == GoalKind.chain && g.target >= 4);
   if (n <= 3) return (0.95, 1.0);
+  if (chain4) return (0.04, 0.6);
   if (chain3) return n <= 15 ? (0.25, 0.9) : (0.15, 0.8);
   if (n <= 9) return (0.8, 1.0);
   if (n <= 20) return (0.55, 0.95);
@@ -38,19 +40,23 @@ void main(List<String> args) {
   for (final level in Campaign.levels) {
     final (lo, hi) = band(level);
     var seed = level.seed;
-    var (rate, solution) = _winRate(level, seed);
+    var (rate, solution, median) = _winRate(level);
     if (tune) {
       for (var tries = 0; tries < 200 && (rate < lo || rate > hi || solution == null); tries++) {
         seed++;
-        (rate, solution) = _winRate(LevelDef(level.number, seed, level.goals), seed);
+        (rate, solution, median) = _winRate(_withSeed(level, seed));
       }
     }
     seeds[level.number] = seed;
     if (solution != null) solutions[level.number] = solution;
-    final goals = level.goals.map((g) => g.text).join(' + ');
+    final goals = [
+      ...level.goals.map((g) => g.text),
+      if (level.drops != null) 'in ${level.drops} drops',
+      if (level.setup != LevelSetup.normal) '[${level.setup.label}]',
+    ].join(' + ');
     final flag = rate < lo || rate > hi ? '  <-- outside ${(lo * 100).round()}–${(hi * 100).round()}%' : '';
     stdout.writeln('${level.number.toString().padLeft(2)}  seed $seed  '
-        '${(rate * 100).round().toString().padLeft(3)}%  $goals$flag');
+        '${(rate * 100).round().toString().padLeft(3)}%  wins in ~${median ?? '-'} drops  $goals$flag');
   }
   if (!tune) return;
 
@@ -68,12 +74,18 @@ void main(List<String> args) {
   stdout.writeln('Wrote test/level_solutions.dart (${solutions.length} levels).');
 }
 
-/// Bot win rate on [seed], and the shortest winning move list found.
-(double, List<int>?) _winRate(LevelDef level, int seed) {
+LevelDef _withSeed(LevelDef level, int seed) =>
+    LevelDef(level.number, seed, level.goals, drops: level.drops, setup: level.setup);
+
+/// Bot win rate on the level's deal, the shortest winning move list found,
+/// and the median number of drops a win took.
+(double, List<int>?, int?) _winRate(LevelDef level) {
+  final seed = level.seed;
   var wins = 0;
   List<int>? best;
+  final lengths = <int>[];
   for (var a = 0; a < attempts; a++) {
-    final game = Game(seed: seed);
+    final game = level.newGame();
     final tracker = LevelTracker(level);
     final bot = math.Random(seed * 1000 + a);
     final moves = <int>[];
@@ -84,10 +96,12 @@ void main(List<String> args) {
     }
     if (tracker.complete) {
       wins++;
+      lengths.add(moves.length);
       if (best == null || moves.length < best.length) best = moves;
     }
   }
-  return (wins / attempts, best);
+  lengths.sort();
+  return (wins / attempts, best, lengths.isEmpty ? null : lengths[lengths.length ~/ 2]);
 }
 
 /// The simulator's greedy bot (tool/simulate.dart), with adjustable noise so

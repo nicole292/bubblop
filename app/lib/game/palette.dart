@@ -36,9 +36,13 @@ abstract final class Palette {
   /// only cue on a ball.
   static List<Color> balls = Cosmetics.classic.colors;
 
-  /// Switches to the player's chosen ball set and sky.
-  static void apply({required Cosmetic balls, required Cosmetic sky}) {
+  /// The outline of every piece, from the chosen shape set ([apply]).
+  static PieceShape shape = PieceShape.ball;
+
+  /// Switches to the player's chosen ball set, shape and sky.
+  static void apply({required Cosmetic balls, required Cosmetic shape, required Cosmetic sky}) {
     Palette.balls = balls.colors;
+    Palette.shape = shape.shape;
     skyTop = sky.colors[0];
     skyMid = sky.colors[1];
     skyBottom = sky.colors[2];

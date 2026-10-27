@@ -78,6 +78,7 @@ class RulesConfig {
 
   RulesConfig copyWith({
     int? matchSize,
+    int? startColors,
     int? orbsPerLevel,
     int? startPressure,
     int? minPressure,
@@ -92,7 +93,7 @@ class RulesConfig {
       columns: columns,
       rows: rows,
       matchSize: matchSize ?? this.matchSize,
-      startColors: startColors,
+      startColors: startColors ?? this.startColors,
       maxColors: maxColors,
       extraColorLevel: extraColorLevel ?? this.extraColorLevel,
       orbsPerLevel: orbsPerLevel ?? this.orbsPerLevel,

@@ -139,7 +139,14 @@ class LevelResultPanel extends StatelessWidget {
         const SizedBox(height: 4),
         FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(close ? 'So close!' : 'Out of room!', style: PopType.of(32, 1000, color: Palette.ink)),
+          child: Text(
+            close
+                ? 'So close!'
+                : hud.dropsLeft == 0
+                    ? 'Out of drops!'
+                    : 'Out of room!',
+            style: PopType.of(32, 1000, color: Palette.ink),
+          ),
         ),
         const SizedBox(height: 14),
         for (final g in hud.goals) ...[

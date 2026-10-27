@@ -297,7 +297,8 @@ Connect **Users and Access**), and the games can be transferred to your own acco
      --dart-define=POP_SHOT_SCALE=3 --dart-define=POP_PROGRESS=11 `
      "--dart-define=POP_SHOT=wait 5; shot home; tap 220 603; wait 1; tap 220 920; wait 0.8; shot map"
    ```
-   `POP_PROGRESS=11` starts with levels 1–11 done (in memory only). Shots land in
+   `POP_PROGRESS=11` starts with levels 1–11 done (in memory only). `POP_STYLE=shape.hearts` buys
+   and uses that style for the run (the 1.2.0 shots use Hearts). Shots land in
    `app\build\shots\`. Copy the ones you want into `app\build\store_raw\` with the names
    listed in `tools\make_store_assets.py` (`chain`, `map`, `level_card`, `gift`, `style`,
    `home`). The chain, goal card and gift come from playing level 10 with its recorded

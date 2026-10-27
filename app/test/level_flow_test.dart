@@ -90,6 +90,41 @@ void main() {
     expect(settings.gamesPlayed, 0);
   });
 
+  test('a level with a drop limit counts down and is lost when the drops run out', () {
+    final progress = Progress.memory();
+    final game = makeGame(progress: progress);
+    game.restart(level: const LevelDef(6, 7, [LevelGoal.pop(999)], drops: 3));
+    expect(game.hud.value.dropsLeft, 3);
+    for (final column in [0, 1, 2]) {
+      game.dropAt(column);
+      finishAnimations(game);
+    }
+    final hud = game.hud.value;
+    expect(hud.dropsLeft, 0);
+    expect(hud.isOver, isTrue);
+    expect(hud.levelClear, isNull);
+    expect(progress.isCompleted(6), isFalse);
+  });
+
+  test('every campaign level plays its setup and limit, and its winning line wins in the app', () {
+    for (final level in Campaign.levels.where((l) => l.drops != null || l.setup != LevelSetup.normal)) {
+      final game = makeGame();
+      game.restart(level: level);
+      final want = level.setup.apply(const RulesConfig());
+      final got = game.rules.config;
+      expect((got.startRows, got.colorsForLevel(1), got.pressureInterval(1)),
+          (want.startRows, want.colorsForLevel(1), want.pressureInterval(1)),
+          reason: 'level ${level.number}');
+      expect(game.hud.value.dropsLeft, level.drops, reason: 'level ${level.number}');
+      for (final column in levelSolutions[level.number]!) {
+        game.dropAt(column);
+        finishAnimations(game);
+      }
+      // (Not recorded: a fresh save hasn't unlocked these levels.)
+      expect(game.hud.value.goals.every((g) => g.met), isTrue, reason: 'level ${level.number}');
+    }
+  });
+
   test('a new player starting level 1 gets the tutorial board, and its lesson wins the level', () {
     final settings = Settings.memory();
     final progress = Progress.memory();

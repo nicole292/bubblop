@@ -24,10 +24,10 @@ ACCENT = (0x7B, 0x5C, 0xFF)
 SHOTS = [
     ('chain', 'Huge chain reactions!'),
     ('map', '30 levels to beat'),
-    ('level_card', 'A clear goal every level'),
+    ('level_card', 'Clear goals, fun twists'),
     ('gift', 'Win gifts and new styles'),
-    ('style', 'Unlock new balls and skies'),
-    ('home', 'Endless mode, plays offline'),
+    ('style', 'Unlock new shapes, colours and skies'),
+    ('home', 'Plays offline, no ads'),
 ]
 
 

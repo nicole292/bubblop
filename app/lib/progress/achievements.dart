@@ -19,7 +19,7 @@ abstract final class Achievements {
     Achievement(AchievementId.firstChain, 'Chain reaction', 'Set off a chain of 2 or more', 20),
     Achievement(AchievementId.fiveLevels, 'Getting going', 'Complete 5 levels', 40, target: 5),
     Achievement(AchievementId.tenLevels, 'On a roll', 'Complete 10 levels', 60, target: 10),
-    Achievement(AchievementId.personalBest, 'Personal best', 'Set a new best score in Endless', 30),
+    Achievement(AchievementId.personalBest, 'Personal best', 'Set a new best score in Classic', 30),
     Achievement(AchievementId.allLevels, 'Bubblop master', 'Complete all 30 levels', 250, target: 30),
   ];
 

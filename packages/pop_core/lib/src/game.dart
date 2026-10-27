@@ -33,6 +33,7 @@ class Game {
     this.config = const RulesConfig(),
     Board? board,
     List<int> scriptedQueue = const [],
+    this.dropLimit,
   })  : _board = board?.copy() ?? Board(config.columns, config.rows),
         _bag = ColorBag(SeededRandom(seed)),
         // Rising rows use their own generator so they never shift which
@@ -76,6 +77,10 @@ class Game {
   final int seed;
   final RulesConfig config;
 
+  /// A level's number of drops; the round ends when they are used up.
+  /// Null: no limit (Endless).
+  final int? dropLimit;
+
   final Board _board;
   final ColorBag _bag;
   final SeededRandom _rowRandom;
@@ -96,6 +101,9 @@ class Game {
   int get level => _level;
   int get orbsCleared => _orbsCleared;
   int get moves => _moves;
+
+  /// Drops left before [dropLimit] ends the round, or null without a limit.
+  int? get dropsLeft => dropLimit == null ? null : math.max(0, dropLimit! - _moves);
 
   /// Drops remaining until the next row rises.
   int get pressure => _pressure;
@@ -155,7 +163,11 @@ class Game {
       _pressure = math.min(_pressure + config.chainRelief, interval);
     }
     _pressure--;
-    if (_pressure <= 0) {
+    if (_pressure <= 0 && steps.isNotEmpty && _anyColumnFull()) {
+      // The row would push a full column off the top, but this drop popped:
+      // it waits one more drop, a last chance to make room.
+      _pressure = 1;
+    } else if (_pressure <= 0) {
       _pressure = config.pressureInterval(_level);
       if (_anyColumnFull()) {
         _isOver = true;
@@ -168,6 +180,11 @@ class Game {
     if (!_isOver && _board.isFull) {
       _isOver = true;
       events.add(const GameOver(GameOverReason.boardFull));
+    }
+
+    if (!_isOver && dropsLeft == 0) {
+      _isOver = true;
+      events.add(const GameOver(GameOverReason.outOfDrops));
     }
 
     _score += points;

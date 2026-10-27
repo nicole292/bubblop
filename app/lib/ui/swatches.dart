@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../game/palette.dart';
 import '../progress/cosmetics.dart';
+import '../render/piece_shapes.dart';
 
-/// A small preview of a cosmetic: five glossy balls for a ball set, a
-/// rounded gradient for a sky.
+/// A small preview of a cosmetic: five glossy pieces for a ball set (in the
+/// chosen shape) or a shape (in the chosen colours), a rounded gradient for
+/// a sky.
 class CosmeticSwatch extends StatelessWidget {
   const CosmeticSwatch({super.key, required this.cosmetic, this.height = 40, this.wide = false});
   final Cosmetic cosmetic;
@@ -31,6 +34,8 @@ class CosmeticSwatch extends StatelessWidget {
       );
     }
     final ball = height * 0.72;
+    final shape = cosmetic.kind == CosmeticKind.shape ? cosmetic.shape : Palette.shape;
+    final colors = cosmetic.kind == CosmeticKind.shape ? Palette.balls : cosmetic.colors;
     return SizedBox(
       height: height,
       child: Row(
@@ -38,9 +43,9 @@ class CosmeticSwatch extends StatelessWidget {
         mainAxisSize: wide ? MainAxisSize.max : MainAxisSize.min,
         mainAxisAlignment: wide ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
         children: [
-          for (final (i, color) in cosmetic.colors.indexed) ...[
+          for (final (i, color) in colors.indexed) ...[
             if (i > 0 && !wide) SizedBox(width: ball * 0.12),
-            GlossyBall(color: color, size: ball),
+            GlossyBall(color: color, size: ball, shape: shape),
           ],
         ],
       ),
@@ -48,14 +53,19 @@ class CosmeticSwatch extends StatelessWidget {
   }
 }
 
-/// A simple shaded ball: lighter top-left, the colour below, a highlight.
+/// A simple shaded ball (or [shape]): lighter top-left, the colour below, a
+/// highlight.
 class GlossyBall extends StatelessWidget {
-  const GlossyBall({super.key, required this.color, required this.size});
+  const GlossyBall({super.key, required this.color, required this.size, this.shape = PieceShape.ball});
   final Color color;
   final double size;
+  final PieceShape shape;
 
   @override
   Widget build(BuildContext context) {
+    if (shape != PieceShape.ball) {
+      return CustomPaint(size: Size.square(size), painter: _ShapePainter(color, shape));
+    }
     return Container(
       width: size,
       height: size,
@@ -79,4 +89,38 @@ class GlossyBall extends StatelessWidget {
       ),
     );
   }
+}
+
+/// [GlossyBall]'s look, cut to a piece outline.
+class _ShapePainter extends CustomPainter {
+  _ShapePainter(this.color, this.shape);
+  final Color color;
+  final PieceShape shape;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = size.width / 2;
+    final outline = piecePath(shape, r)!.shift(size.center(Offset.zero));
+    canvas.save();
+    canvas.clipPath(outline);
+    final cover = Rect.fromCircle(center: size.center(Offset.zero), radius: r * shapeCover);
+    canvas.drawRect(
+        cover,
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(-0.3, -0.4),
+            radius: 0.85,
+            colors: [Color.lerp(color, Colors.white, 0.35)!, color, Color.lerp(color, Colors.black, 0.12)!],
+            stops: const [0, 0.6, 1],
+          ).createShader(cover));
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromCenter(center: Offset(r * 0.65, r * 0.55), width: r * 0.48, height: r * 0.32),
+            Radius.circular(r)),
+        Paint()..color = Colors.white.withValues(alpha: 0.75));
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_ShapePainter old) => old.color != color || old.shape != shape;
 }

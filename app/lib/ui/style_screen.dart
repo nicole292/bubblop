@@ -8,7 +8,7 @@ import 'glass.dart';
 import 'swatches.dart';
 import 'type.dart';
 
-/// The collection: ball sets and skies. Owned items can be used with a tap;
+/// The collection: ball sets, shapes and skies. Owned items can be used with a tap;
 /// coin items unlock with coins; gift items come from the level gifts.
 /// Everything here is decorative.
 class StyleScreen extends StatelessWidget {
@@ -54,6 +54,9 @@ class StyleScreen extends StatelessWidget {
                     children: [
                       _section('BALLS'),
                       for (final c in Cosmetics.ofKind(CosmeticKind.balls)) _item(context, c),
+                      const SizedBox(height: 10),
+                      _section('SHAPES'),
+                      for (final c in Cosmetics.ofKind(CosmeticKind.shape)) _item(context, c),
                       const SizedBox(height: 10),
                       _section('SKY'),
                       for (final c in Cosmetics.ofKind(CosmeticKind.sky)) _item(context, c),
@@ -144,7 +147,7 @@ class StyleScreen extends StatelessWidget {
               // A big preview, so the sets are easy to compare.
               Opacity(
                 opacity: owned ? 1 : 0.8,
-                child: c.kind == CosmeticKind.balls
+                child: c.kind != CosmeticKind.sky
                     ? Padding(
                         padding: const EdgeInsets.only(right: 4),
                         child: CosmeticSwatch(cosmetic: c, height: 56, wide: true),
@@ -238,7 +241,7 @@ class _ConfirmUnlock extends StatelessWidget {
             const SizedBox(height: 6),
             Text(cosmetic.name, style: PopType.of(30, 1000, color: Palette.accent)),
             const SizedBox(height: 14),
-            cosmetic.kind == CosmeticKind.balls
+            cosmetic.kind != CosmeticKind.sky
                 ? CosmeticSwatch(cosmetic: cosmetic, height: 52)
                 : CosmeticSwatch(cosmetic: cosmetic, height: 48, wide: true),
             const SizedBox(height: 16),

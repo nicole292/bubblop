@@ -186,6 +186,26 @@ void main() {
       expect(game.drop(2).accepted, isFalse);
     });
 
+    test('a drop that pops gets one more drop before the row rises under a full column', () {
+      final rows = const RulesConfig().rows;
+      // Column 0 is full; three blues wait in column 2.
+      final lines = [
+        for (var row = rows - 1; row >= 0; row--)
+          (row.isEven ? 'R' : 'Y') + (row < 3 ? '.B...' : '.....'),
+      ];
+      final game = gameOn(lines.join('\n'),
+          queue: [b, g, g], config: const RulesConfig(startPressure: 1, minPressure: 1));
+      final popped = game.drop(2);
+      expect(popped.events.whereType<ChainStep>(), isNotEmpty);
+      expect(popped.events.whereType<GameOver>(), isEmpty, reason: 'the pop earned another drop');
+      expect(game.isOver, isFalse);
+      expect(game.pressure, 1);
+
+      // The next drop doesn't pop, so the row rises and the round ends.
+      final last = game.drop(4).events;
+      expect((last.last as GameOver).reason, GameOverReason.overflow);
+    });
+
     test('filling the last cell ends the game', () {
       // Colour (col + 2·row) % 4 never puts two equal colours side by side.
       final top = const RulesConfig().rows - 1;

@@ -48,9 +48,10 @@ plays the next note of a happy little tune.
 **Bubbles are your secret weapon.** Rows of bubbles rise from below. Pop balls next to a
 bubble to break it open and free the ball inside, which can set off an even bigger chain.
 
-★ 30 levels with clear goals, gift boxes and special rewards
-★ Unlock new ball colours and skies with the coins you earn
-★ Endless mode for chasing your best score
+★ 30 levels with clear goals and fun twists: shell walls, drop limits, fast rows
+★ Gift boxes and special rewards as you go
+★ Unlock new ball colours, piece shapes (hearts, stars, flowers…) and skies with the coins you earn
+★ Classic mode: no goals, just play and chase your best score
 ★ Learn in seconds, with a short guided first round
 ★ One-thumb play: tap a column, or drag to aim and release to drop
 ★ Big, juicy chain reactions with sound and vibration
