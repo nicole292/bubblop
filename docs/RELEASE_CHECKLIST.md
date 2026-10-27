@@ -4,14 +4,14 @@ Tick items as you go (in VS Code: change `[ ]` to `[x]`). Details for each step 
 [MOBILE_RELEASE_GUIDE.md](MOBILE_RELEASE_GUIDE.md); section numbers are in brackets.
 
 ## Done for you (2026-10-22)
-- [x] Game finished; version 1.0.0 (build 1)
+- [x] Game finished; version 1.1.0 (build 2): levels, gifts, achievements, styles
 - [x] Automated checks pass: analyze, 27 app tests, 50 rules tests
 - [x] Android release build tested on the emulator (launch, tutorial, chain, back, resume, saved progress)
 - [x] Android upload key created; signed `app-release.aab` built and verified
 - [x] Android: API 36 target, 64-bit, 16 KB pages, no user permissions
 - [x] iOS project: iPhone only, portrait, iOS 15+, encryption declaration, Codemagic release workflow
 - [x] Store texts and questionnaire answers (`docs/store/listing.md`)
-- [x] Store images (`docs/store/assets/`)
+- [x] Store images (`docs/store/assets/`), refreshed for 1.1.0 (6 screenshots)
 - [x] Support and privacy web pages (`docs/index.html`, `docs/privacy.html`)
 
 ## Before anything else
@@ -31,7 +31,8 @@ Tick items as you go (in VS Code: change `[ ]` to `[x]`). Details for each step 
 - [x] Main store listing: texts, icon, feature graphic, 5 screenshots [9B.3]
 - [x] Internal testing: upload `app-release.aab`, accept Play App Signing, install on your phone [9B.4]
 - [ ] Real-phone checks: sound, vibration, smoothness, best score after reopening, pause on a call [6]
-- [ ] Closed testing release sent for review [9B.5]
+- [ ] Main store listing: replace the screenshots with the 6 new ones and paste the new description lines (1.1.0)
+- [ ] Closed testing release with `Bubblop 1.1.0 (upload this).aab` sent for review [9B.5]
 - [ ] 12+ testers opted in (list names here): …
 - [ ] Day 1 of 14: ____ · Day 14: ____
 - [ ] Apply for production access [9B.6]

@@ -68,6 +68,15 @@ active effects.
 
 UI thread (build) for the bright design: 0.9 ms average, 2.0 ms p99, 0 frames over budget.
 
+## Verified 2026-10-27 (1.1.0+2: levels, gifts, achievements, styles)
+- Windows phone-frame runs: home, level map (5 per row), goal card, levels 3 and 10 won by
+  their recorded lines (gift box and special gift opened), a lost level 1, achievements,
+  style (buying Mint, using Candy recolours home and game), Endless unchanged.
+- Android emulator (API 37), release build: fresh install → level 1 on the tutorial board
+  won, +50 coins with two achievements; force-stop and relaunch keeps coins and LEVEL 2;
+  map shows 5 per row at 411 dp. No game errors in logcat.
+- App bundle 1.1.0 (2): signed with the upload key, targetSdk 36, no runtime permissions.
+
 ## Verified 2026-10-26 (release candidate 1.0.0+1, new layout and music)
 - Android emulator (API 37), release build: home, tutorial, held press → ×2 chain, Back →
   pause (Sound / Music / Vibration), background and return stays paused, force-stop and

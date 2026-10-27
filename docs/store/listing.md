@@ -63,7 +63,7 @@ bubble to break it open and free the ball inside, which can set off an even bigg
 |---|---|
 | App icon (512×512) | `play-icon-512.png` |
 | Feature graphic (1024×500) | `play-feature-graphic-1024x500.png` |
-| Phone screenshots (1080×1920, upload in this order) | `android-phone-1.png` … `android-phone-5.png` |
+| Phone screenshots (1080×1920, upload in this order) | `android-phone-1.png` … `android-phone-6.png` |
 
 ---
 
@@ -83,7 +83,7 @@ plain text).
 ### Screenshots (in docs/store/assets/)
 | App Store Connect field | File |
 |---|---|
-| iPhone 6.9" Display (1320×2868, upload in this order) | `ios-6.9in-1.png` … `ios-6.9in-5.png` |
+| iPhone 6.9" Display (1320×2868, upload in this order) | `ios-6.9in-1.png` … `ios-6.9in-6.png` |
 
 The app is iPhone-only, so no iPad screenshots are needed. If App Store Connect asks for
 a different iPhone size first, the guide explains how to remake them in one command.

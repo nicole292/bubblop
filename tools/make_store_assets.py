@@ -2,7 +2,7 @@
 
 Input: raw 1320x2868 game screenshots in app/build/store_raw/, captured with the
 phone-frame screenshot driver (see docs/MOBILE_RELEASE_GUIDE.md, "Remaking the
-store images"). Needs Pillow: python -m pip install --user pillow
+store images"); names as in SHOTS below. Needs Pillow: python -m pip install --user pillow
 
     python tools/make_store_assets.py
 """
@@ -22,11 +22,12 @@ ACCENT = (0x7B, 0x5C, 0xFF)
 
 # (raw screenshot, caption): only things the game really does.
 SHOTS = [
-    ('chain_04', 'Huge chain reactions!'),
-    ('aim', 'Drag to aim, then drop'),
-    ('chain_03', 'Free the balls in bubbles'),
-    ('round_mid', 'Plan ahead: new rows rise'),
-    ('home', 'Quick rounds, plays offline'),
+    ('chain', 'Huge chain reactions!'),
+    ('map', '30 levels to beat'),
+    ('level_card', 'A clear goal every level'),
+    ('gift', 'Win gifts and new styles'),
+    ('style', 'Unlock new balls and skies'),
+    ('home', 'Endless mode, plays offline'),
 ]
 
 

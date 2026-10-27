@@ -13,20 +13,20 @@ Written for a first release. Work through it with the checklist in
 
 | Area | Status |
 |---|---|
-| Game | Finished and tested (see section 6). Version **1.0.0**, build number **1**. |
+| Game | Finished and tested (see section 6). Version **1.1.0**, build number **2**: 30 levels with goals, gifts, achievements and unlockable styles, plus Endless. |
 | App identity | Name **Bubblop**, app ID **com.bubblop.game** (Android and iOS), app icon, launch screen. |
 | Android | Signed release bundle built: `app\build\app\outputs\bundle\release\app-release.aab`. Targets Android 16 (API 36), minimum Android 7 (API 24); 64-bit; native code 16 KB-page compatible; **no permissions** players see. |
 | Android signing | Upload key created at `C:\Users\User\pop-upload-key.jks`; password in `app\android\key.properties` (not in Git). **You must back these up**, section 7. |
 | iPhone | Project set up for iPhone only, portrait only, iOS 15+. Cloud build workflow ready in `codemagic.yaml` (no Mac needed). Not built yet: that needs your Apple account. |
 | Store texts | `docs\store\listing.md`: titles, descriptions, keywords, categories and every questionnaire answer. |
-| Store images | `docs\store\assets\`: 5 iPhone screenshots (1320×2868), 5 Android screenshots (1080×1920), Play feature graphic (1024×500), Play icon (512×512). Made from the real game. |
+| Store images | `docs\store\assets\`: 6 iPhone screenshots (1320×2868), 6 Android screenshots (1080×1920), Play feature graphic (1024×500), Play icon (512×512). Made from the real game (levels, goal card, gift, style, home). |
 | Web pages | Support page `docs\index.html` and privacy policy `docs\privacy.html`, ready for free hosting on GitHub Pages (one switch, part A below). |
 
 ## 2. What was changed for release, and why
 
 | Change | Why |
 |---|---|
-| Version 0.1.0 → **1.0.0+1** (`app\pubspec.yaml`) | First public version. |
+| Version 0.1.0 → **1.0.0+1**, then **1.1.0+2** (`app\pubspec.yaml`) | First public version; 1.1.0 adds levels, gifts, achievements and styles. |
 | iOS: iPhone only, portrait only, full screen (`app\ios\Runner.xcodeproj\project.pbxproj`, `app\ios\Runner\Info.plist`) | The game is portrait-only. iPad support would need iPad screenshots and all four orientations. iPads can still run the iPhone version. |
 | iOS: `ITSAppUsesNonExemptEncryption = NO` (`Info.plist`) | The game uses no encryption, so App Store Connect stops asking the export-compliance question on every upload. |
 | `codemagic.yaml`: new **iOS release (TestFlight)** workflow | Builds, signs and uploads the iPhone version from the cloud, so you don't need a Mac. |
@@ -62,7 +62,7 @@ downloaded from the build page.
 
 | File | Path |
 |---|---|
-| Android bundle for Google Play | `app\build\app\outputs\bundle\release\app-release.aab` (71 MB including the music; a single-phone install is about 40 MB) |
+| Android bundle for Google Play | `app\build\app\outputs\bundle\release\app-release.aab` (72 MB including the music; a single-phone install is about 40 MB) |
 | Android test APK | `app\build\app\outputs\flutter-apk\app-release.apk` |
 | Android upload key | `C:\Users\User\pop-upload-key.jks` |
 | Key password | `app\android\key.properties` (`storePassword` line) |
@@ -166,7 +166,7 @@ Connect **Users and Access**), and the games can be transferred to your own acco
 2. **Dashboard → Set up your app**: complete every item using the answers in
    `docs\store\listing.md` ("Google Play → App content").
 3. **Grow users → Store presence → Main store listing**: paste the texts, then upload the
-   icon, feature graphic and 5 phone screenshots from `docs\store\assets\`.
+   icon, feature graphic and 6 phone screenshots from `docs\store\assets\`.
 4. **Test and release → Testing → Internal testing → Create new release**: upload
    `app-release.aab`. Accept **Play App Signing** if asked. Release name `1.0.0 (1)`. Add
    yourself under **Testers**, open the link on your phone and install. Play a round.
@@ -222,7 +222,7 @@ Connect **Users and Access**), and the games can be transferred to your own acco
 8. **TestFlight:** add yourself under **Internal Testing**. Install **TestFlight** on your
    iPhone and play the game.
 9. **App Store page** (App Store Connect → your app → **iOS App 1.0**):
-   1. Screenshots: drag in `ios-6.9in-1.png` … `ios-6.9in-5.png` under **iPhone 6.9"
+   1. Screenshots: drag in `ios-6.9in-1.png` … `ios-6.9in-6.png` under **iPhone 6.9"
       Display**. If App Store Connect asks for a different size first, see section 14.
    2. Promotional text, description, keywords, support URL, marketing URL and copyright
       from `docs\store\listing.md`.
@@ -289,17 +289,20 @@ Connect **Users and Access**), and the games can be transferred to your own acco
 
 ## 14. Remaking the store images
 
-1. Capture raw screenshots at 1320×2868 with the developer screenshot driver, for example:
+1. Capture raw screenshots at 1320×2868 with the developer screenshot driver. Close the
+   Windows copy of the game first (a window losing focus pauses the game). Example:
    ```powershell
    cd C:\dev\project_pop\app
    flutter run -d windows --profile --dart-define=POP_PHONE=440x956+62+34 `
-     --dart-define=POP_SHOT_SCALE=3 --dart-define=POP_SEED=11 `
-     "--dart-define=POP_SHOT=wait 2.5; shot home; wait 2.5; tap 220 755; wait 1.5; shot round_start"
+     --dart-define=POP_SHOT_SCALE=3 --dart-define=POP_PROGRESS=11 `
+     "--dart-define=POP_SHOT=wait 5; shot home; tap 220 603; wait 1; tap 220 920; wait 0.8; shot map"
    ```
-   Shots land in `app\build\shots\`. Copy the ones you want into `app\build\store_raw\`
-   with the names listed in `tools\make_store_assets.py` (`chain_04`, `aim`, `chain_03`,
-   `round_mid`, `home`). The chain shots come from `--dart-define=POP_DEMO=chain` and
-   dropping into column 5. Ask me if you'd rather I do it.
+   `POP_PROGRESS=11` starts with levels 1–11 done (in memory only). Shots land in
+   `app\build\shots\`. Copy the ones you want into `app\build\store_raw\` with the names
+   listed in `tools\make_store_assets.py` (`chain`, `map`, `level_card`, `gift`, `style`,
+   `home`). The chain, goal card and gift come from playing level 10 with its recorded
+   winning moves (`packages\pop_core\test\level_solutions.dart`). Ask me if you'd rather I
+   do it.
 2. `python tools\make_store_assets.py` rebuilds everything in `docs\store\assets\`.
 3. For a different iPhone size (for example 6.3", 1206×2622), change the phone size to
    `402x874` and the `1320, 2868` numbers in the script.
