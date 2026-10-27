@@ -63,6 +63,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   /// A level whose goal card should open when the level map appears.
   int? _openLevel;
 
+  /// The level map, so back can close its goal card first.
+  final _levelsKey = GlobalKey<LevelSelectScreenState>();
+
   @override
   void initState() {
     super.initState();
@@ -142,7 +145,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         }
       case _Mode.paused:
         _resume();
-      case _Mode.levels || _Mode.achievements || _Mode.style:
+      case _Mode.levels:
+        if (!(_levelsKey.currentState?.closeIntro() ?? false)) _show(_Mode.home);
+      case _Mode.achievements || _Mode.style:
         _show(_Mode.home);
       case _Mode.home:
         break;
@@ -250,6 +255,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 listenable: widget.progress,
                 builder: (context, _) => switch (_mode) {
                   _Mode.levels => LevelSelectScreen(
+                      key: _levelsKey,
                       progress: widget.progress,
                       openLevel: _openLevel,
                       onBack: () => _show(_Mode.home),

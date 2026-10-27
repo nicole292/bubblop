@@ -34,9 +34,13 @@ class Cosmetic {
   final Unlock unlock;
 }
 
-/// Everything a player can collect. Ball sets keep five clearly different
-/// hues that also differ in brightness, because colour is the only cue on a
-/// ball; skies stay light enough for the white board card and white text.
+/// Everything a player can collect. Each ball set has its own character
+/// (Classic bright, Candy soft and light, Jewel deep with amber and jade,
+/// Neon electric with lime, cyan and orange) so the sets look clearly
+/// different, while the five colours within a set stay far apart in hue and
+/// brightness, because colour is the only cue on a ball
+/// (test/cosmetics_test.dart measures both). Skies stay light enough for the
+/// white board card and white text.
 abstract final class Cosmetics {
   static const classic = Cosmetic('balls.classic', CosmeticKind.balls, 'Classic', [
     Color(0xFFFF4757),
@@ -47,27 +51,27 @@ abstract final class Cosmetics {
   ], FreeUnlock());
 
   static const candy = Cosmetic('balls.candy', CosmeticKind.balls, 'Candy', [
-    Color(0xFFFF5FA2),
-    Color(0xFFFFD93D),
-    Color(0xFF3DDC97),
-    Color(0xFF4CC9F0),
-    Color(0xFFB388FF),
+    Color(0xFFFF7EB6),
+    Color(0xFFFFE07A),
+    Color(0xFF6BE3B4),
+    Color(0xFF7CC2FF),
+    Color(0xFFC59BFF),
   ], GiftUnlock(10));
 
   static const jewel = Cosmetic('balls.jewel', CosmeticKind.balls, 'Jewel', [
-    Color(0xFFE0245E),
-    Color(0xFFFF9F1C),
-    Color(0xFF0FA968),
-    Color(0xFF2D5BFF),
-    Color(0xFF8E44D9),
+    Color(0xFFC8143F),
+    Color(0xFFF28C00),
+    Color(0xFF00A38A),
+    Color(0xFF1F5FE0),
+    Color(0xFFA23BE0),
   ], CoinUnlock(250));
 
   static const neon = Cosmetic('balls.neon', CosmeticKind.balls, 'Neon', [
-    Color(0xFFFF2E63),
-    Color(0xFFFFE600),
-    Color(0xFF00E08A),
-    Color(0xFF00B4FF),
-    Color(0xFFC84BFF),
+    Color(0xFFFF2D95),
+    Color(0xFFB8FF1F),
+    Color(0xFF14E8FF),
+    Color(0xFFFF8A1A),
+    Color(0xFF7A3CFF),
   ], CoinUnlock(400));
 
   static const day = Cosmetic('sky.day', CosmeticKind.sky, 'Day', [

@@ -13,7 +13,7 @@ Written for a first release. Work through it with the checklist in
 
 | Area | Status |
 |---|---|
-| Game | Finished and tested (see section 6). Version **1.1.0**, build number **2**: 30 levels with goals, gifts, achievements and unlockable styles, plus Endless. |
+| Game | Finished and tested (see section 6). Version **1.1.1**, build number **3**: 30 levels with goals, gifts, achievements and unlockable styles, plus Endless. |
 | App identity | Name **Bubblop**, app ID **com.bubblop.game** (Android and iOS), app icon, launch screen. |
 | Android | Signed release bundle built: `app\build\app\outputs\bundle\release\app-release.aab`. Targets Android 16 (API 36), minimum Android 7 (API 24); 64-bit; native code 16 KB-page compatible; **no permissions** players see. |
 | Android signing | Upload key created at `C:\Users\User\pop-upload-key.jks`; password in `app\android\key.properties` (not in Git). **You must back these up**, section 7. |
@@ -26,7 +26,7 @@ Written for a first release. Work through it with the checklist in
 
 | Change | Why |
 |---|---|
-| Version 0.1.0 → **1.0.0+1**, then **1.1.0+2** (`app\pubspec.yaml`) | First public version; 1.1.0 adds levels, gifts, achievements and styles. |
+| Version 0.1.0 → **1.0.0+1**, then **1.1.0+2**, **1.1.1+3** (`app\pubspec.yaml`) | First public version; 1.1.0 adds levels, gifts, achievements and styles; 1.1.1 makes the ball sets look clearly different and asks before spending coins. |
 | iOS: iPhone only, portrait only, full screen (`app\ios\Runner.xcodeproj\project.pbxproj`, `app\ios\Runner\Info.plist`) | The game is portrait-only. iPad support would need iPad screenshots and all four orientations. iPads can still run the iPhone version. |
 | iOS: `ITSAppUsesNonExemptEncryption = NO` (`Info.plist`) | The game uses no encryption, so App Store Connect stops asking the export-compliance question on every upload. |
 | `codemagic.yaml`: new **iOS release (TestFlight)** workflow | Builds, signs and uploads the iPhone version from the cloud, so you don't need a Mac. |

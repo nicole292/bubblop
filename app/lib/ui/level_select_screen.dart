@@ -36,10 +36,10 @@ class LevelSelectScreen extends StatefulWidget {
   final int? openLevel;
 
   @override
-  State<LevelSelectScreen> createState() => _LevelSelectScreenState();
+  State<LevelSelectScreen> createState() => LevelSelectScreenState();
 }
 
-class _LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerProviderStateMixin {
+class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerProviderStateMixin {
   late final _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat();
   final _currentKey = GlobalKey();
   late int? _open = widget.openLevel;
@@ -60,9 +60,28 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> with SingleTicker
     super.dispose();
   }
 
+  /// Back while a goal card is open closes the card. Returns false when
+  /// there was none (then back leaves the map).
+  bool closeIntro() {
+    if (_open == null) return false;
+    widget.onTap();
+    setState(() => _open = null);
+    return true;
+  }
+
   void _tapLevel(int level) {
     if (!widget.progress.isUnlocked(level)) {
       widget.onDeny();
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text('Complete level ${widget.progress.unlockedLevel} to unlock the next one!',
+              style: PopType.of(15, 800, color: Colors.white)),
+          backgroundColor: Palette.ink,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          duration: const Duration(seconds: 2),
+        ));
       return;
     }
     widget.onTap();

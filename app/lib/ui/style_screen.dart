@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../game/palette.dart';
 import '../progress/cosmetics.dart';
 import '../progress/progress.dart';
+import 'buttons.dart';
 import 'glass.dart';
 import 'swatches.dart';
 import 'type.dart';
@@ -52,10 +53,10 @@ class StyleScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     children: [
                       _section('BALLS'),
-                      for (final c in Cosmetics.ofKind(CosmeticKind.balls)) _item(c),
+                      for (final c in Cosmetics.ofKind(CosmeticKind.balls)) _item(context, c),
                       const SizedBox(height: 10),
                       _section('SKY'),
-                      for (final c in Cosmetics.ofKind(CosmeticKind.sky)) _item(c),
+                      for (final c in Cosmetics.ofKind(CosmeticKind.sky)) _item(context, c),
                     ],
                   ),
                 ),
@@ -72,7 +73,7 @@ class StyleScreen extends StatelessWidget {
         child: Text(title, style: PopType.of(14, 900, color: Colors.white, spacing: 2)),
       );
 
-  Widget _item(Cosmetic c) {
+  Widget _item(BuildContext context, Cosmetic c) {
     final owned = progress.owns(c);
     final inUse = progress.selected(c.kind) == c;
     final unlock = c.unlock;
@@ -108,46 +109,93 @@ class StyleScreen extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
-        onTap: () {
-          if (inUse) return;
-          if (owned) {
-            progress.select(c);
-            onTap();
-          } else if (unlock is CoinUnlock && progress.buy(c)) {
-            progress.select(c);
-            onBought();
-          } else {
-            onDeny();
-          }
-        },
+        onTap: () => _tapItem(context, c),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 14),
           decoration: BoxDecoration(
             color: Palette.card,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: inUse ? Palette.success : Colors.transparent, width: 2.5),
             boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Opacity(opacity: owned ? 1 : 0.55, child: CosmeticSwatch(cosmetic: c, height: 38)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(c.name, maxLines: 1, style: PopType.of(17, 1000)),
-                ),
+              Row(
+                children: [
+                  if (!owned) ...[
+                    const Icon(Icons.lock_rounded, size: 18, color: Palette.inkSoft),
+                    const SizedBox(width: 6),
+                  ],
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(c.name, maxLines: 1, style: PopType.of(18, 1000)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  action,
+                ],
               ),
-              const SizedBox(width: 8),
-              action,
+              const SizedBox(height: 10),
+              // A big preview, so the sets are easy to compare.
+              Opacity(
+                opacity: owned ? 1 : 0.8,
+                child: c.kind == CosmeticKind.balls
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: CosmeticSwatch(cosmetic: c, height: 56, wide: true),
+                      )
+                    : CosmeticSwatch(cosmetic: c, height: 44, wide: true),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// Owned: use it. Coin item: ask before spending. Otherwise say how to get it.
+  Future<void> _tapItem(BuildContext context, Cosmetic c) async {
+    if (progress.selected(c.kind) == c) return;
+    if (progress.owns(c)) {
+      progress.select(c);
+      onTap();
+      return;
+    }
+    final unlock = c.unlock;
+    if (unlock is CoinUnlock && progress.coins >= unlock.price) {
+      onTap();
+      final yes = await showDialog<bool>(
+        context: context,
+        barrierColor: Palette.ink.withValues(alpha: 0.4),
+        builder: (context) => _ConfirmUnlock(cosmetic: c, price: unlock.price),
+      );
+      if (yes == true && progress.buy(c)) {
+        progress.select(c);
+        onBought();
+      }
+      return;
+    }
+    onDeny();
+    final message = switch (unlock) {
+      CoinUnlock(:final price) => 'You need ${price - progress.coins} more coins. Complete levels to earn them!',
+      GiftUnlock(:final level) => 'Complete level $level to win ${c.name}!',
+      _ => '',
+    };
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(message, style: PopType.of(15, 800, color: Colors.white)),
+        backgroundColor: Palette.ink,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        duration: const Duration(seconds: 2),
+      ));
   }
 
   Widget _pill(String text, Color background, Color foreground, {IconData? icon}) => Container(
@@ -162,4 +210,53 @@ class StyleScreen extends StatelessWidget {
           ],
         ),
       );
+}
+
+/// "Unlock Jewel for 250 coins?", so coins are never spent by accident.
+class _ConfirmUnlock extends StatelessWidget {
+  const _ConfirmUnlock({required this.cosmetic, required this.price});
+  final Cosmetic cosmetic;
+  final int price;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: Container(
+        width: 320,
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+        decoration: BoxDecoration(
+          color: Palette.card,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: const [BoxShadow(color: Color(0x663A2D9E), blurRadius: 30, offset: Offset(0, 12))],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('UNLOCK', style: PopType.panelTitle),
+            const SizedBox(height: 6),
+            Text(cosmetic.name, style: PopType.of(30, 1000, color: Palette.accent)),
+            const SizedBox(height: 14),
+            cosmetic.kind == CosmeticKind.balls
+                ? CosmeticSwatch(cosmetic: cosmetic, height: 52)
+                : CosmeticSwatch(cosmetic: cosmetic, height: 48, wide: true),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CoinIcon(size: 26),
+                const SizedBox(width: 6),
+                Text('$price coins', style: PopType.of(20, 1000, numbers: true)),
+              ],
+            ),
+            const SizedBox(height: 18),
+            BigButton(label: 'Unlock', icon: Icons.lock_open_rounded, onPressed: () => Navigator.pop(context, true)),
+            const SizedBox(height: 10),
+            SoftButton(label: 'Not now', onPressed: () => Navigator.pop(context, false)),
+          ],
+        ),
+      ),
+    );
+  }
 }

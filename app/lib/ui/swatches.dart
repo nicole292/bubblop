@@ -5,35 +5,41 @@ import '../progress/cosmetics.dart';
 /// A small preview of a cosmetic: five glossy balls for a ball set, a
 /// rounded gradient for a sky.
 class CosmeticSwatch extends StatelessWidget {
-  const CosmeticSwatch({super.key, required this.cosmetic, this.height = 40});
+  const CosmeticSwatch({super.key, required this.cosmetic, this.height = 40, this.wide = false});
   final Cosmetic cosmetic;
   final double height;
+
+  /// Fills the available width (a long sky strip, or balls spread out).
+  final bool wide;
 
   @override
   Widget build(BuildContext context) {
     if (cosmetic.kind == CosmeticKind.sky) {
       return Container(
         height: height,
-        width: height * 2.6,
+        width: wide ? double.infinity : height * 2.6,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(height * 0.3),
+          // A wide strip runs left to right so all three sky colours show.
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: wide ? Alignment.centerLeft : Alignment.topCenter,
+            end: wide ? Alignment.centerRight : Alignment.bottomCenter,
             colors: cosmetic.colors,
           ),
           border: Border.all(color: Colors.white, width: 2),
         ),
       );
     }
-    final ball = height * 0.62;
+    final ball = height * 0.72;
     return SizedBox(
       height: height,
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        // Wide: the five balls spread across the space, as in a row of the board.
+        mainAxisSize: wide ? MainAxisSize.max : MainAxisSize.min,
+        mainAxisAlignment: wide ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
         children: [
           for (final (i, color) in cosmetic.colors.indexed) ...[
-            if (i > 0) SizedBox(width: ball * 0.12),
+            if (i > 0 && !wide) SizedBox(width: ball * 0.12),
             GlossyBall(color: color, size: ball),
           ],
         ],

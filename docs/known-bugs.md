@@ -68,6 +68,15 @@ active effects.
 
 UI thread (build) for the bright design: 0.9 ms average, 2.0 ms p99, 0 frames over budget.
 
+## Fixed (2026-10-27, 1.1.1)
+- The four ball sets looked almost the same (all red/yellow/green/blue/purple at similar
+  brightness). Candy is now soft pastels, Jewel deep with amber and jade, Neon electric with
+  lime, cyan and orange; `cosmetics_test.dart` measures that the sets differ (ΔE ≥ 22) and
+  that each set's colours stay apart (ΔE ≥ 35). Style previews are bigger.
+- Coins were spent on the first tap; buying now asks "Unlock Jewel? 250 coins".
+- Tapping a locked style or level only played the deny sound; it now says how to get it.
+- Back (Android) or Escape with a level's goal card open left the map; it now closes the card.
+
 ## Verified 2026-10-27 (1.1.0+2: levels, gifts, achievements, styles)
 - Windows phone-frame runs: home, level map (5 per row), goal card, levels 3 and 10 won by
   their recorded lines (gift box and special gift opened), a lost level 1, achievements,
