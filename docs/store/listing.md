@@ -76,7 +76,7 @@ your best score. One thumb, quick rounds, no ads.
 
 ### Description [4000]
 Use the Google Play full description above, without the `**` marks (the App Store shows
-plain text).
+plain text). App Store Connect also refuses `★`, so start those lines with `- `, and write `…` as "and more" and `·` as commas.
 
 ### Keywords [100, comma-separated, no spaces needed]
 `puzzle,match 4,chain reaction,bubble,pop,balls,drop,casual,brain,offline,colour,relaxing`
