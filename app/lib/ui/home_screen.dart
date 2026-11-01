@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../game/faces.dart';
 import '../game/palette.dart';
+import '../progress/cosmetics.dart';
 import '../progress/progress.dart';
 import '../render/orb_sprites.dart';
 import '../services/settings.dart';
@@ -187,11 +189,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         child: GlassIconButton(
                           icon: Icons.category_rounded,
                           // The shape in use, in a soft white like the other icons.
-                          picture: GlossyBall(
-                            color: const Color(0xFFF4F5FF),
-                            size: 30,
-                            shape: widget.progress.shape.shape,
-                          ),
+                          picture: _ShapeFace(shape: widget.progress.shape.shape, clock: _clock),
                           tooltip: 'Shapes',
                           label: 'Shapes',
                           size: 52,
@@ -514,4 +512,46 @@ class _Letter extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The shape in use, soft white like the other icons, with a happy face
+/// that blinks now and then.
+class _ShapeFace extends StatelessWidget {
+  const _ShapeFace({required this.shape, required this.clock});
+  final PieceShape shape;
+  final Animation<double> clock;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 30.0;
+    return SizedBox.square(
+      dimension: size,
+      child: Stack(
+        children: [
+          GlossyBall(color: const Color(0xFFF4F5FF), size: size, shape: shape),
+          AnimatedBuilder(
+            animation: clock,
+            builder: (context, _) => CustomPaint(
+              size: const Size.square(size),
+              painter: _FacePainter(shape, clock.value),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FacePainter extends CustomPainter {
+  _FacePainter(this.shape, this.t);
+  final PieceShape shape;
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    paintFace(canvas, size.center(Offset.zero), size.width / 2, Mood.idle, shape: shape, time: t * 6, seed: 3);
+  }
+
+  @override
+  bool shouldRepaint(_FacePainter old) => old.t != t || old.shape != shape;
 }

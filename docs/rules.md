@@ -38,13 +38,12 @@ Status: draft spec for the first prototype. Every number here lives in
 - **Rising bombs:** with `bombEvery` = n, every nth rising row carries one bomb in place
   of a shell (Classic: every 5th row; the *Bomb rows* and *Bomb wall* levels). Off, the
   rows are dealt exactly as before (the generator is not touched).
-- **The player's bombs** (app): a supply kept with the coins. Tap the bomb button, then a
-  column: the bomb goes off where it would land (on the top cell of a full column),
-  clearing that 3×3 square, then everything falls and chains as usual (`Game.dropBomb`).
-  It counts as a drop but leaves the ball queue alone. Its own blast is chain step 1
-  with no groups; pops it causes are steps 2, 3…, and only steps with pops count as a chain.
-- Earned: 3 to start, 1 in every gift box, 3 in every special gift, 1 for a ×4 chain.
-  Sold for coins in the Style screen: 1 for 40, 5 for 160.
+- **The player's bomb** (app): the bomb button at the top charges as balls pop (or are
+  blasted): 30 in a round fills it. Then tap it and a column: the bomb goes off where it
+  would land (on the top cell of a full column), clearing that 3×3 square, then everything
+  falls and chains as usual (`Game.dropBomb`). It counts as a drop but leaves the ball
+  queue alone, and the charge starts again from empty. Its own blast is chain step 1 with
+  no groups; pops it causes are steps 2, 3…, and only steps with pops count as a chain.
 
 ## Pressure (shells)
 - A countdown starts at 9 pips. Every drop ticks it by 1.
@@ -116,10 +115,9 @@ plays its own way, unlike Classic's endless rising rows:
 ## Rewards (app, cosmetic only)
 - First clear of a level: 10 coins (levels 1–9), 15 (10–19), 20 (20–29), 25 (30–40). Replays pay
   nothing more and only keep the best score.
-- Gift box after every third level (3, 6 … 39, except the special ones): 30–120 coins and
-  1 bomb (fixed, shown).
-- Special gift after 10, 20, 30, 40: 100 coins and 3 bombs plus Candy balls / Sunset sky /
-  Twilight sky / Cherries.
+- Gift box after every third level (3, 6 … 39, except the special ones): 30–120 coins
+  (fixed, shown).
+- Special gift after 10, 20, 30, 40: 100 coins plus Kitties / Donuts / Planets / Cherries.
 - Achievements (each once): First win 20, Chain reaction 20, Complete 5 levels 40,
   Complete 10 levels 60, Personal best (Classic) 30, All 40 levels 250 coins.
 - Coins unlock Fruit (200), Ocean (300), Neon (400) and Galaxy (500) balls, the Jelly (150),

@@ -258,6 +258,8 @@ class BoardScene {
           for (final o in popOrbs) {
             o.scale = 1 + 0.12 * k;
             o.glow = t;
+            // A jelly wobble: squashed, then stretched, as it gets excited.
+            o.squash = Timings.squash * 0.9 * math.sin(t * math.pi * 2);
             final (px, py) = pull[o] ?? (0.0, 0.0);
             o
               ..dx = px * k
@@ -280,6 +282,12 @@ class BoardScene {
             o.scale = 1.12 + 0.3 * Curves.easeOut.transform(t);
             o.alpha = (1 - t * 2.2).clamp(0.0, 1.0);
             o.glow = (1 - t * 2.2).clamp(0.0, 1.0);
+            // A little hop up as it bursts.
+            final (px, py) = pull[o] ?? (0.0, 0.0);
+            o
+              ..squash = 0
+              ..dx = px
+              ..dy = py + 0.18 * Curves.easeOut.transform(t);
           }
           for (final o in crackOrbs) {
             if (o.cell.kind == CellKind.shell) {

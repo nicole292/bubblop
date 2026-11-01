@@ -11,7 +11,6 @@ import '../render/background.dart';
 import '../render/effects.dart';
 import '../progress/achievements.dart';
 import '../progress/progress.dart';
-import '../progress/rewards.dart';
 import '../render/orb_sprites.dart';
 import '../services/haptics.dart';
 import '../services/settings.dart';
@@ -86,8 +85,17 @@ class PopGame extends FlameGame {
   /// Seconds since start; drives idle animation.
   double time = 0;
 
-  /// The next drop is one of the player's bombs ([toggleBomb]).
+  /// The next drop is the bomb ([toggleBomb]).
   bool bombArmed = false;
+
+  /// Balls popped (or blasted) this round towards the next bomb.
+  int _charge = 0;
+
+  /// Balls to pop to charge the bomb at the top.
+  static const popsPerBomb = 30;
+
+  /// The bomb is charged and can be used.
+  bool get bombReady => _charge >= popsPerBomb;
 
   /// Seconds of cheering left after a chain: the balls look happy and hop.
   double cheer = 0;
@@ -255,10 +263,10 @@ class PopGame extends FlameGame {
   /// supply and a round in play.
   void toggleBomb() {
     if (rules.isOver || _levelWon) return;
-    if (!bombArmed && progress.bombs <= 0) {
+    if (!bombArmed && !bombReady) {
       sfx.deny();
       haptics.deny();
-      _banner('No bombs left');
+      _banner('Pop ${popsPerBomb - _charge} more!');
       return;
     }
     bombArmed = !bombArmed;
@@ -270,12 +278,20 @@ class PopGame extends FlameGame {
   void dropAt(int column) {
     if (_levelWon) return;
     if (!phases.isIdle) phases.speed = Timings.fastForward;
-    final bomb = bombArmed && progress.bombs > 0;
+    final bomb = bombArmed && bombReady;
     final result = bomb ? rules.dropBomb(column) : rules.drop(column);
+    final wasReady = bombReady;
     if (bomb && result.accepted) {
       bombArmed = false;
-      progress.useBomb();
+      _charge = 0;
     }
+    if (result.accepted) {
+      // Every popped (or blasted) ball charges the bomb.
+      for (final step in result.events.whereType<ChainStep>()) {
+        _charge = math.min(popsPerBomb, _charge + step.orbsPopped + step.orbsBlasted);
+      }
+    }
+    final charged = !wasReady && bombReady;
     if (!result.accepted) {
       if (!rules.isOver) {
         scene.shake(column);
@@ -288,9 +304,6 @@ class PopGame extends FlameGame {
     final chain = result.events.whereType<ChainStep>().where((s) => s.groups.isNotEmpty).length;
     final chainAchievement = progress.recordChain(chain);
     if (chainAchievement != null) _roundAchievements.add(chainAchievement);
-    // A long chain earns a bomb, announced when the chain has played out.
-    final earnedBomb = chain >= bombChainSteps;
-    if (earnedBomb) progress.earnBombs(1);
     final tracker = _tracker;
     tracker?.record(result);
     final won = tracker != null && tracker.complete;
@@ -318,10 +331,13 @@ class PopGame extends FlameGame {
         0,
         onStart: () {
           _afterMove(popped);
-          if (earnedBomb) {
-            _banner('+1 bomb!');
+          if (charged) {
+            _banner('Bomb ready!');
             sfx.praise();
+            haptics.big();
           }
+          // The button fills as the pops play out.
+          hud.value = hud.value.copyWith(bombCharge: _charge / popsPerBomb);
         },
       ),
     ]);
@@ -399,6 +415,7 @@ class PopGame extends FlameGame {
       ..load(rules.board);
     aimColumn = null;
     bombArmed = false;
+    _charge = 0;
     cheer = 0;
     sad = false;
     boardLight = 0;
@@ -445,7 +462,6 @@ class PopGame extends FlameGame {
       isOver: true,
       goals: _goalViews(),
       levelClear: clear,
-      bombs: progress.bombs,
       bombArmed: false,
       achievements: List.of(_roundAchievements),
       longestChain: tracker.bestChain,
@@ -583,11 +599,16 @@ class PopGame extends FlameGame {
         // ball, growing with group size and chain step.
         effects
           ..flash(at, color, to: 0.55 + 0.05 * step)
-          ..confetti(at, color, count: (0.5 + 1.2 * intensity).round(), power: intensity);
+          ..confetti(at, color, count: (0.5 + 1.2 * intensity).round(), power: intensity)
+          // A twinkle of stars in the ball's own colour.
+          ..star(at, size: 0.3, color: Color.lerp(color, const Color(0xFFFFFFFF), 0.4)!, life: 0.4)
+          ..sparkles(at, count: 2, spread: 0.45, color: color);
       }
       final center = sum / n.toDouble();
       stepCenter += sum;
       total += n;
+      // A big group gets a comic "POP!".
+      if (n >= 6) effects.label(center.translate(0, -layout!.cell * 0.2), 'POP!', color, size: 0.55, life: 0.6);
       effects
         ..ring(center, color, to: 0.8 + 0.2 * math.sqrt(n) + 0.25 * (step - 1), width: 0.12 + 0.03 * step)
         ..sparkles(center, count: step, spread: 0.5 + 0.1 * math.sqrt(n), color: Palette.gold);
@@ -700,7 +721,6 @@ class PopGame extends FlameGame {
       pressureMax: rules.config.pressureInterval(rules.level),
       dropsLeft: rules.dropsLeft,
       best: _shownBest,
-      bombs: progress.bombs,
       bombArmed: bombArmed,
     );
   }

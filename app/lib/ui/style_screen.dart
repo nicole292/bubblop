@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import '../game/palette.dart';
 import '../progress/cosmetics.dart';
 import '../progress/progress.dart';
-import '../progress/rewards.dart';
 import '../services/settings.dart';
-import 'bomb_icon.dart';
 import 'buttons.dart';
 import 'glass.dart';
 import 'swatches.dart';
@@ -63,9 +61,6 @@ class StyleScreen extends StatelessWidget {
                     children: [
                       _section('THEME'),
                       _themeCard(),
-                      const SizedBox(height: 10),
-                      _section('BOMBS'),
-                      _bombCard(context),
                       const SizedBox(height: 10),
                       const SizedBox(height: 10),
                       _section('SHAPES'),
@@ -164,106 +159,6 @@ class StyleScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// The player's bombs and the two packs on sale.
-  Widget _bombCard(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-    decoration: BoxDecoration(
-      color: Palette.card,
-      borderRadius: BorderRadius.circular(22),
-      border: Border.all(color: Palette.edge, width: 1.2),
-      boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const BombIcon(size: 40),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(progress.bombs == 1 ? '1 bomb' : '${progress.bombs} bombs', style: PopType.of(19, 1000)),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Tap the bomb in a round, then a column: it clears the 3×3 square where it lands.',
-                    style: PopType.of(13, 700, color: Palette.inkSoft),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            for (final (i, pack) in BombPack.values.indexed) ...[
-              if (i > 0) const SizedBox(width: 10),
-              Expanded(child: _packButton(context, pack)),
-            ],
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Win bombs in gift boxes, or with a ×$bombChainSteps chain.',
-          style: PopType.of(12, 800, color: Palette.inkSoft),
-        ),
-      ],
-    ),
-  );
-
-  Widget _packButton(BuildContext context, BombPack pack) {
-    final afford = progress.coins >= pack.price;
-    return GestureDetector(
-      onTap: () => _buyPack(context, pack),
-      child: Container(
-        height: 46,
-        decoration: BoxDecoration(
-          color: afford ? Palette.cream : Palette.well,
-          borderRadius: BorderRadius.circular(23),
-          border: Border.all(color: afford ? Palette.gold : Palette.pipEmpty, width: 1.5),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('+${pack.bombs}', style: PopType.of(16, 1000, numbers: true)),
-            const SizedBox(width: 2),
-            const BombIcon(size: 20),
-            const SizedBox(width: 8),
-            const CoinIcon(size: 20),
-            const SizedBox(width: 4),
-            Text(
-              '${pack.price}',
-              style: PopType.of(15, 1000, color: afford ? Palette.ink : Palette.inkSoft, numbers: true),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _buyPack(BuildContext context, BombPack pack) async {
-    if (progress.coins < pack.price) {
-      onDeny();
-      _say(context, 'You need ${pack.price - progress.coins} more coins. Complete levels to earn them!');
-      return;
-    }
-    onTap();
-    final yes = await showDialog<bool>(
-      context: context,
-      barrierColor: Palette.scrim.withValues(alpha: 0.4),
-      builder: (context) => _Confirm(
-        title: pack.bombs == 1 ? '1 bomb' : '${pack.bombs} bombs',
-        preview: const BombIcon(size: 56),
-        price: pack.price,
-        action: 'Buy',
-      ),
-    );
-    if (yes == true && progress.buyBombs(pack)) onBought();
   }
 
   /// Light, dark or follow the phone; the same setting as in the pause menu.

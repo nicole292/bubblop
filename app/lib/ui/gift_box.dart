@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../game/palette.dart';
 import '../progress/cosmetics.dart';
 import '../progress/rewards.dart';
-import 'bomb_icon.dart';
 import 'glass.dart';
 import 'swatches.dart';
 import 'type.dart';
@@ -224,12 +223,6 @@ class _GiftBoxState extends State<GiftBox> with TickerProviderStateMixin {
               const CoinIcon(size: 26),
               const SizedBox(width: 6),
               Text('+$coins coins', style: PopType.of(20, 1000, numbers: true)),
-              if (widget.contents.bombs > 0) ...[
-                const SizedBox(width: 12),
-                const BombIcon(size: 26),
-                const SizedBox(width: 4),
-                Text('+${widget.contents.bombs}', style: PopType.of(20, 1000, numbers: true)),
-              ],
             ],
           ),
         ],

@@ -33,7 +33,7 @@ class HudState {
     this.hintColumn,
     this.newBest = false,
     this.newBestLevel = false,
-    this.bombs = 0,
+    this.bombCharge = 0,
     this.bombArmed = false,
     this.levelNumber,
     this.dropsLeft,
@@ -85,8 +85,8 @@ class HudState {
   /// True when the finished Classic round reached a new highest level.
   final bool newBestLevel;
 
-  /// Bombs in the player's supply.
-  final int bombs;
+  /// How full the bomb button is (0–1); at 1 the bomb is ready.
+  final double bombCharge;
 
   /// The next drop is a bomb.
   final bool bombArmed;
@@ -129,7 +129,7 @@ class HudState {
     bool clearHint = false,
     bool? newBest,
     bool? newBestLevel,
-    int? bombs,
+    double? bombCharge,
     bool? bombArmed,
     int? dropsLeft,
     List<GoalView>? goals,
@@ -156,7 +156,7 @@ class HudState {
       hintColumn: clearHint ? null : hintColumn ?? this.hintColumn,
       newBest: newBest ?? this.newBest,
       newBestLevel: newBestLevel ?? this.newBestLevel,
-      bombs: bombs ?? this.bombs,
+      bombCharge: bombCharge ?? this.bombCharge,
       bombArmed: bombArmed ?? this.bombArmed,
       levelNumber: levelNumber,
       dropsLeft: dropsLeft ?? this.dropsLeft,

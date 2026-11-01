@@ -6,27 +6,11 @@ enum GiftKind { none, box, special }
 /// fixed per level (no randomness), so the player always gets exactly what
 /// the level card promised.
 class GiftContents {
-  const GiftContents({required this.coins, this.cosmetic, this.bombs = 0});
+  const GiftContents({required this.coins, this.cosmetic});
   final int coins;
   final Cosmetic? cosmetic;
-
-  /// Bombs for the player's supply.
-  final int bombs;
 }
 
-/// Bombs sold for coins in the Style screen; the bigger pack is cheaper per
-/// bomb.
-enum BombPack {
-  one(1, 40),
-  five(5, 160);
-
-  const BombPack(this.bombs, this.price);
-  final int bombs;
-  final int price;
-}
-
-/// A drop that sets off a chain of this many steps or more earns a bomb.
-const bombChainSteps = 4;
 
 /// The rewards for completing a level for the first time.
 class LevelRewards {
@@ -49,7 +33,7 @@ class LevelRewards {
         ? 20
         : 25;
     // A special gift after levels 10, 20, 30 and 40; a gift box after every
-    // other third level. Every gift holds bombs too.
+    // other third level.
     final special = switch (level) {
       10 => Cosmetics.kitties,
       20 => Cosmetics.donuts,
@@ -61,7 +45,7 @@ class LevelRewards {
       return LevelRewards(
         coins: coins,
         gift: GiftKind.special,
-        contents: GiftContents(coins: 100, cosmetic: special, bombs: 3),
+        contents: GiftContents(coins: 100, cosmetic: special),
       );
     }
     if (level % 3 == 0) {
@@ -70,7 +54,7 @@ class LevelRewards {
       return LevelRewards(
         coins: coins,
         gift: GiftKind.box,
-        contents: GiftContents(coins: boxCoins[i], bombs: 1),
+        contents: GiftContents(coins: boxCoins[i]),
       );
     }
     return LevelRewards(coins: coins, gift: GiftKind.none);

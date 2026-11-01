@@ -68,7 +68,7 @@ class HudBar extends StatelessWidget {
                     ),
                   ),
                   if (onBomb != null) ...[
-                    _BombButton(count: hud.bombs, armed: hud.bombArmed, onPressed: onBomb!),
+                    _BombButton(charge: hud.bombCharge, armed: hud.bombArmed, onPressed: onBomb!),
                     const SizedBox(width: 6),
                   ],
                   if (showNext) NextBalls(sprites: sprites, queue: hud.queue),
@@ -82,58 +82,98 @@ class HudBar extends StatelessWidget {
   }
 }
 
-/// The player's bombs: tap to make the next drop a bomb (it glows while
-/// armed), tap again to put it back. Greyed out with none left.
-class _BombButton extends StatelessWidget {
-  const _BombButton({required this.count, required this.armed, required this.onPressed});
-  final int count;
+/// The bomb: a ring fills as balls pop; once full, the bomb bounces and
+/// glows, ready. Tap it, then a column, to drop it (tap again to put it
+/// back). It starts filling again after every bomb.
+class _BombButton extends StatefulWidget {
+  const _BombButton({required this.charge, required this.armed, required this.onPressed});
+  final double charge;
   final bool armed;
   final VoidCallback onPressed;
 
   @override
+  State<_BombButton> createState() => _BombButtonState();
+}
+
+class _BombButtonState extends State<_BombButton> with SingleTickerProviderStateMixin {
+  late final _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+
+  bool get _ready => widget.charge >= 1;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_ready) _pulse.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_BombButton old) {
+    super.didUpdateWidget(old);
+    if (_ready && !_pulse.isAnimating) _pulse.repeat(reverse: true);
+    if (!_ready && _pulse.isAnimating) _pulse.reset();
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    const fire = Color(0xFFFF8A1A);
     return Tooltip(
-      message: armed ? 'Bomb ready: tap a column' : 'Use a bomb',
+      message: widget.armed
+          ? 'Bomb ready: tap a column'
+          : _ready
+              ? 'Use the bomb'
+              : 'Pop balls to charge the bomb',
       child: GestureDetector(
-        onTap: onPressed,
+        onTap: widget.onPressed,
         child: SizedBox(
           width: 48,
           height: 48,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: armed ? const Color(0xFFFFE2B8) : const Color(0x40FF8A1A),
-                  border: Border.all(color: armed ? const Color(0xFFFF8A1A) : Colors.transparent, width: 2.5),
-                  boxShadow: armed
-                      ? const [BoxShadow(color: Color(0x99FF8A1A), blurRadius: 14, spreadRadius: 1)]
-                      : null,
-                ),
-                child: Opacity(
-                  opacity: count > 0 || armed ? 1 : 0.4,
-                  child: const Center(child: BombIcon(size: 30)),
-                ),
-              ),
-              Positioned(
-                right: -2,
-                top: -2,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+          child: AnimatedBuilder(
+            animation: _pulse,
+            builder: (context, child) {
+              final p = Curves.easeInOut.transform(_pulse.value);
+              return Transform.scale(scale: _ready ? 1 + 0.08 * p : 1, child: child);
+            },
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: count > 0 ? Palette.danger : Palette.inkSoft,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Palette.card, width: 2),
+                    shape: BoxShape.circle,
+                    color: widget.armed ? const Color(0xFFFFE2B8) : Palette.well,
+                    boxShadow: _ready || widget.armed
+                        ? const [BoxShadow(color: Color(0x99FF8A1A), blurRadius: 14, spreadRadius: 1)]
+                        : null,
                   ),
-                  child: Text('$count', style: PopType.of(12, 1000, color: Colors.white, numbers: true)),
                 ),
-              ),
-            ],
+                // The charge ring, filling clockwise from the top.
+                SizedBox(
+                  width: 46,
+                  height: 46,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(end: widget.charge.clamp(0.0, 1.0)),
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                    builder: (context, value, _) => CircularProgressIndicator(
+                      value: value,
+                      strokeWidth: 4,
+                      strokeCap: StrokeCap.round,
+                      color: fire,
+                      backgroundColor: Palette.pipEmpty,
+                    ),
+                  ),
+                ),
+                Opacity(opacity: _ready || widget.armed ? 1 : 0.45, child: const BombIcon(size: 28)),
+              ],
+            ),
           ),
         ),
       ),
