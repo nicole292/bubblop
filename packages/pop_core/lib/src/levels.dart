@@ -89,7 +89,8 @@ enum LevelSetup {
 /// attempt gets the same balls and rising rows, so each level has a known
 /// winning line (test/levels_test.dart replays one for every level).
 class LevelDef {
-  const LevelDef(this.number, this.seed, this.goals, {this.drops, this.setup = LevelSetup.normal});
+  const LevelDef(this.number, this.seed, this.goals,
+      {this.drops, this.setup = LevelSetup.normal, this.layout, this.still = false});
 
   final int number;
   final int seed;
@@ -99,9 +100,22 @@ class LevelDef {
   final int? drops;
   final LevelSetup setup;
 
+  /// The hand-built starting board ([Layouts]), or null for the usual
+  /// start of a shell row and two open rows.
+  final String? layout;
+
+  /// A puzzle: rows never rise, the board changes only by what is dropped.
+  final bool still;
+
   /// A fresh round of this level on top of [base] (the usual rules).
-  Game newGame({RulesConfig base = const RulesConfig()}) =>
-      Game(seed: seed, config: setup.apply(base), dropLimit: drops);
+  Game newGame({RulesConfig base = const RulesConfig()}) {
+    final config = setup.apply(base);
+    return Game(
+        seed: seed,
+        config: still ? config.copyWith(rowsRise: false) : config,
+        dropLimit: drops,
+        layout: layout);
+  }
 }
 
 /// Tracks a level's goals from the moves of a round. Feed it every accepted
@@ -147,59 +161,125 @@ class LevelTracker {
   bool get complete => level.goals.every(isMet);
 }
 
-/// The 40 levels. Early ones teach one goal at a time with small targets;
-/// later ones raise the targets and then combine two familiar goals. Along
-/// the way some levels add a drop limit or a [LevelSetup] twist, so rounds
-/// play differently: a shell wall to crack through, three colours for long
-/// chains, fast rows. The targets were set from the greedy bot in
-/// tool/levels.dart (a typical bot round scores ~2400 and pops ~150 balls;
-/// ×3 chains are uncommon, ×4 rare), and each seed was chosen so the bot
-/// wins its level at the intended rate.
+/// Starting boards for levels, top line first (see [Game] for the letters:
+/// `o` ball, `s` shell, `#` stone, `*` bomb). Every column is a stack, so
+/// nothing floats.
+abstract final class Layouts {
+  static const pyramid = """
+..oo..
+.oooo.
+oooooo""";
+  static const stairs = """
+o.....
+oo....
+ooo...
+oooo..""";
+  static const stairsRight = """
+.....o
+....oo
+...ooo
+..oooo""";
+  static const towers = """
+o....o
+o....o
+oo..oo
+oo..oo""";
+  static const valley = """
+o....o
+oo..oo
+ooo.oo
+oooooo""";
+  static const zigzag = """
+o.o.o.
+oooooo
+ssssss""";
+  static const checker = """
+sosoos
+ososso""";
+  static const centerTower = """
+..oo..
+..oo..
+..ss..
+.ssss.
+ssssss""";
+  static const wideBase = """
+oooooo
+ssssss
+ssssss""";
+  static const shellPyramid = """
+..ss..
+.ssss.
+ssssss""";
+  static const vault = """
+.ssss.
+#ssss#
+#ssss#
+######""";
+  static const bombNest = """
+..**..
+.oooo.
+ssssss""";
+  static const bombTower = """
+*....*
+s*..*s
+ssosss""";
+  static const stoneWall = """
+o.oo.o
+oooooo
+######""";
+}
+
+/// The 40 levels. Every one starts its own way: a hand-built board
+/// ([Layouts]: pyramids, towers, stairs, shell vaults, bomb nests, stone
+/// walls) or a [LevelSetup] twist, and some are puzzles whose rows never
+/// rise ([LevelDef.still]): a fixed board and a number of drops. Early
+/// levels teach one goal at a time; later ones raise the targets and
+/// combine two. The targets were set from the greedy bot in tool/levels.dart,
+/// and each seed was chosen so the bot wins its level at the intended rate.
 abstract final class Campaign {
   static const levels = <LevelDef>[
-    LevelDef(1, 1101, [LevelGoal.pop(8)]),
-    LevelDef(2, 1201, [LevelGoal.score(300)]),
-    LevelDef(3, 1301, [LevelGoal.chain(2)]),
-    LevelDef(4, 1401, [LevelGoal.pop(20)]),
-    LevelDef(5, 1501, [LevelGoal.crack(6)]),
-    LevelDef(6, 1601, [LevelGoal.score(600)], drops: 45),
-    LevelDef(7, 1701, [LevelGoal.pop(35)]),
+    LevelDef(1, 1101, [LevelGoal.pop(8)], layout: Layouts.pyramid),
+    LevelDef(2, 1201, [LevelGoal.score(300)], layout: Layouts.stairs),
+    LevelDef(3, 1301, [LevelGoal.chain(2)], layout: Layouts.towers),
+    LevelDef(4, 1401, [LevelGoal.pop(20)], layout: Layouts.valley),
+    LevelDef(5, 1501, [LevelGoal.crack(6)], layout: Layouts.checker),
+    LevelDef(6, 1601, [LevelGoal.crack(9)], drops: 30, still: true, layout: Layouts.shellPyramid),
+    LevelDef(7, 1701, [LevelGoal.pop(35)], layout: Layouts.zigzag),
     LevelDef(8, 1801, [LevelGoal.crack(15)], setup: LevelSetup.wall),
-    LevelDef(9, 1902, [LevelGoal.chain(2)]),
-    LevelDef(10, 2007, [LevelGoal.chain(3)], setup: LevelSetup.calm),
-    LevelDef(11, 2101, [LevelGoal.score(1200)]),
-    LevelDef(12, 2206, [LevelGoal.pop(50)], drops: 50),
-    LevelDef(13, 2301, [LevelGoal.crack(20)], setup: LevelSetup.wall),
-    LevelDef(14, 2403, [LevelGoal.score(900)], setup: LevelSetup.rush),
-    LevelDef(15, 2501, [LevelGoal.chain(3)]),
-    LevelDef(16, 2601, [LevelGoal.pop(70)], drops: 60),
+    LevelDef(9, 1901, [LevelGoal.chain(2)], layout: Layouts.centerTower),
+    LevelDef(10, 2001, [LevelGoal.chain(3)], setup: LevelSetup.calm, layout: Layouts.pyramid),
+    LevelDef(11, 2103, [LevelGoal.score(1200)], layout: Layouts.stairsRight),
+    LevelDef(12, 2204, [LevelGoal.pop(50)], drops: 50, layout: Layouts.towers),
+    LevelDef(13, 2301, [LevelGoal.crack(10)], drops: 45, still: true, layout: Layouts.vault),
+    LevelDef(14, 2401, [LevelGoal.score(900)], setup: LevelSetup.rush, layout: Layouts.valley),
+    LevelDef(15, 2502, [LevelGoal.chain(3)], layout: Layouts.wideBase),
+    LevelDef(16, 3001, [LevelGoal.blast(2)], layout: Layouts.bombNest),
     LevelDef(17, 2701, [LevelGoal.chain(3)], drops: 80, setup: LevelSetup.calm),
-    LevelDef(18, 2801, [LevelGoal.score(1800)], drops: 100),
+    LevelDef(18, 2801, [LevelGoal.score(1800)], drops: 100, layout: Layouts.checker),
     LevelDef(19, 2901, [LevelGoal.crack(30)], setup: LevelSetup.wall),
-    LevelDef(20, 3002, [LevelGoal.pop(60)], setup: LevelSetup.rush),
-    LevelDef(21, 3101, [LevelGoal.score(1200), LevelGoal.chain(2)]),
+    LevelDef(20, 3001, [LevelGoal.pop(60)], setup: LevelSetup.rush, layout: Layouts.stoneWall),
+    LevelDef(21, 3101, [LevelGoal.score(1200), LevelGoal.chain(2)], layout: Layouts.pyramid),
     LevelDef(22, 3202, [LevelGoal.crack(20), LevelGoal.chain(2)], setup: LevelSetup.wall),
-    LevelDef(23, 3301, [LevelGoal.crack(30), LevelGoal.pop(40)], setup: LevelSetup.wall),
-    LevelDef(24, 3404, [LevelGoal.pop(50), LevelGoal.chain(3)]),
+    LevelDef(23, 3302, [LevelGoal.crack(12), LevelGoal.pop(30)], drops: 70, still: true, layout: Layouts.vault),
+    LevelDef(24, 3403, [LevelGoal.pop(50), LevelGoal.chain(3)], layout: Layouts.towers),
     LevelDef(25, 3501, [LevelGoal.chain(4)], setup: LevelSetup.calm),
-    LevelDef(26, 3602, [LevelGoal.score(1500)], setup: LevelSetup.rush),
-    LevelDef(27, 3702, [LevelGoal.crack(25), LevelGoal.chain(3)], setup: LevelSetup.wall),
-    LevelDef(28, 3801, [LevelGoal.pop(100), LevelGoal.chain(3)]),
-    LevelDef(29, 3901, [LevelGoal.score(2400)], drops: 120),
-    LevelDef(30, 4001, [LevelGoal.score(2000), LevelGoal.chain(3)], setup: LevelSetup.rush),
-    // Bombs: they rise with the rows and go off when a ball beside them pops.
+    LevelDef(26, 3601, [LevelGoal.score(1500)], setup: LevelSetup.rush, layout: Layouts.stairs),
+    LevelDef(27, 3901, [LevelGoal.blast(3)], drops: 18, layout: Layouts.bombTower),
+    LevelDef(28, 3801, [LevelGoal.pop(100), LevelGoal.chain(3)], layout: Layouts.zigzag),
+    LevelDef(29, 3902, [LevelGoal.score(2400)], drops: 120, layout: Layouts.wideBase),
+    LevelDef(30, 4056, [LevelGoal.score(2000), LevelGoal.chain(3)], setup: LevelSetup.rush, layout: Layouts.centerTower),
+    // Bombs rise with the rows and go off when a ball beside them pops.
     LevelDef(31, 4104, [LevelGoal.blast(2)], setup: LevelSetup.bombs),
-    LevelDef(32, 4203, [LevelGoal.pop(100)], setup: LevelSetup.bombs),
+    LevelDef(32, 4201, [LevelGoal.pop(100)], setup: LevelSetup.bombs, layout: Layouts.bombNest),
     LevelDef(33, 4315, [LevelGoal.crack(25)], setup: LevelSetup.bombWall),
-    LevelDef(34, 4401, [LevelGoal.score(1500)], setup: LevelSetup.stones),
+    LevelDef(34, 4401, [LevelGoal.score(1500)], setup: LevelSetup.stones, layout: Layouts.stoneWall),
     LevelDef(35, 4501, [LevelGoal.blast(4)], drops: 80, setup: LevelSetup.bombs),
     LevelDef(36, 4603, [LevelGoal.chain(3)], setup: LevelSetup.bombWall),
-    LevelDef(37, 4701, [LevelGoal.blast(3), LevelGoal.pop(60)], setup: LevelSetup.bombs),
-    LevelDef(38, 4801, [LevelGoal.pop(80), LevelGoal.chain(2)], setup: LevelSetup.stones),
+    LevelDef(37, 4901, [LevelGoal.blast(3), LevelGoal.pop(60)], drops: 65, setup: LevelSetup.bombs, layout: Layouts.bombTower),
+    LevelDef(38, 4802, [LevelGoal.pop(80), LevelGoal.chain(2)], setup: LevelSetup.stones, layout: Layouts.valley),
     LevelDef(39, 4911, [LevelGoal.blast(5)], drops: 90, setup: LevelSetup.bombWall),
-    LevelDef(40, 5001, [LevelGoal.score(2500), LevelGoal.blast(4)], setup: LevelSetup.bombs),
+    LevelDef(40, 5001, [LevelGoal.score(2500), LevelGoal.blast(4)], setup: LevelSetup.bombs, layout: Layouts.bombNest),
   ];
-
 
   static int get count => levels.length;
 

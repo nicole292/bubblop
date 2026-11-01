@@ -84,8 +84,11 @@ class BoardComponent extends Component {
     }
 
     if (!DevOptions.skip('dock')) {
-      _paintMeter(canvas, layout);
-      _paintDockBalls(canvas, layout, sprites);
+      // A puzzle level's rows never rise: no countdown, no next row.
+      if (rules.config.rowsRise) {
+        _paintMeter(canvas, layout);
+        _paintDockBalls(canvas, layout, sprites);
+      }
     }
 
     canvas.save();

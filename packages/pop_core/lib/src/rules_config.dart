@@ -31,6 +31,7 @@ class RulesConfig {
     this.startRows = 1,
     this.startOpenRows = 2,
     this.bombEvery = 0,
+    this.rowsRise = true,
   });
 
   final int columns;
@@ -71,6 +72,10 @@ class RulesConfig {
   /// Every [bombEvery]th rising row carries a bomb. 0 turns it off.
   final int bombEvery;
 
+  /// False for puzzle levels: no row ever rises, so the board only changes
+  /// by what the player drops.
+  final bool rowsRise;
+
   /// The countdown shortens by one every [levelsPerPressureStep] levels.
   final int levelsPerPressureStep;
 
@@ -93,6 +98,7 @@ class RulesConfig {
     int? startRows,
     int? startOpenRows,
     int? bombEvery,
+    bool? rowsRise,
   }) {
     return RulesConfig(
       columns: columns,
@@ -111,6 +117,7 @@ class RulesConfig {
       startRows: startRows ?? this.startRows,
       startOpenRows: startOpenRows ?? this.startOpenRows,
       bombEvery: bombEvery ?? this.bombEvery,
+      rowsRise: rowsRise ?? this.rowsRise,
     );
   }
 }

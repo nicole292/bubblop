@@ -93,12 +93,12 @@ void main() {
     test('special gifts unlock a cosmetic and add their coins', () {
       final p = Progress.memory();
       clearUpTo(p, 9);
-      expect(p.owns(Cosmetics.candy), isFalse);
+      expect(p.owns(Cosmetics.kitties), isFalse);
       final before = p.coins;
       final clear = p.completeLevel(10, score: 100)!;
       expect(clear.gift, GiftKind.special);
-      expect(clear.giftContents!.cosmetic, Cosmetics.candy);
-      expect(p.owns(Cosmetics.candy), isTrue);
+      expect(clear.giftContents!.cosmetic, Cosmetics.kitties);
+      expect(p.owns(Cosmetics.kitties), isTrue);
       final achievementCoins = clear.achievements.fold(0, (sum, a) => sum + a.coins);
       expect(p.coins, before + clear.coins + clear.giftContents!.coins + achievementCoins);
     });
@@ -162,29 +162,29 @@ void main() {
       expect(p.sky, Cosmetics.day);
       expect(p.owns(Cosmetics.classic), isTrue);
       expect(p.owns(Cosmetics.bubbles), isTrue);
-      expect(p.owns(Cosmetics.ocean), isFalse);
+      expect(p.owns(Cosmetics.hearts), isFalse);
     });
 
     test('coin items need enough coins and are paid once', () {
       final p = Progress.memory();
-      expect(p.buy(Cosmetics.mint), isFalse, reason: 'no coins yet');
+      expect(p.buy(Cosmetics.hearts), isFalse, reason: 'no coins yet');
       clearUpTo(p, 12);
       final coins = p.coins;
-      expect(coins, greaterThanOrEqualTo(200));
-      expect(p.buy(Cosmetics.mint), isTrue);
-      expect(p.coins, coins - 200);
-      expect(p.buy(Cosmetics.mint), isFalse, reason: 'already owned');
-      expect(p.coins, coins - 200);
+      expect(coins, greaterThanOrEqualTo(250));
+      expect(p.buy(Cosmetics.hearts), isTrue);
+      expect(p.coins, coins - 250);
+      expect(p.buy(Cosmetics.hearts), isFalse, reason: 'already owned');
+      expect(p.coins, coins - 250);
     });
 
     test('gift-only items cannot be bought, and locked items cannot be used', () {
       final p = Progress.memory();
       clearUpTo(p, 20);
-      expect(p.buy(Cosmetics.twilight), isFalse);
-      expect(p.select(Cosmetics.twilight), isFalse);
-      expect(p.sky, Cosmetics.day);
-      expect(p.select(Cosmetics.sunset), isTrue, reason: 'won at level 20');
-      expect(p.sky, Cosmetics.sunset);
+      expect(p.buy(Cosmetics.planets), isFalse);
+      expect(p.select(Cosmetics.planets), isFalse);
+      expect(p.shape, Cosmetics.bubbles);
+      expect(p.select(Cosmetics.donuts), isTrue, reason: 'won at level 20');
+      expect(p.shape, Cosmetics.donuts);
     });
 
     test('a shape is bought and used on its own, keeping the ball colours', () async {
@@ -210,9 +210,8 @@ void main() {
       clearUpTo(p, 12);
       p.completeLevel(3, score: 999);
       p.recordChain(2);
-      p.buy(Cosmetics.mint);
-      p.select(Cosmetics.mint);
-      p.select(Cosmetics.candy);
+      p.buy(Cosmetics.hearts);
+      p.select(Cosmetics.hearts);
 
       final again = Progress.from(prefs);
       expect(again.unlockedLevel, 13);
@@ -221,10 +220,9 @@ void main() {
       expect(again.coins, p.coins);
       expect(again.hasAchievement(AchievementId.firstChain), isTrue);
       expect(again.hasAchievement(AchievementId.tenLevels), isTrue);
-      expect(again.owns(Cosmetics.mint), isTrue);
-      expect(again.owns(Cosmetics.candy), isTrue);
-      expect(again.sky, Cosmetics.mint);
-      expect(again.balls, Cosmetics.candy);
+      expect(again.owns(Cosmetics.hearts), isTrue);
+      expect(again.owns(Cosmetics.kitties), isTrue, reason: 'the level 10 gift');
+      expect(again.shape, Cosmetics.hearts);
 
       // Rewards stay claimed after the restart.
       final coins = again.coins;
@@ -234,28 +232,30 @@ void main() {
 
     test('a damaged selection falls back to the defaults', () async {
       SharedPreferences.setMockInitialValues({
-        'style.balls': 'balls.neon',
+        'style.balls': 'nonsense',
         'style.shape': 'balls.classic',
         'style.sky': 'nonsense',
       });
       final p = Progress.from(await SharedPreferences.getInstance());
-      expect(p.balls, Cosmetics.classic, reason: 'neon is not owned');
+      expect(p.balls, Cosmetics.classic);
       expect(p.shape, Cosmetics.bubbles, reason: 'a ball set is not a shape');
       expect(p.sky, Cosmetics.day);
     });
 
-    test('a retired ball set in use is refunded once and swapped for Classic', () async {
+    test('retired ball sets and skies are refunded once and swapped for the defaults', () async {
       SharedPreferences.setMockInitialValues({
         'progress.coins': 40,
-        'style.owned': ['balls.jewel', 'sky.mint'],
-        'style.balls': 'balls.jewel',
+        'style.owned': ['balls.jewel', 'balls.galaxy', 'balls.candy', 'sky.mint', 'shape.jelly'],
+        'style.balls': 'balls.galaxy',
+        'style.sky': 'sky.mint',
       });
       final prefs = await SharedPreferences.getInstance();
       final p = Progress.from(prefs);
-      expect(p.coins, 290);
+      expect(p.coins, 40 + 250 + 500 + 200, reason: 'gift items paid nothing, so give nothing back');
       expect(p.balls, Cosmetics.classic);
-      expect(p.owns(Cosmetics.mint), isTrue);
-      expect(Progress.from(prefs).coins, 290, reason: 'the refund is paid only once');
+      expect(p.sky, Cosmetics.day);
+      expect(p.owns(Cosmetics.jelly), isTrue, reason: 'shapes are kept');
+      expect(Progress.from(prefs).coins, 990, reason: 'the refund is paid only once');
     });
   });
 }

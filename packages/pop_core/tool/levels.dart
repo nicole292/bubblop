@@ -25,7 +25,9 @@ const attempts = 80;
   final n = level.number;
   final chain3 = level.goals.any((g) => g.kind == GoalKind.chain && g.target >= 3);
   final chain4 = level.goals.any((g) => g.kind == GoalKind.chain && g.target >= 4);
-  if (n <= 3) return (0.95, 1.0);
+  if (n <= 3) return (0.9, 1.0);
+  // Puzzles: a fixed board and a fixed number of drops.
+  if (level.still) return (0.3, 0.9);
   // The bot never aims at bombs, so it sets them off only by chance.
   if (level.goals.any((g) => g.kind == GoalKind.blast)) return (0.2, 0.9);
   if (chain4) return (0.04, 0.6);
@@ -77,8 +79,8 @@ void main(List<String> args) {
   stdout.writeln('Wrote test/level_solutions.dart (${solutions.length} levels).');
 }
 
-LevelDef _withSeed(LevelDef level, int seed) =>
-    LevelDef(level.number, seed, level.goals, drops: level.drops, setup: level.setup);
+LevelDef _withSeed(LevelDef level, int seed) => LevelDef(level.number, seed, level.goals,
+    drops: level.drops, setup: level.setup, layout: level.layout, still: level.still);
 
 /// Bot win rate on the level's deal, the shortest winning move list found,
 /// and the median number of drops a win took.

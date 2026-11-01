@@ -398,12 +398,17 @@ class LevelIntro extends StatelessWidget {
                     ),
                     Text('LEVEL', style: PopType.panelTitle),
                     Text('${level.number}', style: PopType.of(52, 1000, color: Palette.accent, numbers: true)),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
+                    if (level.layout != null) ...[
+                      _BoardPreview(board: level.newGame().board),
+                      const SizedBox(height: 12),
+                    ] else
+                      const SizedBox(height: 2),
                     for (final goal in level.goals) ...[
                       _GoalRow(goal: goal),
                       const SizedBox(height: 8),
                     ],
-                    if (level.drops != null || level.setup != LevelSetup.normal) ...[
+                    if (level.drops != null || level.setup != LevelSetup.normal || level.still) ...[
                       _Twists(level: level),
                       const SizedBox(height: 8),
                     ],
@@ -424,6 +429,72 @@ class LevelIntro extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A small picture of the level's starting board: balls in their colours,
+/// shells as rings, stones grey, bombs dark.
+class _BoardPreview extends StatelessWidget {
+  const _BoardPreview({required this.board});
+  final Board board;
+
+  @override
+  Widget build(BuildContext context) {
+    var top = 0;
+    for (var c = 0; c < board.columns; c++) {
+      top = math.max(top, board.height(c));
+    }
+    const cell = 18.0;
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(16)),
+      child: SizedBox(
+        width: cell * board.columns,
+        height: cell * top,
+        child: CustomPaint(painter: _BoardPreviewPainter(board, top, cell)),
+      ),
+    );
+  }
+}
+
+class _BoardPreviewPainter extends CustomPainter {
+  _BoardPreviewPainter(this.board, this.rows, this.cell);
+  final Board board;
+  final int rows;
+  final double cell;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = cell * 0.42;
+    for (var row = 0; row < rows; row++) {
+      for (var col = 0; col < board.columns; col++) {
+        final c = board.at(col, row);
+        if (c == null) continue;
+        final at = Offset(col * cell + cell / 2, (rows - 1 - row) * cell + cell / 2);
+        switch (c.kind) {
+          case CellKind.orb:
+            canvas.drawCircle(at, r, Paint()..color = Palette.balls[c.color]);
+          case CellKind.shell:
+            canvas.drawCircle(at, r, Paint()..color = Palette.balls[c.color].withValues(alpha: 0.45));
+            canvas.drawCircle(
+                at,
+                r * 0.86,
+                Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = r * 0.28
+                  ..color = Colors.white.withValues(alpha: 0.9));
+          case CellKind.stone:
+            canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCircle(center: at, radius: r), Radius.circular(r * 0.35)),
+                Paint()..color = const Color(0xFF9A9FB8));
+          case CellKind.bomb:
+            canvas.drawCircle(at, r, Paint()..color = const Color(0xFF22232E));
+            canvas.drawCircle(at.translate(r * 0.55, -r * 0.8), r * 0.28, Paint()..color = const Color(0xFFFFA62B));
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BoardPreviewPainter old) => old.board != board;
 }
 
 class _GoalRow extends StatelessWidget {
@@ -465,6 +536,7 @@ class _Twists extends StatelessWidget {
       spacing: 8,
       runSpacing: 6,
       children: [
+        if (level.still) _tag(Icons.extension_rounded, 'Puzzle: rows stay still'),
         if (drops != null) _tag(Icons.water_drop_rounded, 'In $drops drops'),
         if (level.setup != LevelSetup.normal) _tag(_setupIcon(level.setup), level.setup.about),
       ],

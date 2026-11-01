@@ -34,6 +34,7 @@ class Game {
     Board? board,
     List<int> scriptedQueue = const [],
     this.dropLimit,
+    String? layout,
   })  : _board = board?.copy() ?? Board(config.columns, config.rows),
         _bag = ColorBag(SeededRandom(seed)),
         // Rising rows use their own generator so they never shift which
@@ -48,12 +49,47 @@ class Game {
       _queue.add(_nextColor());
     }
     _nextRow = _generateRow();
-    // A fresh round (no board given) starts with some rows already risen.
-    if (board == null) {
+    // A fresh round (no board given) starts with some rows already risen,
+    // or with a level's hand-built [layout].
+    if (board == null && layout != null) {
+      _placeLayout(layout);
+    } else if (board == null) {
       for (var i = 0; i < config.startRows; i++) {
         _raiseRow();
       }
       _placeOpenRows();
+    }
+  }
+
+  /// Builds the starting board from a level layout, top line first like
+  /// [Board.parse]: `o` a ball and `s` a shell of a dealt colour, `#` a
+  /// stone, `*` a bomb, `.` empty, or a fixed cell in [Board.parse]
+  /// letters. Balls are re-dealt until no group is already complete.
+  void _placeLayout(String layout) {
+    final lines = layout
+        .split('\n')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+    final colorCount = config.colorsForLevel(_level);
+    for (var i = lines.length - 1; i >= 0; i--) {
+      final row = lines.length - 1 - i;
+      for (var col = 0; col < config.columns; col++) {
+        final ch = lines[i][col];
+        switch (ch) {
+          case '.':
+            break;
+          case 'o':
+            for (var attempt = 0; attempt < 12; attempt++) {
+              _board.set(col, row, Cell.orb(_rowRandom.nextInt(colorCount)));
+              if (findGroups(_board, config.matchSize).isEmpty) break;
+            }
+          case 's':
+            _board.set(col, row, Cell.shell(_rowRandom.nextInt(colorCount)));
+          default:
+            _board.set(col, row, Board.parse(ch, columns: 1, rows: 1).at(0, 0));
+        }
+      }
     }
   }
 
@@ -204,8 +240,11 @@ class Game {
     if (steps.length >= 2 && config.chainRelief > 0) {
       _pressure = math.min(_pressure + config.chainRelief, interval);
     }
-    _pressure--;
-    if (_pressure <= 0 && steps.isNotEmpty && _anyColumnFull()) {
+    // Rows that stay still never count down.
+    if (config.rowsRise) _pressure--;
+    if (!config.rowsRise) {
+      // Nothing rises.
+    } else if (_pressure <= 0 && steps.isNotEmpty && _anyColumnFull()) {
       // The row would push a full column off the top, but this drop popped:
       // it waits one more drop, a last chance to make room.
       _pressure = 1;

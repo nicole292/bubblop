@@ -51,9 +51,9 @@ class LevelRewards {
     // A special gift after levels 10, 20, 30 and 40; a gift box after every
     // other third level. Every gift holds bombs too.
     final special = switch (level) {
-      10 => Cosmetics.candy,
-      20 => Cosmetics.sunset,
-      30 => Cosmetics.twilight,
+      10 => Cosmetics.kitties,
+      20 => Cosmetics.donuts,
+      30 => Cosmetics.planets,
       40 => Cosmetics.cherries,
       _ => null,
     };

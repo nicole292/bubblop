@@ -75,8 +75,14 @@ Status: draft spec for the first prototype. Every number here lives in
   confused with the campaign level number.
 
 ## Campaign (40 levels)
-Defined in `packages/pop_core/lib/src/levels.dart`; same rules as Endless, plus a few
-per-level twists.
+Defined in `packages/pop_core/lib/src/levels.dart`; same rules as Endless, but every level
+plays its own way, unlike Classic's endless rising rows:
+- **Hand-built starting boards** (`Layouts`): pyramid, stairs, towers, valley, zigzag,
+  checker, centre tower, wide base, shell pyramid, shell vault, bomb nest, bomb tower and
+  stone wall. `o` is a ball and `s` a shell in a dealt colour (re-dealt so no group starts
+  complete), `#` a stone, `*` a bomb. The level card shows a small picture of the board.
+- **Puzzles** (`still`): rows never rise; a fixed board and a number of drops, e.g. crack
+  every shell in the vault (levels 6, 13, 23).
 - Each level has a **fixed deal** (seed): every attempt gets the same balls and rows.
 - Goals, all of which must be met before the round ends:
   - **Score** N points (the round's score),

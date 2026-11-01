@@ -67,14 +67,9 @@ class StyleScreen extends StatelessWidget {
                       _section('BOMBS'),
                       _bombCard(context),
                       const SizedBox(height: 10),
-                      _section('BALLS'),
-                      for (final c in Cosmetics.ofKind(CosmeticKind.balls)) _item(context, c),
                       const SizedBox(height: 10),
                       _section('SHAPES'),
                       _shapeCard(context),
-                      const SizedBox(height: 10),
-                      _section('SKY'),
-                      for (final c in Cosmetics.ofKind(CosmeticKind.sky)) _item(context, c),
                     ],
                   ),
                 ),
@@ -86,16 +81,7 @@ class StyleScreen extends StatelessWidget {
     );
   }
 
-  static List<(String, List<Cosmetic>)> _shapeFamilies() {
-    final families = <String, List<Cosmetic>>{};
-    for (final c in Cosmetics.ofKind(CosmeticKind.shape)) {
-      families.putIfAbsent((c.family ?? 'Shapes').toUpperCase(), () => []).add(c);
-    }
-    return [for (final e in families.entries) (e.key, e.value)];
-  }
-
-  /// Every shape in one card: a small tile per shape showing a single piece,
-  /// grouped by family (the classic outlines, then each 3D family).
+  /// Every shape in one card: a small tile per shape showing a single piece.
   Widget _shapeCard(BuildContext context) => Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
@@ -110,24 +96,15 @@ class StyleScreen extends StatelessWidget {
             // Four tiles a row on most phones, three on narrow ones.
             final perRow = box.maxWidth >= 340 ? 4 : 3;
             final tile = (box.maxWidth - 8 * (perRow - 1)) / perRow;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final (family, shapes) in _shapeFamilies()) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
-                    child: Text(family, style: PopType.of(12, 900, color: Palette.inkSoft, spacing: 1.5)),
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final c in shapes) _shapeTile(context, c, tile),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final c in Cosmetics.ofKind(CosmeticKind.shape)) _shapeTile(context, c, tile),
                 ],
-              ],
+              ),
             );
           },
         ),
@@ -316,90 +293,6 @@ class StyleScreen extends StatelessWidget {
     child: Text(title, style: PopType.of(14, 900, color: Colors.white, spacing: 2)),
   );
 
-  Widget _item(BuildContext context, Cosmetic c) {
-    final owned = progress.owns(c);
-    final inUse = progress.selected(c.kind) == c;
-    final unlock = c.unlock;
-    Widget action;
-    if (inUse) {
-      action = _pill('In use', Palette.success, Colors.white, icon: Icons.check_rounded);
-    } else if (owned) {
-      action = _pill('Use', Palette.accent, Colors.white);
-    } else if (unlock is CoinUnlock) {
-      final afford = progress.coins >= unlock.price;
-      action = Container(
-        height: 38,
-        padding: const EdgeInsets.fromLTRB(8, 0, 14, 0),
-        decoration: BoxDecoration(
-          color: afford ? Palette.cream : Palette.well,
-          borderRadius: BorderRadius.circular(19),
-          border: Border.all(color: afford ? Palette.gold : Palette.pipEmpty, width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CoinIcon(size: 22),
-            const SizedBox(width: 5),
-            Text(
-              '${unlock.price}',
-              style: PopType.of(15, 1000, color: afford ? Palette.ink : Palette.inkSoft, numbers: true),
-            ),
-          ],
-        ),
-      );
-    } else if (unlock is GiftUnlock) {
-      action = _pill('Level ${unlock.level} gift', Palette.well, Palette.inkSoft, icon: Icons.auto_awesome_rounded);
-    } else {
-      action = const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: () => _tapItem(context, c),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 12, 14),
-          decoration: BoxDecoration(
-            color: Palette.card,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: inUse ? Palette.success : Palette.edge, width: inUse ? 2.5 : 1.2),
-            boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  if (!owned) ...[Icon(Icons.lock_rounded, size: 18, color: Palette.inkSoft), const SizedBox(width: 6)],
-                  Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(c.name, maxLines: 1, style: PopType.of(18, 1000)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  action,
-                ],
-              ),
-              const SizedBox(height: 10),
-              // A big preview, so the sets are easy to compare.
-              Opacity(
-                opacity: owned ? 1 : 0.8,
-                child: c.kind != CosmeticKind.sky
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: CosmeticSwatch(cosmetic: c, height: 56, wide: true),
-                      )
-                    : CosmeticSwatch(cosmetic: c, height: 44, wide: true),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   /// Owned: use it. Coin item: ask before spending. Otherwise say how to get it.
   Future<void> _tapItem(BuildContext context, Cosmetic c) async {
     if (progress.selected(c.kind) == c) return;
@@ -452,19 +345,6 @@ class StyleScreen extends StatelessWidget {
         ),
       );
   }
-
-  Widget _pill(String text, Color background, Color foreground, {IconData? icon}) => Container(
-    height: 38,
-    padding: const EdgeInsets.symmetric(horizontal: 14),
-    decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(19)),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (icon != null) ...[Icon(icon, size: 16, color: foreground), const SizedBox(width: 4)],
-        Text(text, style: PopType.of(14, 900, color: foreground)),
-      ],
-    ),
-  );
 }
 
 /// "Unlock Ocean for 300 coins?" or "Buy 5 bombs for 160 coins?", so coins

@@ -145,13 +145,49 @@ void main() {
       expect(Campaign.levels.take(20).every((l) => l.goals.length == 1), isTrue);
     });
 
-    test('blast goals only appear where bombs rise with the rows', () {
+    test('blast goals only appear where there are bombs', () {
       for (final level in Campaign.levels) {
         if (level.goals.any((g) => g.kind == GoalKind.blast)) {
-          expect(level.newGame().config.bombEvery, greaterThan(0),
+          final game = level.newGame();
+          final onBoard = game.board.toPicture().contains('*');
+          expect(onBoard || game.config.bombEvery > 0, isTrue,
               reason: 'level ${level.number}');
         }
       }
+    });
+
+    test('every layout starts settled, with no group already complete', () {
+      for (final level in Campaign.levels.where((l) => l.layout != null)) {
+        final board = level.newGame().board;
+        expect(applyGravity(board.copy()), isEmpty,
+            reason: 'level ${level.number}: something floats');
+        expect(findGroups(board, 4), isEmpty,
+            reason: 'level ${level.number}: a group is already complete');
+        expect(board.isEmpty, isFalse);
+      }
+    });
+
+    test('puzzle levels never raise a row', () {
+      final puzzles = Campaign.levels.where((l) => l.still).toList();
+      expect(puzzles, isNotEmpty);
+      for (final level in puzzles) {
+        expect(level.drops, isNotNull,
+            reason: 'level ${level.number}: a puzzle needs a drop limit');
+        final game = level.newGame();
+        for (var i = 0; i < 25 && !game.isOver; i++) {
+          final column = [for (var c = 0; c < 6; c++) (i + c) % 6]
+              .firstWhere(game.canDrop, orElse: () => -1);
+          if (column < 0) break;
+          final result = game.drop(column);
+          expect(result.events.whereType<RowRose>(), isEmpty,
+              reason: 'level ${level.number}');
+        }
+      }
+    });
+
+    test('most levels start from their own board', () {
+      final layouts = Campaign.levels.where((l) => l.layout != null).length;
+      expect(layouts, greaterThanOrEqualTo(25));
     });
 
     test('every level can be won: a recorded winning line meets its goals', () {
