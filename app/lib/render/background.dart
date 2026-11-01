@@ -78,6 +78,8 @@ class SkyBackground {
       );
     }
 
+    if (Palette.dark) _paintStars(canvas);
+
     for (final b in _bubbles) {
       final c = Offset(b.x + math.sin(_time * 0.8 + b.phase) * 8, b.y);
       _bubbleFill.color = const Color(0x14FFFFFF);
@@ -91,6 +93,28 @@ class SkyBackground {
     }
   }
 
+  /// Night only: small stars scattered over the sky (fixed places, so they
+  /// don't jump on resize), each twinkling at its own pace.
+  void _paintStars(Canvas canvas) {
+    final random = math.Random(11);
+    for (var i = 0; i < 46; i++) {
+      final p = Offset(random.nextDouble() * _size.width, random.nextDouble() * _size.height);
+      final r = 0.6 + random.nextDouble() * 1.4;
+      final speed = 0.6 + random.nextDouble() * 1.6;
+      final twinkle = 0.45 + 0.55 * (0.5 + 0.5 * math.sin(_time * speed + i * 1.7));
+      _starPaint.color = Color.fromRGBO(255, 255, 255, 0.85 * twinkle);
+      canvas.drawCircle(p, r, _starPaint);
+      // A few bigger ones get a soft cross of light.
+      if (i % 9 == 0) {
+        _starPaint.color = Color.fromRGBO(220, 225, 255, 0.35 * twinkle);
+        canvas.drawRect(Rect.fromCenter(center: p, width: r * 7, height: 0.8), _starPaint);
+        canvas.drawRect(Rect.fromCenter(center: p, width: 0.8, height: r * 7), _starPaint);
+      }
+    }
+  }
+
+  final _starPaint = Paint();
+
   /// Big soft patches of colour, rendered once at quarter resolution.
   Image _bakeBlobs(Size size) {
     const scale = 0.25;
@@ -98,19 +122,24 @@ class SkyBackground {
     final h = math.max(1, (size.height * scale).round());
     final recorder = PictureRecorder();
     final canvas = Canvas(recorder);
-    // At night the patches glow faintly instead of brightening the sky.
-    final strength = Palette.dark ? 0.4 : 1.0;
     void blob(double fx, double fy, double radius, Color color) {
-      color = color.withValues(alpha: color.a * strength);
       final c = Offset(fx * w, fy * h);
       final r = radius * w;
       canvas.drawCircle(c, r, Paint()..shader = Gradient.radial(c, r, [color, color.withValues(alpha: 0)]));
     }
 
-    blob(0.05, 0.08, 0.75, const Color(0x55FFFFFF));
-    blob(1.0, 0.30, 0.7, const Color(0x40FF8FD1));
-    blob(0.0, 0.75, 0.8, const Color(0x3D6CF0E0));
-    blob(0.95, 0.95, 0.7, const Color(0x40FFB36B));
+    if (Palette.dark) {
+      // Night: faint nebula glows in violet, pink and blue.
+      blob(0.1, 0.12, 0.8, const Color(0x335A7BFF));
+      blob(1.0, 0.38, 0.75, const Color(0x2EC25CFF));
+      blob(0.0, 0.78, 0.8, const Color(0x2640C8FF));
+      blob(0.95, 0.98, 0.75, const Color(0x33FF5CA8));
+    } else {
+      blob(0.05, 0.08, 0.75, const Color(0x55FFFFFF));
+      blob(1.0, 0.30, 0.7, const Color(0x40FF8FD1));
+      blob(0.0, 0.75, 0.8, const Color(0x3D6CF0E0));
+      blob(0.95, 0.95, 0.7, const Color(0x40FFB36B));
+    }
     final picture = recorder.endRecording();
     final image = picture.toImageSync(w, h);
     picture.dispose();

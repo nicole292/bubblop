@@ -102,6 +102,7 @@ class StyleScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Palette.card,
           borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Palette.edge, width: 1.2),
           boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
         ),
         child: LayoutBuilder(
@@ -195,6 +196,7 @@ class StyleScreen extends StatelessWidget {
     decoration: BoxDecoration(
       color: Palette.card,
       borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: Palette.edge, width: 1.2),
       boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
     ),
     child: Column(
@@ -294,6 +296,7 @@ class StyleScreen extends StatelessWidget {
     decoration: BoxDecoration(
       color: Palette.card,
       borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: Palette.edge, width: 1.2),
       boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
     ),
     child: ListenableBuilder(
@@ -359,7 +362,7 @@ class StyleScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: Palette.card,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: inUse ? Palette.success : Colors.transparent, width: 2.5),
+            border: Border.all(color: inUse ? Palette.success : Palette.edge, width: inUse ? 2.5 : 1.2),
             boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
           ),
           child: Column(
@@ -486,6 +489,7 @@ class _Confirm extends StatelessWidget {
         decoration: BoxDecoration(
           color: Palette.card,
           borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: Palette.edge, width: 1.2),
           boxShadow: const [BoxShadow(color: Color(0x663A2D9E), blurRadius: 30, offset: Offset(0, 12))],
         ),
         child: Column(

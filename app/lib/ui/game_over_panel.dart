@@ -35,6 +35,7 @@ class GameOverPanel extends StatelessWidget {
         decoration: BoxDecoration(
           color: Palette.card,
           borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: Palette.edge, width: 1.2),
           boxShadow: const [BoxShadow(color: Color(0x663A2D9E), blurRadius: 30, offset: Offset(0, 12))],
         ),
         child: Column(

@@ -287,6 +287,13 @@ class BoardComponent extends Component {
       ..maskFilter = null
       ..color = Palette.card;
     canvas.drawRRect(card, paint);
+    // At night a faint lit rim lifts the card off the sky.
+    canvas.drawRRect(
+        card.deflate(0.6),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2
+          ..color = Palette.edge);
 
     // The well the balls sit in, reaching up to the header.
     final well = RRect.fromRectAndRadius(

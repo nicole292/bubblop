@@ -79,6 +79,7 @@ class _AchievementCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Palette.card,
         borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Palette.edge, width: 1.2),
         boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
       ),
       child: Row(
