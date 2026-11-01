@@ -1,5 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:project_pop/services/settings.dart';
+import 'package:project_pop/ui/theme_switch.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   test('defaults: sound and vibration on, no best, tutorial not done', () {
@@ -44,5 +48,19 @@ void main() {
     expect(calls, 4);
     expect(s.music, isFalse);
     expect(s.sound, isFalse);
+  });
+
+  test('theme starts on Auto, which follows the phone', () {
+    expect(Settings.memory().theme, ThemeChoice.auto);
+    expect(ThemeSwitch.isDark(ThemeChoice.auto, Brightness.dark), isTrue);
+    expect(ThemeSwitch.isDark(ThemeChoice.auto, Brightness.light), isFalse);
+    expect(ThemeSwitch.isDark(ThemeChoice.dark, Brightness.light), isTrue);
+    expect(ThemeSwitch.isDark(ThemeChoice.light, Brightness.dark), isFalse);
+  });
+
+  test('the theme choice is saved', () async {
+    SharedPreferences.setMockInitialValues({});
+    (await Settings.load()).theme = ThemeChoice.dark;
+    expect((await Settings.load()).theme, ThemeChoice.dark);
   });
 }

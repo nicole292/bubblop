@@ -65,7 +65,7 @@ class _HintBubbleState extends State<HintBubble> with SingleTickerProviderStateM
               left: widget.arrowX! - 22,
               child: Transform.rotate(
                 angle: math.pi / 2,
-                child: const Icon(Icons.double_arrow_rounded, size: 46, color: Palette.accent,
+                child: Icon(Icons.double_arrow_rounded, size: 46, color: Palette.accent,
                     shadows: [Shadow(color: Colors.white, blurRadius: 6), Shadow(color: Colors.white, blurRadius: 2)]),
               ),
             ),

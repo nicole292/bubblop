@@ -50,7 +50,8 @@ bubble to break it open and free the ball inside, which can set off an even bigg
 
 ★ 30 levels with clear goals and fun twists: shell walls, drop limits, fast rows
 ★ Gift boxes and special rewards as you go
-★ Unlock new ball colours, piece shapes (hearts, stars, flowers…) and skies with the coins you earn
+★ Unlock themed ball colours (Candy, Fruit, Ocean, Neon, Galaxy), piece shapes (hearts, stars, flowers…) and skies with the coins you earn
+★ Dark mode for cosy night-time play, or let it follow your phone
 ★ Classic mode: no goals, just play and chase your best score
 ★ Learn in seconds, with a short guided first round
 ★ One-thumb play: tap a column, or drag to aim and release to drop
@@ -77,6 +78,13 @@ your best score. One thumb, quick rounds, no ads.
 ### Description [4000]
 Use the Google Play full description above, without the `**` marks (the App Store shows
 plain text). App Store Connect also refuses `★`, so start those lines with `- `, and write `…` as "and more" and `·` as commas.
+
+### What's New in This Version (1.3.0) [4000]
+```
+- Dark mode: choose Light, Dark or Auto (follows your phone) in the pause menu or the Style screen
+- New ball colours: Fruit, Ocean and Galaxy, and a sweeter Candy set with chocolate
+- Jewel balls are retired: if you owned them, your 250 coins are back
+```
 
 ### Keywords [100, comma-separated, no spaces needed]
 `puzzle,match 4,chain reaction,bubble,pop,balls,drop,casual,brain,offline,colour,relaxing`

@@ -269,6 +269,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     ),
                   _ => StyleScreen(
                       progress: widget.progress,
+                      settings: widget.settings,
                       onBack: () => _show(_Mode.home),
                       onTap: _tap,
                       onBought: () {

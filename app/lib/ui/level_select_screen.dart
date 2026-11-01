@@ -257,7 +257,7 @@ class _LevelNode extends StatelessWidget {
                   blurRadius: 4,
                   spreadRadius: size * 0.22 * t,
                 ),
-                const BoxShadow(color: Palette.panelShadow, blurRadius: 10, offset: Offset(0, 4)),
+                BoxShadow(color: Palette.panelShadow, blurRadius: 10, offset: Offset(0, 4)),
               ],
             ),
             alignment: Alignment.center,
@@ -337,7 +337,7 @@ class _Badge extends StatelessWidget {
           color: color,
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 2),
-          boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 4, offset: Offset(0, 2))],
+          boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 4, offset: Offset(0, 2))],
         ),
         child: Icon(icon, size: size * 0.62, color: Colors.white),
       );
@@ -366,7 +366,7 @@ class LevelIntro extends StatelessWidget {
     return GestureDetector(
       onTap: onClose,
       child: ColoredBox(
-        color: Palette.ink.withValues(alpha: 0.4),
+        color: Palette.scrim.withValues(alpha: 0.4),
         child: Center(
           child: GestureDetector(
             onTap: () {},
@@ -392,7 +392,7 @@ class LevelIntro extends StatelessWidget {
                       child: IconButton(
                         tooltip: 'Close',
                         onPressed: onClose,
-                        icon: const Icon(Icons.close_rounded, color: Palette.inkSoft),
+                        icon: Icon(Icons.close_rounded, color: Palette.inkSoft),
                       ),
                     ),
                     Text('LEVEL', style: PopType.panelTitle),
@@ -480,7 +480,7 @@ class _Twists extends StatelessWidget {
   Widget _tag(IconData icon, String text) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF4D6),
+          color: Palette.cream,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Palette.gold, width: 1.5),
         ),
@@ -511,7 +511,7 @@ class _RewardRow extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.check_circle_rounded, size: 18, color: Palette.success),
+          Icon(Icons.check_circle_rounded, size: 18, color: Palette.success),
           const SizedBox(width: 6),
           Text('Completed', style: PopType.of(15, 900, color: Palette.success)),
           if (best != null) ...[

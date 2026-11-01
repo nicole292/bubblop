@@ -7,7 +7,7 @@ class _Bubble {
   double x = 0, y = 0, r = 10, speed = 10, phase = 0;
 }
 
-/// The bright sky behind everything: a cheerful gradient, a few large soft
+/// The sky behind everything (a night sky in dark mode): a cheerful gradient, a few large soft
 /// colour blobs and bubbles floating slowly upward. Calm enough not to compete with the board.
 class SkyBackground {
   final _random = math.Random(7);
@@ -24,20 +24,25 @@ class SkyBackground {
     if (size == _size || size.isEmpty) return;
     _size = size;
     restyle();
-    _blobs?.dispose();
-    _blobs = _bakeBlobs(size);
     _bubbles.clear();
     for (var i = 0; i < 6; i++) {
       _bubbles.add(_reset(_Bubble(), anywhere: true));
     }
   }
 
-  /// Repaints the gradient in the current sky colours ([Palette.apply]).
+  /// Repaints the gradient and colour patches in the current sky colours
+  /// ([Palette.apply]) and light or dark mode.
   void restyle() {
     if (_size.isEmpty) return;
     _gradient = Paint()
-      ..shader = Gradient.linear(Offset.zero, Offset(_size.width * 0.3, _size.height),
-          [Palette.skyTop, Palette.skyMid, Palette.skyBottom], const [0, 0.5, 1]);
+      ..shader = Gradient.linear(
+        Offset.zero,
+        Offset(_size.width * 0.3, _size.height),
+        [Palette.skyTop, Palette.skyMid, Palette.skyBottom],
+        const [0, 0.5, 1],
+      );
+    _blobs?.dispose();
+    _blobs = _bakeBlobs(_size);
   }
 
   _Bubble _reset(_Bubble b, {bool anywhere = false}) {
@@ -65,8 +70,12 @@ class SkyBackground {
     final blobs = _blobs;
     if (blobs != null) {
       final drift = Offset(math.sin(_time * 0.07) * 14, math.cos(_time * 0.05) * 10);
-      canvas.drawImageRect(blobs, Rect.fromLTWH(0, 0, blobs.width.toDouble(), blobs.height.toDouble()),
-          (Offset.zero & _size).inflate(24).shift(drift), _blobPaint);
+      canvas.drawImageRect(
+        blobs,
+        Rect.fromLTWH(0, 0, blobs.width.toDouble(), blobs.height.toDouble()),
+        (Offset.zero & _size).inflate(24).shift(drift),
+        _blobPaint,
+      );
     }
 
     for (final b in _bubbles) {
@@ -89,7 +98,10 @@ class SkyBackground {
     final h = math.max(1, (size.height * scale).round());
     final recorder = PictureRecorder();
     final canvas = Canvas(recorder);
+    // At night the patches glow faintly instead of brightening the sky.
+    final strength = Palette.dark ? 0.4 : 1.0;
     void blob(double fx, double fy, double radius, Color color) {
+      color = color.withValues(alpha: color.a * strength);
       final c = Offset(fx * w, fy * h);
       final r = radius * w;
       canvas.drawCircle(c, r, Paint()..shader = Gradient.radial(c, r, [color, color.withValues(alpha: 0)]));

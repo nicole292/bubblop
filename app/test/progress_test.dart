@@ -159,7 +159,7 @@ void main() {
       expect(p.sky, Cosmetics.day);
       expect(p.owns(Cosmetics.classic), isTrue);
       expect(p.owns(Cosmetics.bubbles), isTrue);
-      expect(p.owns(Cosmetics.jewel), isFalse);
+      expect(p.owns(Cosmetics.ocean), isFalse);
     });
 
     test('coin items need enough coins and are paid once', () {
@@ -230,12 +230,29 @@ void main() {
     });
 
     test('a damaged selection falls back to the defaults', () async {
-      SharedPreferences.setMockInitialValues(
-          {'style.balls': 'balls.neon', 'style.shape': 'balls.classic', 'style.sky': 'nonsense'});
+      SharedPreferences.setMockInitialValues({
+        'style.balls': 'balls.neon',
+        'style.shape': 'balls.classic',
+        'style.sky': 'nonsense',
+      });
       final p = Progress.from(await SharedPreferences.getInstance());
       expect(p.balls, Cosmetics.classic, reason: 'neon is not owned');
       expect(p.shape, Cosmetics.bubbles, reason: 'a ball set is not a shape');
       expect(p.sky, Cosmetics.day);
+    });
+
+    test('a retired ball set in use is refunded once and swapped for Classic', () async {
+      SharedPreferences.setMockInitialValues({
+        'progress.coins': 40,
+        'style.owned': ['balls.jewel', 'sky.mint'],
+        'style.balls': 'balls.jewel',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final p = Progress.from(prefs);
+      expect(p.coins, 290);
+      expect(p.balls, Cosmetics.classic);
+      expect(p.owns(Cosmetics.mint), isTrue);
+      expect(Progress.from(prefs).coins, 290, reason: 'the refund is paid only once');
     });
   });
 }

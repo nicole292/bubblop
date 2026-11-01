@@ -199,7 +199,7 @@ class _GiftBoxState extends State<GiftBox> with TickerProviderStateMixin {
         color: Palette.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _special ? Palette.accent : Palette.gold, width: 2.5),
-        boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: Offset(0, 5))],
+        boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: Offset(0, 5))],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

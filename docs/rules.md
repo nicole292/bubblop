@@ -91,7 +91,10 @@ per-level twists.
 - Special gift after 10, 20, 30: 100 coins plus Candy balls / Sunset sky / Twilight sky.
 - Achievements (each once): First win 20, Chain reaction 20, Complete 5 levels 40,
   Complete 10 levels 60, Personal best (Classic) 30, All 30 levels 250 coins.
-- Coins unlock Jewel balls (250), Neon balls (400) and the Mint sky (200). No purchases.
+- Coins unlock Fruit (200), Ocean (300), Neon (400) and Galaxy (500) balls, the Jelly (150),
+  Hearts (250), Stars (300) and Flowers (350) shapes, and the Mint sky (200). No purchases.
+  Jewel balls were retired in 1.3.0; anyone who owned them got their 250 coins back.
+- Theme: Auto (follows the phone), Light or Dark, in the pause menu and the Style screen.
 - Everything is saved on the device the moment it is earned (`app/lib/progress/`).
 
 ## Game over

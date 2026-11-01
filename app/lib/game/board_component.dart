@@ -21,9 +21,11 @@ class BoardComponent extends Component {
   final PopGame game;
 
   // The parts of the board that never move are baked into one image per
-  // layout, so a frame draws them with a single image copy.
+  // layout (and light or dark mode), so a frame draws them with a single
+  // image copy.
   Image? _static;
   Rect? _staticFor;
+  bool? _staticDark;
   Rect _staticBounds = Rect.zero;
 
   final _fill = Paint();
@@ -205,7 +207,7 @@ class BoardComponent extends Component {
   RRect _cardRRect(BoardLayout layout) => RRect.fromRectAndRadius(layout.cardRect, Radius.circular(layout.cell * 0.5));
 
   void _ensureStatic(BoardLayout layout) {
-    if (_static != null && _staticFor == layout.cardRect) return;
+    if (_static != null && _staticFor == layout.cardRect && _staticDark == Palette.dark) return;
     final card = _cardRRect(layout);
     // Room for the shadow around the card.
     final bounds = card.outerRect.inflate(layout.cell * 0.6);
@@ -221,6 +223,7 @@ class BoardComponent extends Component {
     _static = picture.toImageSync((bounds.width * ratio).ceil(), (bounds.height * ratio).ceil());
     picture.dispose();
     _staticFor = layout.cardRect;
+    _staticDark = Palette.dark;
     _staticBounds = bounds;
   }
 

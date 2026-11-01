@@ -70,14 +70,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
       child: Stack(
         children: [
-          // A soft light behind the logo.
-          const Positioned.fill(
+          // A soft light behind the logo (fainter at night).
+          Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: Alignment(0, -0.3),
+                  center: const Alignment(0, -0.3),
                   radius: 0.75,
-                  colors: [Color(0x66FFFFFF), Color(0x00FFFFFF)],
+                  colors: [Color(Palette.dark ? 0x26FFFFFF : 0x66FFFFFF), const Color(0x00FFFFFF)],
                 ),
               ),
             ),

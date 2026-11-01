@@ -38,7 +38,7 @@ class LevelResultPanel extends StatelessWidget {
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 420),
       builder: (context, t, child) => ColoredBox(
-        color: Palette.ink.withValues(alpha: 0.35 * t.clamp(0.0, 1.0)),
+        color: Palette.scrim.withValues(alpha: 0.35 * t.clamp(0.0, 1.0)),
         child: Center(
           child: Transform.scale(
             scale: Curves.easeOutBack.transform(t),
@@ -183,7 +183,7 @@ class _GoalResult extends StatelessWidget {
           Row(
             children: [
               view.met
-                  ? const Icon(Icons.check_circle_rounded, size: 24, color: Palette.success)
+                  ? Icon(Icons.check_circle_rounded, size: 24, color: Palette.success)
                   : GoalIcon(kind: goal.kind, size: 24),
               const SizedBox(width: 10),
               Expanded(
@@ -234,14 +234,14 @@ class AchievementChips extends StatelessWidget {
           Container(
             padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF4D6),
+              color: Palette.cream,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Palette.gold, width: 1.5),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.emoji_events_rounded, size: 18, color: Palette.gold),
+                Icon(Icons.emoji_events_rounded, size: 18, color: Palette.gold),
                 const SizedBox(width: 5),
                 Text(a.title, style: PopType.of(13, 900)),
                 const SizedBox(width: 6),

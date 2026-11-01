@@ -79,7 +79,7 @@ class _AchievementCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Palette.card,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
       ),
       child: Row(
         children: [
@@ -136,7 +136,7 @@ class _AchievementCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           done
-              ? const Icon(Icons.check_circle_rounded, size: 28, color: Palette.success)
+              ? Icon(Icons.check_circle_rounded, size: 28, color: Palette.success)
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

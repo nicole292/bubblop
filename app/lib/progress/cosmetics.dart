@@ -41,13 +41,14 @@ class Cosmetic {
 }
 
 /// Everything a player can collect. Shapes change only the piece outline,
-/// never the colours. Each ball set has its own character
-/// (Classic bright, Candy soft and light, Jewel deep with amber and jade,
-/// Neon electric with lime, cyan and orange) so the sets look clearly
-/// different, while the five colours within a set stay far apart in hue and
-/// brightness, because colour is the only cue on a ball
-/// (test/cosmetics_test.dart measures both). Skies stay light enough for the
-/// white board card and white text.
+/// never the colours. Each ball set has its own theme rather than another
+/// rainbow (Candy with chocolate, Fruit with orange and blueberry, Ocean
+/// with coral, sand and anemone pink, Neon electric, Galaxy with nebula
+/// magenta and sunset orange) so the sets look clearly different, while the
+/// five colours within a set stay far apart in hue and brightness, because
+/// colour is the only cue on a ball, and stand out on both the light and the
+/// dark board (test/cosmetics_test.dart measures all three). Skies stay light
+/// enough for the white board card and white text.
 abstract final class Cosmetics {
   static const classic = Cosmetic('balls.classic', CosmeticKind.balls, 'Classic', [
     Color(0xFFFF4757),
@@ -58,20 +59,28 @@ abstract final class Cosmetics {
   ], FreeUnlock());
 
   static const candy = Cosmetic('balls.candy', CosmeticKind.balls, 'Candy', [
-    Color(0xFFFF7EB6),
-    Color(0xFFFFE07A),
-    Color(0xFF6BE3B4),
-    Color(0xFF7CC2FF),
-    Color(0xFFC59BFF),
+    Color(0xFFFF5FA2),
+    Color(0xFFFFE45C),
+    Color(0xFF5EE6B0),
+    Color(0xFFB79CFF),
+    Color(0xFF8B5A3C),
   ], GiftUnlock(10));
 
-  static const jewel = Cosmetic('balls.jewel', CosmeticKind.balls, 'Jewel', [
-    Color(0xFFC8143F),
-    Color(0xFFF28C00),
-    Color(0xFF00A38A),
-    Color(0xFF1F5FE0),
-    Color(0xFFA23BE0),
-  ], CoinUnlock(250));
+  static const fruit = Cosmetic('balls.fruit', CosmeticKind.balls, 'Fruit', [
+    Color(0xFFE8304A),
+    Color(0xFFFFE14D),
+    Color(0xFF8CC63F),
+    Color(0xFFFF8C1A),
+    Color(0xFF4B5BD6),
+  ], CoinUnlock(200));
+
+  static const ocean = Cosmetic('balls.ocean', CosmeticKind.balls, 'Ocean', [
+    Color(0xFFFF7062),
+    Color(0xFFFFD86B),
+    Color(0xFF12C2B2),
+    Color(0xFF2C5BD9),
+    Color(0xFFE58BD8),
+  ], CoinUnlock(300));
 
   static const neon = Cosmetic('balls.neon', CosmeticKind.balls, 'Neon', [
     Color(0xFFFF2D95),
@@ -81,16 +90,57 @@ abstract final class Cosmetics {
     Color(0xFF7A3CFF),
   ], CoinUnlock(400));
 
-  static const bubbles =
-      Cosmetic('shape.bubbles', CosmeticKind.shape, 'Bubbles', [], FreeUnlock(), shape: PieceShape.ball);
-  static const jelly =
-      Cosmetic('shape.jelly', CosmeticKind.shape, 'Jelly', [], CoinUnlock(150), shape: PieceShape.jelly);
-  static const hearts =
-      Cosmetic('shape.hearts', CosmeticKind.shape, 'Hearts', [], CoinUnlock(250), shape: PieceShape.heart);
-  static const stars =
-      Cosmetic('shape.stars', CosmeticKind.shape, 'Stars', [], CoinUnlock(300), shape: PieceShape.star);
-  static const flowers =
-      Cosmetic('shape.flowers', CosmeticKind.shape, 'Flowers', [], CoinUnlock(350), shape: PieceShape.flower);
+  static const galaxy = Cosmetic('balls.galaxy', CosmeticKind.balls, 'Galaxy', [
+    Color(0xFFE040FB),
+    Color(0xFFFFD23F),
+    Color(0xFF3DE0FF),
+    Color(0xFF4A5BFF),
+    Color(0xFFFF7A59),
+  ], CoinUnlock(500));
+
+  /// Sets no longer sold, with the coins they cost: owners get them back.
+  static const retired = [('balls.jewel', 250)];
+
+  static const bubbles = Cosmetic(
+    'shape.bubbles',
+    CosmeticKind.shape,
+    'Bubbles',
+    [],
+    FreeUnlock(),
+    shape: PieceShape.ball,
+  );
+  static const jelly = Cosmetic(
+    'shape.jelly',
+    CosmeticKind.shape,
+    'Jelly',
+    [],
+    CoinUnlock(150),
+    shape: PieceShape.jelly,
+  );
+  static const hearts = Cosmetic(
+    'shape.hearts',
+    CosmeticKind.shape,
+    'Hearts',
+    [],
+    CoinUnlock(250),
+    shape: PieceShape.heart,
+  );
+  static const stars = Cosmetic(
+    'shape.stars',
+    CosmeticKind.shape,
+    'Stars',
+    [],
+    CoinUnlock(300),
+    shape: PieceShape.star,
+  );
+  static const flowers = Cosmetic(
+    'shape.flowers',
+    CosmeticKind.shape,
+    'Flowers',
+    [],
+    CoinUnlock(350),
+    shape: PieceShape.flower,
+  );
 
   static const day = Cosmetic('sky.day', CosmeticKind.sky, 'Day', [
     Color(0xFF5CC8FF),
@@ -117,7 +167,7 @@ abstract final class Cosmetics {
   ], GiftUnlock(30));
 
   static const all = [
-    classic, candy, jewel, neon, //
+    classic, candy, fruit, ocean, neon, galaxy, //
     bubbles, jelly, hearts, stars, flowers,
     day, mint, sunset, twilight,
   ];
@@ -126,7 +176,10 @@ abstract final class Cosmetics {
   static const defaultShape = bubbles;
   static const defaultSky = day;
 
-  static List<Cosmetic> ofKind(CosmeticKind kind) => [for (final c in all) if (c.kind == kind) c];
+  static List<Cosmetic> ofKind(CosmeticKind kind) => [
+    for (final c in all)
+      if (c.kind == kind) c,
+  ];
 
   static Cosmetic? byId(String id) {
     for (final c in all) {

@@ -25,7 +25,7 @@ class PauseMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: Palette.ink.withValues(alpha: 0.4),
+      color: Palette.scrim.withValues(alpha: 0.4),
       child: Center(
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.85, end: 1),
@@ -67,6 +67,7 @@ class PauseMenu extends StatelessWidget {
                     value: settings.haptics,
                     onChanged: (v) => settings.haptics = v,
                   ),
+                  ThemeRow(value: settings.theme, onChanged: (v) => settings.theme = v),
                   const SizedBox(height: 10),
                   SoftButton(label: 'Restart', icon: Icons.refresh_rounded, onPressed: onRestart),
                   const SizedBox(height: 10),

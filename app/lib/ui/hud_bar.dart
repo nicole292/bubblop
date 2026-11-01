@@ -82,7 +82,7 @@ class _PauseButton extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onPressed,
-          child: const SizedBox(
+          child: SizedBox(
             width: 44,
             height: 44,
             child: Icon(Icons.pause_rounded, size: 24, color: Palette.inkSoft),
@@ -187,7 +187,7 @@ class _SubLine extends StatelessWidget {
       width: 3,
       height: 3,
       margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: const BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
+      decoration: BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
     );
     // Shrinks rather than overflowing on narrow headers.
     return FittedBox(
@@ -196,7 +196,7 @@ class _SubLine extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.emoji_events_rounded, size: 14, color: Palette.gold),
+          Icon(Icons.emoji_events_rounded, size: 14, color: Palette.gold),
           const SizedBox(width: 3),
           Text('$best', style: PopType.small),
           dot,
@@ -231,10 +231,10 @@ class _GoalLine extends StatelessWidget {
             width: 3,
             height: 3,
             margin: const EdgeInsets.symmetric(horizontal: 7),
-            decoration: const BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
           ),
           g.met
-              ? const Icon(Icons.check_circle_rounded, size: 14, color: Palette.success)
+              ? Icon(Icons.check_circle_rounded, size: 14, color: Palette.success)
               : GoalIcon(kind: g.goal.kind, size: 14),
           const SizedBox(width: 3),
           Text(
@@ -247,7 +247,7 @@ class _GoalLine extends StatelessWidget {
             width: 3,
             height: 3,
             margin: const EdgeInsets.symmetric(horizontal: 7),
-            decoration: const BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
           ),
           Icon(Icons.water_drop_rounded, size: 13, color: drops <= 5 ? Palette.danger : Palette.inkSoft),
           const SizedBox(width: 2),
@@ -279,7 +279,7 @@ class NextBalls extends StatelessWidget {
         color: floating ? Palette.card.withValues(alpha: 0.92) : Palette.well,
         borderRadius: BorderRadius.circular(28),
         boxShadow: floating
-            ? const [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: Offset(0, 5))]
+            ? [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: Offset(0, 5))]
             : null,
       ),
       child: Row(
@@ -292,7 +292,7 @@ class NextBalls extends StatelessWidget {
             decoration: BoxDecoration(
               color: floating ? Palette.well : Palette.card,
               shape: BoxShape.circle,
-              boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 6, offset: Offset(0, 2))],
+              boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 6, offset: Offset(0, 2))],
             ),
             child: queue.isEmpty ? null : _Ball(sprites: sprites, color: queue[0], size: 40),
           ),

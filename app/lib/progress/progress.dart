@@ -70,12 +70,21 @@ class Progress extends ChangeNotifier {
       if (id != null) _achievements.add(id);
     }
     _owned.addAll(prefs.getStringList(_ownedKey) ?? const []);
+    // A retired set gives back the coins it cost.
+    var refunded = false;
+    for (final (id, price) in Cosmetics.retired) {
+      if (_owned.remove(id)) {
+        _coins += price;
+        refunded = true;
+      }
+    }
     _balls = Cosmetics.byId(prefs.getString(_ballsKey) ?? '') ?? Cosmetics.defaultBalls;
     _shape = Cosmetics.byId(prefs.getString(_shapeKey) ?? '') ?? Cosmetics.defaultShape;
     _sky = Cosmetics.byId(prefs.getString(_skyKey) ?? '') ?? Cosmetics.defaultSky;
     if (!owns(_balls) || _balls.kind != CosmeticKind.balls) _balls = Cosmetics.defaultBalls;
     if (!owns(_shape) || _shape.kind != CosmeticKind.shape) _shape = Cosmetics.defaultShape;
     if (!owns(_sky) || _sky.kind != CosmeticKind.sky) _sky = Cosmetics.defaultSky;
+    if (refunded) _save();
   }
 
   static const _completedKey = 'progress.completed';

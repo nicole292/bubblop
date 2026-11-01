@@ -3,18 +3,20 @@ import 'package:flutter/material.dart';
 import '../game/palette.dart';
 import '../progress/cosmetics.dart';
 import '../progress/progress.dart';
+import '../services/settings.dart';
 import 'buttons.dart';
 import 'glass.dart';
 import 'swatches.dart';
 import 'type.dart';
 
-/// The collection: ball sets, shapes and skies. Owned items can be used with a tap;
+/// The collection: light or dark theme, ball sets, shapes and skies. Owned items can be used with a tap;
 /// coin items unlock with coins; gift items come from the level gifts.
 /// Everything here is decorative.
 class StyleScreen extends StatelessWidget {
   const StyleScreen({
     super.key,
     required this.progress,
+    required this.settings,
     required this.onBack,
     required this.onTap,
     required this.onBought,
@@ -22,6 +24,7 @@ class StyleScreen extends StatelessWidget {
   });
 
   final Progress progress;
+  final Settings settings;
   final VoidCallback onBack;
   final VoidCallback onTap;
   final VoidCallback onBought;
@@ -52,6 +55,9 @@ class StyleScreen extends StatelessWidget {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     children: [
+                      _section('THEME'),
+                      _themeCard(),
+                      const SizedBox(height: 10),
                       _section('BALLS'),
                       for (final c in Cosmetics.ofKind(CosmeticKind.balls)) _item(context, c),
                       const SizedBox(height: 10),
@@ -70,6 +76,27 @@ class StyleScreen extends StatelessWidget {
       ),
     );
   }
+
+  /// Light, dark or follow the phone; the same setting as in the pause menu.
+  Widget _themeCard() => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+        decoration: BoxDecoration(
+          color: Palette.card,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
+        ),
+        child: ListenableBuilder(
+          listenable: settings,
+          builder: (context, _) => ThemeRow(
+            value: settings.theme,
+            onChanged: (v) {
+              settings.theme = v;
+              onTap();
+            },
+          ),
+        ),
+      );
 
   Widget _section(String title) => Padding(
         padding: const EdgeInsets.fromLTRB(6, 6, 6, 10),
@@ -91,7 +118,7 @@ class StyleScreen extends StatelessWidget {
         height: 38,
         padding: const EdgeInsets.fromLTRB(8, 0, 14, 0),
         decoration: BoxDecoration(
-          color: afford ? const Color(0xFFFFF4D6) : Palette.well,
+          color: afford ? Palette.cream : Palette.well,
           borderRadius: BorderRadius.circular(19),
           border: Border.all(color: afford ? Palette.gold : Palette.pipEmpty, width: 1.5),
         ),
@@ -121,7 +148,7 @@ class StyleScreen extends StatelessWidget {
             color: Palette.card,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: inUse ? Palette.success : Colors.transparent, width: 2.5),
-            boxShadow: const [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
+            boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: Offset(0, 4))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,7 +156,7 @@ class StyleScreen extends StatelessWidget {
               Row(
                 children: [
                   if (!owned) ...[
-                    const Icon(Icons.lock_rounded, size: 18, color: Palette.inkSoft),
+                    Icon(Icons.lock_rounded, size: 18, color: Palette.inkSoft),
                     const SizedBox(width: 6),
                   ],
                   Expanded(
@@ -174,7 +201,7 @@ class StyleScreen extends StatelessWidget {
       onTap();
       final yes = await showDialog<bool>(
         context: context,
-        barrierColor: Palette.ink.withValues(alpha: 0.4),
+        barrierColor: Palette.scrim.withValues(alpha: 0.4),
         builder: (context) => _ConfirmUnlock(cosmetic: c, price: unlock.price),
       );
       if (yes == true && progress.buy(c)) {
@@ -215,7 +242,7 @@ class StyleScreen extends StatelessWidget {
       );
 }
 
-/// "Unlock Jewel for 250 coins?", so coins are never spent by accident.
+/// "Unlock Ocean for 300 coins?", so coins are never spent by accident.
 class _ConfirmUnlock extends StatelessWidget {
   const _ConfirmUnlock({required this.cosmetic, required this.price});
   final Cosmetic cosmetic;

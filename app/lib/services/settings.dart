@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Light or dark look: [auto] follows the phone.
+enum ThemeChoice { auto, light, dark }
+
 /// Everything saved between launches: player preferences, best score and
 /// whether the tutorial has been seen. Reads once at start-up; every change
 /// is written straight away.
@@ -14,6 +17,7 @@ class Settings extends ChangeNotifier {
   static const _bestLevelKey = 'bestLevel';
   static const _tutorialKey = 'tutorialDone';
   static const _gamesKey = 'gamesPlayed';
+  static const _themeKey = 'theme';
 
   final SharedPreferences? _prefs;
 
@@ -38,6 +42,8 @@ class Settings extends ChangeNotifier {
   late int _bestLevel = _prefs?.getInt(_bestLevelKey) ?? 0;
   late bool _tutorialDone = _prefs?.getBool(_tutorialKey) ?? false;
   late int _gamesPlayed = _prefs?.getInt(_gamesKey) ?? 0;
+  late ThemeChoice _theme =
+      ThemeChoice.values.where((t) => t.name == _prefs?.getString(_themeKey)).firstOrNull ?? ThemeChoice.auto;
 
   bool get sound => _sound;
 
@@ -50,6 +56,7 @@ class Settings extends ChangeNotifier {
   int get bestLevel => _bestLevel;
   bool get tutorialDone => _tutorialDone;
   int get gamesPlayed => _gamesPlayed;
+  ThemeChoice get theme => _theme;
 
   set sound(bool value) {
     _sound = value;
@@ -66,6 +73,12 @@ class Settings extends ChangeNotifier {
   set haptics(bool value) {
     _haptics = value;
     _prefs?.setBool(_hapticsKey, value);
+    notifyListeners();
+  }
+
+  set theme(ThemeChoice value) {
+    _theme = value;
+    _prefs?.setString(_themeKey, value.name);
     notifyListeners();
   }
 

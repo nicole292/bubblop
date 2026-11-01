@@ -41,6 +41,9 @@ abstract final class DevOptions {
   /// these cosmetics in phone-frame screenshot runs.
   static const style = String.fromEnvironment('POP_STYLE');
 
+  /// POP_THEME=dark (or light) sets the theme in phone-frame screenshot runs.
+  static const theme = String.fromEnvironment('POP_THEME');
+
   /// POP_DEV=true shows the developer bar (4/3-match switch, session stats).
   static const showDevBar = bool.fromEnvironment('POP_DEV');
 

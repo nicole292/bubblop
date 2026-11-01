@@ -138,6 +138,9 @@ class PopGame extends FlameGame {
     _relayout();
   }
 
+  /// The light or dark mode the sky was last painted in.
+  bool _dark = Palette.dark;
+
   /// A new ball set, shape or sky was chosen: restyle the palette, rebake
   /// the balls and repaint the sky.
   void _progressChanged() {
@@ -161,6 +164,10 @@ class PopGame extends FlameGame {
   void update(double dt) {
     super.update(dt);
     time += dt;
+    if (Palette.dark != _dark) {
+      _dark = Palette.dark;
+      background.restyle();
+    }
     background.update(dt);
     phases.update(dt);
     final scaled = dt * phases.speed;

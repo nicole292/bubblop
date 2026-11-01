@@ -21,7 +21,7 @@ class GameOverPanel extends StatelessWidget {
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 420),
       builder: (context, t, child) => ColoredBox(
-        color: Palette.ink.withValues(alpha: 0.35 * t.clamp(0.0, 1.0)),
+        color: Palette.scrim.withValues(alpha: 0.35 * t.clamp(0.0, 1.0)),
         child: Center(
           child: Transform.scale(
             scale: Curves.easeOutBack.transform(t),

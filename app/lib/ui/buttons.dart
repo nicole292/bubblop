@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../game/palette.dart';
+import '../services/settings.dart';
 import 'type.dart';
 
 /// The chunky, bouncy pill button used for main actions. It sits on a solid
@@ -100,10 +101,7 @@ class SoftButton extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[
-                    Icon(icon, color: Palette.ink, size: 22),
-                    const SizedBox(width: 8),
-                  ],
+                  if (icon != null) ...[Icon(icon, color: Palette.ink, size: 22), const SizedBox(width: 8)],
                   Text(label, style: PopType.of(17, 900)),
                 ],
               ),
@@ -117,7 +115,13 @@ class SoftButton extends StatelessWidget {
 
 /// A white round icon button (pause, settings, sound).
 class RoundIconButton extends StatelessWidget {
-  const RoundIconButton({super.key, required this.icon, required this.tooltip, required this.onPressed, this.size = 40});
+  const RoundIconButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.size = 40,
+  });
 
   final IconData icon;
   final String tooltip;
@@ -135,7 +139,11 @@ class RoundIconButton extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onPressed,
-          child: SizedBox(width: size, height: size, child: Icon(icon, size: size * 0.55, color: Palette.ink)),
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Icon(icon, size: size * 0.55, color: Palette.ink),
+          ),
         ),
       ),
     );
@@ -168,9 +176,73 @@ class ToggleRow extends StatelessWidget {
               onChanged: onChanged,
               activeThumbColor: Colors.white,
               activeTrackColor: Palette.balls[2],
+              inactiveThumbColor: Palette.inkSoft,
+              inactiveTrackColor: Palette.pipEmpty,
+              trackOutlineColor: WidgetStatePropertyAll(Palette.pipEmpty),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A settings row choosing Auto, Light or Dark (Auto follows the phone).
+class ThemeRow extends StatelessWidget {
+  const ThemeRow({super.key, required this.value, required this.onChanged});
+
+  final ThemeChoice value;
+  final ValueChanged<ThemeChoice> onChanged;
+
+  static const _labels = {ThemeChoice.auto: 'Auto', ThemeChoice.light: 'Light', ThemeChoice.dark: 'Dark'};
+
+  @override
+  Widget build(BuildContext context) {
+    final label = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.dark_mode_rounded, color: Palette.ink),
+        const SizedBox(width: 12),
+        Text('Theme', style: PopType.of(17, 800)),
+      ],
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      // On a narrow card (the pause menu) the choices go under the label.
+      child: LayoutBuilder(
+        builder: (context, box) => box.maxWidth < 320
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [label, const SizedBox(height: 8), _choices(stretch: true)],
+              )
+            : Row(children: [label, const Spacer(), _choices(stretch: false)]),
+      ),
+    );
+  }
+
+  Widget _choices({required bool stretch}) {
+    Widget chip(ThemeChoice choice) => GestureDetector(
+      onTap: () => onChanged(choice),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        alignment: stretch ? Alignment.center : null,
+        decoration: BoxDecoration(
+          color: choice == value ? Palette.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Text(
+          _labels[choice]!,
+          style: PopType.of(14, 900, color: choice == value ? Colors.white : Palette.inkSoft),
+        ),
+      ),
+    );
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(18)),
+      child: Row(
+        mainAxisSize: stretch ? MainAxisSize.max : MainAxisSize.min,
+        children: [for (final choice in ThemeChoice.values) stretch ? Expanded(child: chip(choice)) : chip(choice)],
       ),
     );
   }

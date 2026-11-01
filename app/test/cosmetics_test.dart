@@ -31,8 +31,21 @@ void main() {
       expect(set.colors.length, 5, reason: set.name);
       for (var i = 0; i < 5; i++) {
         for (var j = i + 1; j < 5; j++) {
-          expect(difference(set.colors[i], set.colors[j]), greaterThan(35),
-              reason: '${set.name}: colours $i and $j look too alike');
+          expect(
+            difference(set.colors[i], set.colors[j]),
+            greaterThan(35),
+            reason: '${set.name}: colours $i and $j look too alike',
+          );
+        }
+      }
+    }
+  });
+
+  test('every ball stands out on the light and the dark board', () {
+    for (final set in ballSets) {
+      for (final (i, color) in set.colors.indexed) {
+        for (final well in [const Color(0xFFF1F4FF), const Color(0xFF1C1F3E)]) {
+          expect(difference(color, well), greaterThan(35), reason: '${set.name}: colour $i fades into the board');
         }
       }
     }
@@ -78,8 +91,11 @@ void main() {
       // The material is drawn out to shapeCover radii; the outline must stay inside it.
       for (final metric in path.computeMetrics()) {
         for (var d = 0.0; d < metric.length; d += 2) {
-          expect(metric.getTangentForOffset(d)!.position.distance, lessThanOrEqualTo(r * shapeCover),
-              reason: '${set.name} pokes out of its shading');
+          expect(
+            metric.getTangentForOffset(d)!.position.distance,
+            lessThanOrEqualTo(r * shapeCover),
+            reason: '${set.name} pokes out of its shading',
+          );
         }
       }
     }

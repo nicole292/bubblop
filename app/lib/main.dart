@@ -10,6 +10,7 @@ import 'services/haptics.dart';
 import 'services/settings.dart';
 import 'services/sfx.dart';
 import 'ui/game_screen.dart';
+import 'ui/theme_switch.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ Future<void> main() async {
     for (var level = 1; level <= DevOptions.progressLevels; level++) {
       progress.completeLevel(level, score: 1000);
     }
+    settings.theme = ThemeChoice.values.where((t) => t.name == DevOptions.theme).firstOrNull ?? settings.theme;
     for (final id in DevOptions.style.split(',')) {
       final cosmetic = Cosmetics.byId(id);
       if (cosmetic == null) continue;
@@ -46,16 +48,19 @@ class PopApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Bubblop',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        fontFamily: 'Nunito',
-        scaffoldBackgroundColor: Palette.skyTop,
-        colorScheme: ColorScheme.fromSeed(seedColor: Palette.accent),
+    return ThemeSwitch(
+      settings: settings,
+      child: MaterialApp(
+        title: 'Bubblop',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          brightness: Brightness.light,
+          fontFamily: 'Nunito',
+          scaffoldBackgroundColor: Palette.skyTop,
+          colorScheme: ColorScheme.fromSeed(seedColor: Palette.accent),
+        ),
+        home: GameScreen(settings: settings, progress: progress, sfx: sfx, haptics: haptics),
       ),
-      home: GameScreen(settings: settings, progress: progress, sfx: sfx, haptics: haptics),
     );
   }
 }
