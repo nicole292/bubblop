@@ -48,11 +48,11 @@ plays the next note of a happy little tune.
 **Bubbles are your secret weapon.** Rows of bubbles rise from below. Pop balls next to a
 bubble to break it open and free the ball inside, which can set off an even bigger chain.
 
-★ 40 levels with clear goals and fun twists: shell walls, bomb rows, stone rows, drop limits
+★ 40 levels, each with its own board: pyramids, towers, shell vaults, bomb nests and puzzles where the rows stand still
 ★ Gift boxes and special rewards as you go
-★ Bombs: earn them and blast your way out of a tight spot
+★ Pop balls to charge your bomb, then blast your way out of a tight spot
 ★ Cute balls with faces that cheer, gasp and nap
-★ Unlock themed ball colours (Candy, Fruit, Ocean, Neon, Galaxy), 3D shapes (kitties, donuts, planets, strawberries…) and skies with the coins you earn
+★ Unlock 3D shapes with the coins you earn: kitties, bunnies, donuts, planets, gems, strawberries…
 ★ Dark mode for cosy night-time play, or let it follow your phone
 ★ Classic mode: no goals, just play and chase your best score
 ★ Learn in seconds, with a short guided first round
@@ -83,12 +83,13 @@ plain text). App Store Connect also refuses `★`, so start those lines with `- 
 
 ### What's New in This Version (1.3.0) [4000]
 ```
-- Bombs! Earn them, then tap the bomb and a column to blast a 3x3 square. Some even rise with the rows
+- Bombs! Pop 30 balls to charge the bomb, then tap it and a column to blast a 3x3 square
+- Every level has its own board now: pyramids, towers, shell vaults, bomb nests and stone walls, plus puzzle levels where the rows stand still
 - 10 new levels (31-40) with bomb rows, bomb walls, stone rows and a new "Blast bombs" goal
-- The balls have faces now: they blink, get excited, cheer after chains and look scared near the top
-- 13 new 3D shapes: kitties, bunnies, bears, frogs, donuts, cupcakes, macarons, planets, gems, moons, strawberries, apples and cherries
-- Every ball set has its own look: sugar sparkles, dewdrops, pearl, neon glow and starry galaxy
-- Dark mode: Light, Dark or Auto (follows your phone)
+- The balls have faces: they blink, wobble, cheer after chains, look scared near the top and nap in their shells
+- 13 new 3D shapes, each in its own colour: kitties, bunnies, bears, frogs, donuts, cupcakes, macarons, planets, gems, moons, strawberries, apples and cherries
+- Dark mode with a starry night sky: Light, Dark or Auto (follows your phone)
+- A new home screen: Levels, Shapes and How to play
 ```
 
 ### Keywords [100, comma-separated, no spaces needed]
