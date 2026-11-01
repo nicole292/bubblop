@@ -84,7 +84,7 @@ plain text).
 ### Screenshots (in docs/store/assets/)
 | App Store Connect field | File |
 |---|---|
-| iPhone 6.9" Display (1320×2868, upload in this order) | `ios-6.9in-1.png` … `ios-6.9in-6.png` |
+| iPhone 6.9" Display (1320×2868, upload in this order) | `ios-6.9in-1.png` … `ios-6.9in-7.png` |
 
 The app is iPhone-only, so no iPad screenshots are needed. If App Store Connect asks for
 a different iPhone size first, the guide explains how to remake them in one command.

@@ -222,7 +222,7 @@ Connect **Users and Access**), and the games can be transferred to your own acco
 8. **TestFlight:** add yourself under **Internal Testing**. Install **TestFlight** on your
    iPhone and play the game.
 9. **App Store page** (App Store Connect → your app → **iOS App 1.0**):
-   1. Screenshots: drag in `ios-6.9in-1.png` … `ios-6.9in-6.png` under **iPhone 6.9"
+   1. Screenshots: drag in `ios-6.9in-1.png` … `ios-6.9in-7.png` under **iPhone 6.9"
       Display**. If App Store Connect asks for a different size first, see section 14.
    2. Promotional text, description, keywords, support URL, marketing URL and copyright
       from `docs\store\listing.md`.

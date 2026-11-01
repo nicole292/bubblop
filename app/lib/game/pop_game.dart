@@ -341,7 +341,8 @@ class PopGame extends FlameGame {
     stats.startRound(_config);
     _tutorial = tutorial && DevOptions.demo.isEmpty ? TutorialStep.drop : TutorialStep.off;
     hud.value = HudState(
-      best: settings.best,
+      best: _shownBest,
+      bestLevel: settings.bestLevel,
       bannerId: hud.value.bannerId,
       gainId: hud.value.gainId,
       spritesVersion: hud.value.spritesVersion,
@@ -416,7 +417,8 @@ class PopGame extends FlameGame {
       _tutorial = TutorialStep.off;
       return;
     }
-    final isBest = settings.recordRound(rules.score);
+    final isBestLevel = settings.bestLevel > 0 && rules.level > settings.bestLevel;
+    final isBest = settings.recordRound(rules.score, level: rules.level);
     if (isBest) {
       sfx.newBest();
       haptics.big();
@@ -430,6 +432,8 @@ class PopGame extends FlameGame {
       isOver: true,
       best: settings.best,
       newBest: isBest,
+      bestLevel: settings.bestLevel,
+      newBestLevel: isBestLevel,
       achievements: List.of(_roundAchievements),
       longestChain: last?.longestChain ?? 0,
       moves: last?.moves ?? rules.moves,
@@ -582,8 +586,15 @@ class PopGame extends FlameGame {
       pressure: rules.pressure,
       pressureMax: rules.config.pressureInterval(rules.level),
       dropsLeft: rules.dropsLeft,
-      best: settings.best,
+      best: _shownBest,
     );
+  }
+
+  /// The best shown under the score: this level's own best while playing a
+  /// level (0 until it is first cleared), otherwise the Classic best.
+  int get _shownBest {
+    final level = this.level;
+    return level == null ? settings.best : progress.bestScore(level.number) ?? 0;
   }
 
   // --- Benchmark (developer only) ----------------------------------------

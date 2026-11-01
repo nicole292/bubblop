@@ -11,6 +11,7 @@ class Settings extends ChangeNotifier {
   static const _musicKey = 'music';
   static const _hapticsKey = 'haptics';
   static const _bestKey = 'best';
+  static const _bestLevelKey = 'bestLevel';
   static const _tutorialKey = 'tutorialDone';
   static const _gamesKey = 'gamesPlayed';
 
@@ -34,6 +35,7 @@ class Settings extends ChangeNotifier {
   late bool _music = _prefs?.getBool(_musicKey) ?? true;
   late bool _haptics = _prefs?.getBool(_hapticsKey) ?? true;
   late int _best = _prefs?.getInt(_bestKey) ?? 0;
+  late int _bestLevel = _prefs?.getInt(_bestLevelKey) ?? 0;
   late bool _tutorialDone = _prefs?.getBool(_tutorialKey) ?? false;
   late int _gamesPlayed = _prefs?.getInt(_gamesKey) ?? 0;
 
@@ -43,6 +45,9 @@ class Settings extends ChangeNotifier {
   bool get music => _music;
   bool get haptics => _haptics;
   int get best => _best;
+
+  /// The highest level reached in a Classic round (0 before the first).
+  int get bestLevel => _bestLevel;
   bool get tutorialDone => _tutorialDone;
   int get gamesPlayed => _gamesPlayed;
 
@@ -70,10 +75,15 @@ class Settings extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Records a finished round. Returns true if it set a new best.
-  bool recordRound(int score) {
+  /// Records a finished round and the level it reached. Returns true if it
+  /// set a new best score.
+  bool recordRound(int score, {int level = 0}) {
     _gamesPlayed++;
     _prefs?.setInt(_gamesKey, _gamesPlayed);
+    if (level > _bestLevel) {
+      _bestLevel = level;
+      _prefs?.setInt(_bestLevelKey, level);
+    }
     final isBest = score > _best;
     if (isBest) {
       _best = score;

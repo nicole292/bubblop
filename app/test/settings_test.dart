@@ -21,6 +21,18 @@ void main() {
     expect(s.gamesPlayed, 3);
   });
 
+  test('recordRound keeps the highest level reached', () {
+    final s = Settings.memory();
+    expect(s.bestLevel, 0);
+    s.recordRound(50, level: 3);
+    expect(s.bestLevel, 3);
+    s.recordRound(500, level: 2);
+    expect(s.bestLevel, 3, reason: 'a lower level never lowers it');
+    s.recordRound(10, level: 5);
+    expect(s.bestLevel, 5);
+    expect(s.best, 500);
+  });
+
   test('changes notify listeners', () {
     final s = Settings.memory();
     var calls = 0;

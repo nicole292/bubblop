@@ -64,12 +64,18 @@ class GameOverPanel extends StatelessWidget {
               )
             else
               Text('Best ${hud.best}', style: PopType.of(15, 800, color: Palette.inkSoft)),
+            const SizedBox(height: 6),
+            hud.newBestLevel
+                ? Text('New best level!', style: PopType.of(15, 900, color: Palette.gold))
+                : Text('Best level ${hud.bestLevel}', style: PopType.of(15, 800, color: Palette.inkSoft)),
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(18)),
               child: Row(
                 children: [
+                  Expanded(child: _Stat(label: 'LEVEL', value: '${hud.level}')),
+                  Container(width: 1.5, height: 30, color: Palette.laneAlt),
                   Expanded(
                       child: _Stat(label: 'BEST CHAIN', value: hud.longestChain > 1 ? '×${hud.longestChain}' : '—')),
                   Container(width: 1.5, height: 30, color: Palette.laneAlt),

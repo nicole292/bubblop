@@ -95,7 +95,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Row(
                       children: [
                         CoinChip(coins: widget.progress.coins),
-                        if (settings.best > 0) ...[const SizedBox(width: 8), _BestChip(best: settings.best)],
+                        if (settings.best > 0 || settings.bestLevel > 0) ...[
+                          const SizedBox(width: 8),
+                          _BestChip(best: settings.best, bestLevel: settings.bestLevel),
+                        ],
                         const Spacer(),
                         GlassIconButton(
                           icon: settings.sound ? Icons.volume_up_rounded : Icons.volume_off_rounded,
@@ -216,10 +219,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-/// The best Classic score, next to the coins.
+/// The best Classic score, with the best level reached under it, next to
+/// the coins.
 class _BestChip extends StatelessWidget {
-  const _BestChip({required this.best});
+  const _BestChip({required this.best, required this.bestLevel});
   final int best;
+  final int bestLevel;
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +249,15 @@ class _BestChip extends StatelessWidget {
             child: const Icon(Icons.emoji_events_rounded, size: 18, color: Colors.white),
           ),
           const SizedBox(width: 8),
-          Text('$best', style: PopType.of(20, 900, color: Colors.white, numbers: true)),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('$best', style: PopType.of(bestLevel > 0 ? 17 : 20, 900, color: Colors.white, numbers: true)),
+              if (bestLevel > 0)
+                Text('BEST LV $bestLevel', style: PopType.of(10, 900, color: const Color(0xD9FFFFFF), spacing: 0.8)),
+            ],
+          ),
         ],
       ),
     );

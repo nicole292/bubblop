@@ -18,6 +18,7 @@ class HudState {
     this.gain = 0,
     this.gainId = 0,
     this.best = 0,
+    this.bestLevel = 0,
     this.level = 1,
     this.queue = const [],
     this.pressure = 0,
@@ -31,6 +32,7 @@ class HudState {
     this.hint,
     this.hintColumn,
     this.newBest = false,
+    this.newBestLevel = false,
     this.levelNumber,
     this.dropsLeft,
     this.goals = const [],
@@ -45,6 +47,9 @@ class HudState {
   final int gain;
   final int gainId;
   final int best;
+
+  /// The highest Classic level ever reached.
+  final int bestLevel;
   final int level;
 
   /// Colour indices: current orb first.
@@ -75,6 +80,9 @@ class HudState {
   /// True when the finished round set a new best score.
   final bool newBest;
 
+  /// True when the finished Classic round reached a new highest level.
+  final bool newBestLevel;
+
   /// The campaign level being played, or null in Endless.
   final int? levelNumber;
   bool get isLevel => levelNumber != null;
@@ -97,6 +105,7 @@ class HudState {
     int? gain,
     int? gainId,
     int? best,
+    int? bestLevel,
     int? level,
     List<int>? queue,
     int? pressure,
@@ -111,6 +120,7 @@ class HudState {
     int? hintColumn,
     bool clearHint = false,
     bool? newBest,
+    bool? newBestLevel,
     int? dropsLeft,
     List<GoalView>? goals,
     LevelClear? levelClear,
@@ -121,6 +131,7 @@ class HudState {
       gain: gain ?? this.gain,
       gainId: gainId ?? this.gainId,
       best: best ?? this.best,
+      bestLevel: bestLevel ?? this.bestLevel,
       level: level ?? this.level,
       queue: queue ?? this.queue,
       pressure: pressure ?? this.pressure,
@@ -134,6 +145,7 @@ class HudState {
       hint: clearHint ? null : hint ?? this.hint,
       hintColumn: clearHint ? null : hintColumn ?? this.hintColumn,
       newBest: newBest ?? this.newBest,
+      newBestLevel: newBestLevel ?? this.newBestLevel,
       levelNumber: levelNumber,
       dropsLeft: dropsLeft ?? this.dropsLeft,
       goals: goals ?? this.goals,

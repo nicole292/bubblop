@@ -10,7 +10,8 @@ import 'orb_icon.dart';
 import 'type.dart';
 
 /// The header at the top of the board card: pause (quiet, on the left),
-/// score with best and level under it, and the next balls on the right.
+/// score with best score, level and best level under it, and the next
+/// balls on the right.
 /// Laid out at [designHeight] and scaled to fit the header, so it keeps its
 /// proportions on every screen.
 class HudBar extends StatelessWidget {
@@ -51,7 +52,7 @@ class HudBar extends StatelessWidget {
                         if (hud.isLevel)
                           _GoalLine(level: hud.levelNumber!, goals: hud.goals, dropsLeft: hud.dropsLeft)
                         else
-                          _SubLine(best: hud.best, level: hud.level),
+                          _SubLine(best: hud.best, level: hud.level, bestLevel: hud.bestLevel),
                       ],
                     ),
                   ),
@@ -175,25 +176,38 @@ class _ScoreState extends State<_Score> with SingleTickerProviderStateMixin {
 }
 
 class _SubLine extends StatelessWidget {
-  const _SubLine({required this.best, required this.level});
+  const _SubLine({required this.best, required this.level, required this.bestLevel});
   final int best;
   final int level;
+  final int bestLevel;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(Icons.emoji_events_rounded, size: 14, color: Palette.gold),
-        const SizedBox(width: 3),
-        Text('$best', style: PopType.small),
-        Container(
-          width: 3,
-          height: 3,
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: const BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
-        ),
-        Text('LEVEL $level', style: PopType.level),
-      ],
+    final dot = Container(
+      width: 3,
+      height: 3,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: const BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
+    );
+    // Shrinks rather than overflowing on narrow headers.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.emoji_events_rounded, size: 14, color: Palette.gold),
+          const SizedBox(width: 3),
+          Text('$best', style: PopType.small),
+          dot,
+          Text('LEVEL $level', style: PopType.level),
+          // Once this round passes the best level, the current level is the best.
+          if (bestLevel > level) ...[
+            dot,
+            Text('BEST LV $bestLevel', style: PopType.of(11, 900, color: Palette.inkSoft, spacing: 1.1)),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -237,10 +251,7 @@ class _GoalLine extends StatelessWidget {
           ),
           Icon(Icons.water_drop_rounded, size: 13, color: drops <= 5 ? Palette.danger : Palette.inkSoft),
           const SizedBox(width: 2),
-          Text(
-            '$drops',
-            style: PopType.of(12, 900, color: drops <= 5 ? Palette.danger : Palette.ink, numbers: true),
-          ),
+          Text('$drops', style: PopType.of(12, 900, color: drops <= 5 ? Palette.danger : Palette.ink, numbers: true)),
         ],
       ],
     );
