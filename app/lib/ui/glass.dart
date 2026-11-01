@@ -23,9 +23,13 @@ class GlassIconButton extends StatelessWidget {
     this.label,
     this.dot = false,
     this.size = 44,
+    this.picture,
   });
 
   final IconData icon;
+
+  /// Drawn instead of [icon] when given (e.g. the chosen shape).
+  final Widget? picture;
   final String tooltip;
   final VoidCallback onPressed;
   final bool off;
@@ -42,7 +46,9 @@ class GlassIconButton extends StatelessWidget {
           width: size,
           height: size,
           decoration: glass(size / 2),
-          child: Icon(icon, size: size * 0.5, color: off ? const Color(0x80FFFFFF) : Colors.white),
+          child: Center(
+            child: picture ?? Icon(icon, size: size * 0.5, color: off ? const Color(0x80FFFFFF) : Colors.white),
+          ),
         ),
         if (dot)
           Positioned(

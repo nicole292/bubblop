@@ -9,6 +9,7 @@ import '../services/settings.dart';
 import 'buttons.dart';
 import 'glass.dart';
 import 'orb_icon.dart';
+import 'swatches.dart';
 import 'type.dart';
 
 /// The first thing players see: a light, glowing sky with glossy balls
@@ -184,9 +185,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       SizedBox(
                         width: 100,
                         child: GlassIconButton(
-                          icon: Icons.palette_rounded,
-                          tooltip: 'Style',
-                          label: 'Style',
+                          icon: Icons.category_rounded,
+                          // The shape in use, in a soft white like the other icons.
+                          picture: GlossyBall(
+                            color: const Color(0xFFF4F5FF),
+                            size: 30,
+                            shape: widget.progress.shape.shape,
+                          ),
+                          tooltip: 'Shapes',
+                          label: 'Shapes',
                           size: 52,
                           onPressed: widget.onStyle,
                         ),

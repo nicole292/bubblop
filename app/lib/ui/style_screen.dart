@@ -45,7 +45,7 @@ class StyleScreen extends StatelessWidget {
                   GlassBackButton(onPressed: onBack),
                   Expanded(
                     child: Text(
-                      'Style',
+                      'Shapes',
                       textAlign: TextAlign.center,
                       style: PopType.of(26, 1000, color: Colors.white),
                     ),
