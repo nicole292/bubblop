@@ -241,6 +241,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     _Mode.levels,
                     openLevel: widget.progress.allCompleted ? null : widget.progress.currentLevel,
                   ),
+                  onMap: () => _show(_Mode.levels),
                   onClassic: () => _play(),
                   onAchievements: () => _show(_Mode.achievements),
                   onStyle: () => _show(_Mode.style),
@@ -260,12 +261,14 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                       openLevel: _openLevel,
                       onBack: () => _show(_Mode.home),
                       onPlay: (level) => _play(level: level),
+                      onAwards: () => _show(_Mode.achievements),
                       onTap: _tap,
                       onDeny: _deny,
                     ),
+                  // Awards open from the level map, and go back to it.
                   _Mode.achievements => AchievementsScreen(
                       progress: widget.progress,
-                      onBack: () => _show(_Mode.home),
+                      onBack: () => _show(_Mode.levels),
                     ),
                   _ => StyleScreen(
                       progress: widget.progress,

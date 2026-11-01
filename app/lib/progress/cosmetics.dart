@@ -28,6 +28,29 @@ enum PieceShape {
 
   /// Drawn from Blender layers in assets/pieces/ rather than an outline.
   bool get isArt => index > PieceShape.flower.index;
+
+  /// The colour the shape is shown in on its own (the Shapes screen and the
+  /// home icon): one that suits it, not a ball colour.
+  Color get signature => switch (this) {
+        ball => const Color(0xFF5AB8FF),
+        jelly => const Color(0xFF4FD1A5),
+        heart => const Color(0xFFFF6FA5),
+        star => const Color(0xFFFFC93C),
+        flower => const Color(0xFFB98BFF),
+        kitty => const Color(0xFFFFA24C),
+        bunny => const Color(0xFFF59BD0),
+        bear => const Color(0xFFC98A5A),
+        frog => const Color(0xFF62C95C),
+        donut => const Color(0xFFFF8FB8),
+        cupcake => const Color(0xFFB59CFF),
+        macaron => const Color(0xFF7FDCC4),
+        planet => const Color(0xFF8C6CFF),
+        gem => const Color(0xFF4CD6F0),
+        moon => const Color(0xFFFFD970),
+        strawberry => const Color(0xFFFF4D6A),
+        apple => const Color(0xFF7ED957),
+        cherry => const Color(0xFFE8344E),
+      };
 }
 
 /// The surface of a ball set, painted over every ball so sets differ in

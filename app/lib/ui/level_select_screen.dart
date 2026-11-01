@@ -21,6 +21,7 @@ class LevelSelectScreen extends StatefulWidget {
     required this.progress,
     required this.onBack,
     required this.onPlay,
+    required this.onAwards,
     required this.onTap,
     required this.onDeny,
     this.openLevel,
@@ -29,6 +30,9 @@ class LevelSelectScreen extends StatefulWidget {
   final Progress progress;
   final VoidCallback onBack;
   final ValueChanged<LevelDef> onPlay;
+
+  /// Opens the awards (achievements).
+  final VoidCallback onAwards;
   final VoidCallback onTap;
   final VoidCallback onDeny;
 
@@ -113,6 +117,12 @@ class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerP
                           ],
                         ),
                       ),
+                      GlassIconButton(
+                        icon: Icons.emoji_events_rounded,
+                        tooltip: 'Awards',
+                        onPressed: widget.onAwards,
+                      ),
+                      const SizedBox(width: 8),
                       CoinChip(coins: progress.coins),
                     ],
                   ),

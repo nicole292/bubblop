@@ -105,11 +105,7 @@ class StyleScreen extends StatelessWidget {
         ),
       );
 
-  /// The one soft colour every shape tile uses, so the tiles show the shape,
-  /// not a ball colour. Reads on both the light and the dark card.
-  static const _shapeTint = Color(0xFFB9BEDF);
-
-  /// One shape: a single piece in a neutral colour, its name, and what it
+  /// One shape: a single piece in its own colour, its name, and what it
   /// takes to get it. No tile background; the shape in use gets a ring.
   Widget _shapeTile(BuildContext context, Cosmetic c, double width) {
     final owned = progress.owns(c);
@@ -146,7 +142,7 @@ class StyleScreen extends StatelessWidget {
           children: [
             Opacity(
               opacity: owned ? 1 : 0.75,
-              child: GlossyBall(color: _shapeTint, size: width * 0.5, shape: c.shape),
+              child: GlossyBall(color: c.shape.signature, size: width * 0.5, shape: c.shape),
             ),
             const SizedBox(height: 6),
             FittedBox(

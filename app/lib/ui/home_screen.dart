@@ -26,6 +26,7 @@ class HomeScreen extends StatefulWidget {
     required this.progress,
     required this.sprites,
     required this.onLevels,
+    required this.onMap,
     required this.onClassic,
     required this.onAchievements,
     required this.onStyle,
@@ -37,6 +38,9 @@ class HomeScreen extends StatefulWidget {
   final Progress progress;
   final OrbSprites? sprites;
   final VoidCallback onLevels;
+
+  /// Opens the level map (no level card).
+  final VoidCallback onMap;
   final VoidCallback onClassic;
   final VoidCallback onAchievements;
   final VoidCallback onStyle;
@@ -176,11 +180,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       SizedBox(
                         width: 100,
                         child: GlassIconButton(
-                          icon: Icons.emoji_events_rounded,
-                          tooltip: 'Achievements',
-                          label: 'Awards',
+                          icon: Icons.map_rounded,
+                          picture: _ShapeFace(
+                              shape: PieceShape.star, color: PieceShape.star.signature, clock: _clock, seed: 1),
+                          tooltip: 'Levels',
+                          label: 'Levels',
                           size: 52,
-                          onPressed: widget.onAchievements,
+                          onPressed: widget.onMap,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -188,8 +194,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         width: 100,
                         child: GlassIconButton(
                           icon: Icons.category_rounded,
-                          // The shape in use, in a soft white like the other icons.
-                          picture: _ShapeFace(shape: widget.progress.shape.shape, clock: _clock),
+                          // The shape in use, in its own colour.
+                          picture: _ShapeFace(
+                            shape: widget.progress.shape.shape,
+                            color: widget.progress.shape.shape.signature,
+                            clock: _clock,
+                          ),
                           tooltip: 'Shapes',
                           label: 'Shapes',
                           size: 52,
@@ -201,6 +211,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         width: 100,
                         child: GlassIconButton(
                           icon: Icons.lightbulb_rounded,
+                          picture: _ShapeFace(
+                            shape: PieceShape.jelly,
+                            color: PieceShape.jelly.signature,
+                            clock: _clock,
+                            seed: 5,
+                            badge: '?',
+                          ),
                           tooltip: 'How to play',
                           label: 'How to play',
                           size: 52,
@@ -514,28 +531,50 @@ class _Letter extends StatelessWidget {
   }
 }
 
-/// The shape in use, soft white like the other icons, with a happy face
-/// that blinks now and then.
+/// A home-screen icon: a piece in [color] with a face that blinks now and
+/// then, and an optional [badge] ("?").
 class _ShapeFace extends StatelessWidget {
-  const _ShapeFace({required this.shape, required this.clock});
+  const _ShapeFace({required this.shape, required this.color, required this.clock, this.seed = 3, this.badge});
   final PieceShape shape;
+  final Color color;
   final Animation<double> clock;
+
+  /// Blinks at its own moment, so the icons don't blink together.
+  final int seed;
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
-    const size = 30.0;
+    const size = 36.0;
     return SizedBox.square(
       dimension: size,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          GlossyBall(color: const Color(0xFFF4F5FF), size: size, shape: shape),
+          GlossyBall(color: color, size: size, shape: shape),
           AnimatedBuilder(
             animation: clock,
             builder: (context, _) => CustomPaint(
               size: const Size.square(size),
-              painter: _FacePainter(shape, clock.value),
+              painter: _FacePainter(shape, clock.value, seed),
             ),
           ),
+          if (badge != null)
+            Positioned(
+              right: -7,
+              top: -7,
+              child: Container(
+                width: 16,
+                height: 16,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: color, width: 1.5),
+                ),
+                child: Text(badge!, style: PopType.of(11, 1000, color: Palette.accent)),
+              ),
+            ),
         ],
       ),
     );
@@ -543,15 +582,16 @@ class _ShapeFace extends StatelessWidget {
 }
 
 class _FacePainter extends CustomPainter {
-  _FacePainter(this.shape, this.t);
+  _FacePainter(this.shape, this.t, this.seed);
   final PieceShape shape;
   final double t;
+  final int seed;
 
   @override
   void paint(Canvas canvas, Size size) {
-    paintFace(canvas, size.center(Offset.zero), size.width / 2, Mood.idle, shape: shape, time: t * 6, seed: 3);
+    paintFace(canvas, size.center(Offset.zero), size.width / 2, Mood.idle, shape: shape, time: t * 6, seed: seed);
   }
 
   @override
-  bool shouldRepaint(_FacePainter old) => old.t != t || old.shape != shape;
+  bool shouldRepaint(_FacePainter old) => old.t != t || old.shape != shape || old.seed != seed;
 }

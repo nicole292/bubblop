@@ -134,6 +134,9 @@ plays its own way, unlike Classic's endless rising rows:
   aimed bomb, sleep inside shells and look sad when a round is lost.
   Jewel balls were retired in 1.3.0; anyone who owned them got their 250 coins back.
 - Theme: Auto (follows the phone), Light or Dark, in the pause menu and the Style screen.
+- Home: the big button plays the next level; the round buttons below open the level map
+  (Levels), the Shapes screen and How to play, each drawn as a colourful piece with a face.
+  Awards open from the trophy on the level map.
 - Everything is saved on the device the moment it is earned (`app/lib/progress/`).
 
 ## Game over
