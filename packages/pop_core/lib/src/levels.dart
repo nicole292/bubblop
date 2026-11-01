@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'cell.dart';
 import 'events.dart';
 import 'game.dart';
 import 'rules_config.dart';
@@ -16,8 +15,12 @@ enum GoalKind {
   /// Set off a chain of [LevelGoal.target] steps in a single drop.
   chain,
 
-  /// Crack [LevelGoal.target] shells open.
+  /// Crack [LevelGoal.target] shells open (a blast breaking one counts too).
   crack,
+
+  /// Set off [LevelGoal.target] bombs that rose with the rows (the player's
+  /// own bombs don't count).
+  blast,
 }
 
 class LevelGoal {
@@ -26,6 +29,7 @@ class LevelGoal {
   const LevelGoal.pop(int balls) : this(GoalKind.pop, balls);
   const LevelGoal.chain(int steps) : this(GoalKind.chain, steps);
   const LevelGoal.crack(int shells) : this(GoalKind.crack, shells);
+  const LevelGoal.blast(int bombs) : this(GoalKind.blast, bombs);
 
   final GoalKind kind;
   final int target;
@@ -36,6 +40,7 @@ class LevelGoal {
         GoalKind.pop => 'Pop $target balls',
         GoalKind.chain => 'Make a ×$target chain',
         GoalKind.crack => 'Crack $target shells',
+        GoalKind.blast => 'Blast $target bombs',
       };
 }
 
@@ -50,7 +55,16 @@ enum LevelSetup {
   calm('Three colours', 'Only three colours'),
 
   /// Rows rise sooner (every 6 drops at first instead of 9).
-  rush('Fast rows', 'Rows rise faster');
+  rush('Fast rows', 'Rows rise faster'),
+
+  /// Every other rising row carries a bomb.
+  bombs('Bomb rows', 'Bombs rise with the rows'),
+
+  /// Three rows to start, each with a bomb, and a bomb in every row after.
+  bombWall('Bomb wall', 'Starts with a wall full of bombs'),
+
+  /// Grey stones rise instead of shells: pop beside them to clear them.
+  stones('Stone rows', 'Stones rise instead of shells');
 
   const LevelSetup(this.label, this.about);
 
@@ -62,6 +76,10 @@ enum LevelSetup {
         wall => base.copyWith(startRows: 3, startOpenRows: 1),
         calm => base.copyWith(startColors: 3, extraColorLevel: 1 << 30),
         rush => base.copyWith(startPressure: 6),
+        bombs => base.copyWith(bombEvery: 2),
+        bombWall =>
+          base.copyWith(startRows: 3, startOpenRows: 1, bombEvery: 1),
+        stones => base.copyWith(risingRowKind: RisingRowKind.stones),
       };
 }
 
@@ -96,16 +114,23 @@ class LevelTracker {
   int popped = 0;
   int bestChain = 0;
   int cracked = 0;
+  int blasted = 0;
 
   void record(MoveResult result) {
     if (!result.accepted) return;
     score += result.points;
     final steps = result.events.whereType<ChainStep>();
     for (final step in steps) {
-      popped += step.orbsPopped;
-      cracked += step.cracked.values.where((c) => c.kind == CellKind.shell).length;
+      popped += step.orbsPopped + step.orbsBlasted;
+      cracked += step.shellsBroken;
+      blasted += step.blasts
+          .where((b) => b.cleared[b.center]?.isBomb ?? false)
+          .length;
     }
-    bestChain = math.max(bestChain, steps.length);
+    // A player's bomb sets off its blast as a step of its own; only real
+    // pops make a chain.
+    bestChain = math.max(
+        bestChain, steps.where((s) => s.groups.isNotEmpty).length);
   }
 
   /// Progress towards [goal], never above its target.
@@ -114,6 +139,7 @@ class LevelTracker {
         GoalKind.pop => popped,
         GoalKind.chain => bestChain,
         GoalKind.crack => cracked,
+        GoalKind.blast => blasted,
       });
 
   bool isMet(LevelGoal goal) => progress(goal) >= goal.target;
@@ -121,7 +147,7 @@ class LevelTracker {
   bool get complete => level.goals.every(isMet);
 }
 
-/// The 30 levels. Early ones teach one goal at a time with small targets;
+/// The 40 levels. Early ones teach one goal at a time with small targets;
 /// later ones raise the targets and then combine two familiar goals. Along
 /// the way some levels add a drop limit or a [LevelSetup] twist, so rounds
 /// play differently: a shell wall to crack through, three colours for long
@@ -161,6 +187,17 @@ abstract final class Campaign {
     LevelDef(28, 3801, [LevelGoal.pop(100), LevelGoal.chain(3)]),
     LevelDef(29, 3901, [LevelGoal.score(2400)], drops: 120),
     LevelDef(30, 4001, [LevelGoal.score(2000), LevelGoal.chain(3)], setup: LevelSetup.rush),
+    // Bombs: they rise with the rows and go off when a ball beside them pops.
+    LevelDef(31, 4104, [LevelGoal.blast(2)], setup: LevelSetup.bombs),
+    LevelDef(32, 4203, [LevelGoal.pop(100)], setup: LevelSetup.bombs),
+    LevelDef(33, 4315, [LevelGoal.crack(25)], setup: LevelSetup.bombWall),
+    LevelDef(34, 4401, [LevelGoal.score(1500)], setup: LevelSetup.stones),
+    LevelDef(35, 4501, [LevelGoal.blast(4)], drops: 80, setup: LevelSetup.bombs),
+    LevelDef(36, 4603, [LevelGoal.chain(3)], setup: LevelSetup.bombWall),
+    LevelDef(37, 4701, [LevelGoal.blast(3), LevelGoal.pop(60)], setup: LevelSetup.bombs),
+    LevelDef(38, 4801, [LevelGoal.pop(80), LevelGoal.chain(2)], setup: LevelSetup.stones),
+    LevelDef(39, 4911, [LevelGoal.blast(5)], drops: 90, setup: LevelSetup.bombWall),
+    LevelDef(40, 5001, [LevelGoal.score(2500), LevelGoal.blast(4)], setup: LevelSetup.bombs),
   ];
 
 

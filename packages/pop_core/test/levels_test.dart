@@ -61,6 +61,7 @@ void main() {
       expect(const LevelGoal.pop(40).text, 'Pop 40 balls');
       expect(const LevelGoal.chain(3).text, 'Make a ×3 chain');
       expect(const LevelGoal.crack(12).text, 'Crack 12 shells');
+      expect(const LevelGoal.blast(3).text, 'Blast 3 bombs');
     });
 
     test('cracked shells are counted from the moves', () {
@@ -124,8 +125,8 @@ void main() {
   });
 
   group('Campaign', () {
-    test('30 levels, numbered in order, each with one or two goals', () {
-      expect(Campaign.count, 30);
+    test('40 levels, numbered in order, each with one or two goals', () {
+      expect(Campaign.count, 40);
       for (var i = 0; i < Campaign.count; i++) {
         final level = Campaign.levels[i];
         expect(level.number, i + 1);
@@ -136,11 +137,21 @@ void main() {
     });
 
     test('each goal type is introduced alone before levels combine them', () {
-      final singles = Campaign.levels.take(20);
       for (final kind in GoalKind.values) {
-        expect(singles.any((l) => l.goals.length == 1 && l.goals.single.kind == kind), isTrue);
+        final first = Campaign.levels
+            .firstWhere((l) => l.goals.any((g) => g.kind == kind));
+        expect(first.goals, hasLength(1), reason: '$kind first appears combined');
       }
       expect(Campaign.levels.take(20).every((l) => l.goals.length == 1), isTrue);
+    });
+
+    test('blast goals only appear where bombs rise with the rows', () {
+      for (final level in Campaign.levels) {
+        if (level.goals.any((g) => g.kind == GoalKind.blast)) {
+          expect(level.newGame().config.bombEvery, greaterThan(0),
+              reason: 'level ${level.number}');
+        }
+      }
     });
 
     test('every level can be won: a recorded winning line meets its goals', () {

@@ -62,3 +62,22 @@ void paintShell(Canvas canvas, double r, int colorIndex) {
 void paintStone(Canvas canvas, double r) {
   canvas.drawCircle(Offset.zero, r * 0.92, Paint()..color = const Color(0xFFB4B9D6));
 }
+
+/// A plain drawn bomb, used only if the Blender image could not be loaded:
+/// a dark ball with a metal cap. The fuse spark is drawn live.
+void paintBombFallback(Canvas canvas, double r) {
+  canvas.drawCircle(
+    Offset(0, r * 0.08),
+    r * 0.9,
+    Paint()
+      ..shader = Gradient.radial(Offset(-r * 0.3, -r * 0.25), r * 1.3,
+          const [Color(0xFF4A4E66), Color(0xFF15161F)]),
+  );
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(0, -r * 0.82), width: r * 0.5, height: r * 0.24),
+        Radius.circular(r * 0.06)),
+    Paint()..color = const Color(0xFFA9ADBD),
+  );
+  canvas.drawOval(Rect.fromCenter(center: Offset(-r * 0.3, -r * 0.3), width: r * 0.4, height: r * 0.22),
+      Paint()..color = const Color(0x55FFFFFF));
+}

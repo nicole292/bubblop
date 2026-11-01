@@ -474,6 +474,8 @@ class _Twists extends StatelessWidget {
         LevelSetup.wall => Icons.bubble_chart_rounded,
         LevelSetup.calm => Icons.palette_rounded,
         LevelSetup.rush => Icons.keyboard_double_arrow_up_rounded,
+        LevelSetup.bombs || LevelSetup.bombWall => Icons.local_fire_department_rounded,
+        LevelSetup.stones => Icons.landscape_rounded,
         LevelSetup.normal => Icons.circle,
       };
 

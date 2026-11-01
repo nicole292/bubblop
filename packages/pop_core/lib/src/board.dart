@@ -13,8 +13,8 @@ class Board {
   Board._(this.columns, this.rows, this._cells);
 
   /// Builds a board from a text picture, top line first, bottom line last.
-  /// `R Y G B P` are orbs, lowercase letters are shells, `#` is a stone and
-  /// `.` is empty. Missing top lines are treated as empty.
+  /// `R Y G B P` are orbs, lowercase letters are shells, `#` is a stone, `*`
+  /// is a bomb and `.` is empty. Missing top lines are treated as empty.
   ///
   /// ```
   /// .r....
@@ -93,6 +93,7 @@ class Board {
   static Cell? _parseCell(String ch) {
     if (ch == '.') return null;
     if (ch == '#') return const Cell.stone();
+    if (ch == '*') return const Cell.bomb();
     final upper = ch.toUpperCase();
     final color = colorLetters.indexOf(upper);
     if (color < 0) throw ArgumentError('Unknown cell character "$ch"');
@@ -105,6 +106,7 @@ class Board {
       CellKind.orb => colorLetters[cell.color],
       CellKind.shell => colorLetters[cell.color].toLowerCase(),
       CellKind.stone => '#',
+      CellKind.bomb => '*',
     };
   }
 }

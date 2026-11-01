@@ -1,7 +1,7 @@
 /// A board coordinate. Column 0 is the left edge, row 0 is the bottom.
 typedef CellPos = ({int col, int row});
 
-enum CellKind { orb, shell, stone }
+enum CellKind { orb, shell, stone, bomb }
 
 /// The contents of one occupied board cell. Empty cells are `null`.
 class Cell {
@@ -11,15 +11,23 @@ class Cell {
       : kind = CellKind.stone,
         color = -1;
 
+  /// Explodes when a neighbour pops, clearing the 3×3 square around it.
+  const Cell.bomb()
+      : kind = CellKind.bomb,
+        color = -1;
+
   final CellKind kind;
 
-  /// Colour index (0 = first colour). -1 for stones, which have no colour.
+  /// Colour index (0 = first colour). -1 for stones and bombs, which have no
+  /// colour.
   final int color;
 
   bool get isOrb => kind == CellKind.orb;
 
+  bool get isBomb => kind == CellKind.bomb;
+
   /// Shells and stones: things that crack when a neighbour pops.
-  bool get isBreakable => kind != CellKind.orb;
+  bool get isBreakable => kind == CellKind.shell || kind == CellKind.stone;
 
   @override
   bool operator ==(Object other) =>
@@ -33,5 +41,6 @@ class Cell {
         CellKind.orb => 'Orb($color)',
         CellKind.shell => 'Shell($color)',
         CellKind.stone => 'Stone',
+        CellKind.bomb => 'Bomb',
       };
 }

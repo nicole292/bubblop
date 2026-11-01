@@ -334,7 +334,13 @@ class _BoardSlot extends StatelessWidget {
                     maintainAnimation: true,
                     maintainState: true,
                     child: RepaintBoundary(
-                      child: HudBar(hud: hud, sprites: game.sprites, onPause: onPause, showNext: next == null),
+                      child: HudBar(
+                        hud: hud,
+                        sprites: game.sprites,
+                        onPause: onPause,
+                        onBomb: hud.isOver ? null : game.toggleBomb,
+                        showNext: next == null,
+                      ),
                     ),
                   ),
                 ),

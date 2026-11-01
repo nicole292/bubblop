@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 import '../game/palette.dart';
 import '../progress/cosmetics.dart';
+import 'finishes.dart';
 import 'orb_material.dart';
+import 'piece_art.dart';
 import 'piece_shapes.dart';
 
 /// Pre-rendered images for everything drawn many times per frame: balls,
@@ -20,6 +22,7 @@ class OrbSprites {
     required this._halos,
     required this.stone,
     required this.shadow,
+    required this.bomb,
     required this.usesShader,
   });
 
@@ -45,12 +48,20 @@ class OrbSprites {
   /// [shapes] adds a white symbol to every ball (the colour-blind option);
   /// shells show it through their glass. [shape] is the piece outline: any
   /// shape but a ball gets the same material, cut to that outline.
-  factory OrbSprites.bake(double radius, double pixelRatio, FragmentProgram? program,
-      {bool shapes = false, PieceShape shape = PieceShape.ball}) {
+  factory OrbSprites.bake(
+    double radius,
+    double pixelRatio,
+    FragmentProgram? program, {
+    bool shapes = false,
+    PieceShape shape = PieceShape.ball,
+    Finish finish = Finish.gloss,
+  }) {
     final size = (radius * pad * 2 * pixelRatio).ceil();
     final rPx = radius * pixelRatio;
     final full = Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble());
     final outline = piecePath(shape, rPx)?.shift(Offset(size / 2, size / 2));
+    // A 3D piece from Blender; its images are framed exactly like a sprite.
+    final art = PieceArt.of(shape);
 
     Image picture(void Function(Canvas canvas) paint) {
       final recorder = PictureRecorder();
@@ -85,6 +96,7 @@ class OrbSprites {
 
     final balls = <Image>[];
     final shells = <Image>[];
+
     /// A shaped piece: the ball material drawn a little larger and cut to the
     /// outline, with a soft contour so neighbours never merge.
     void shapedBall(Canvas canvas, Path outline, int c) {
@@ -96,11 +108,12 @@ class OrbSprites {
         centred(canvas, (cv) => paintBall(cv, radius * shapeCover, c));
       }
       canvas.drawPath(
-          outline,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = rPx * 0.12
-            ..color = const Color(0x24000000));
+        outline,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = rPx * 0.12
+          ..color = const Color(0x24000000),
+      );
       canvas.restore();
     }
 
@@ -110,40 +123,82 @@ class OrbSprites {
       canvas.clipPath(outline);
       canvas.drawPath(outline, Paint()..color = const Color(0x80FFFFFF));
       canvas.drawPath(
-          outline,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = rPx * 0.26
-            ..color = const Color(0xF2FFFFFF));
+        outline,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = rPx * 0.26
+          ..color = const Color(0xF2FFFFFF),
+      );
+      canvas.restore();
+    }
+
+    /// The set's [Finish] over the piece just drawn, kept inside its shape.
+    void finishPass(Canvas canvas, int c) {
+      if (finish == Finish.gloss) return;
+      final color = Palette.balls[c];
+      if (art != null) {
+        canvas.saveLayer(full, Paint());
+        centred(canvas, (cv) => paintFinish(cv, radius, color, finish, c));
+        canvas.drawImageRect(
+          art.body,
+          Rect.fromLTWH(0, 0, art.body.width.toDouble(), art.body.height.toDouble()),
+          full,
+          Paint()..blendMode = BlendMode.dstIn,
+        );
+        canvas.restore();
+        return;
+      }
+      canvas.save();
+      if (outline != null) {
+        canvas.clipPath(outline);
+      } else {
+        canvas.clipPath(Path()..addOval(Rect.fromCircle(center: full.center, radius: rPx)));
+      }
+      centred(canvas, (cv) => paintFinish(cv, radius, color, finish, c));
       canvas.restore();
     }
 
     for (var c = 0; c < Palette.balls.length; c++) {
       final ball = picture((canvas) {
-        if (outline != null) {
+        if (finish == Finish.glow) centred(canvas, (cv) => paintGlowUnder(cv, radius, Palette.balls[c]));
+        if (art != null) {
+          PieceArt.paint(canvas, art, Palette.balls[c], full);
+        } else if (outline != null) {
           shapedBall(canvas, outline, c);
         } else if (program != null) {
           shaderPass(canvas, Palette.balls[c], 0);
         } else {
           centred(canvas, (cv) => paintBall(cv, radius, c));
         }
+        finishPass(canvas, c);
         if (shapes) centred(canvas, (cv) => _paintSymbol(cv, radius, c));
       });
       balls.add(ball);
-      shells.add(picture((canvas) {
-        if (outline != null) {
-          canvas.drawImage(ball, Offset.zero, Paint());
-          shapedShell(canvas, outline);
-        } else if (program != null) {
-          // The full-size ball under frosted glass, so every cell reads
-          // as the same size.
-          canvas.drawImage(ball, Offset.zero, Paint());
-          shaderPass(canvas, const Color(0xFFFFFFFF), 1);
-        } else {
-          centred(canvas, (cv) => paintShell(cv, radius, c));
-          if (shapes) centred(canvas, (cv) => _paintSymbol(cv, radius, c));
-        }
-      }));
+      shells.add(
+        picture((canvas) {
+          if (art != null) {
+            // Frosted glass over the 3D piece, following its silhouette.
+            canvas.drawImage(ball, Offset.zero, Paint());
+            canvas.drawImageRect(
+              art.body,
+              Rect.fromLTWH(0, 0, art.body.width.toDouble(), art.body.height.toDouble()),
+              full,
+              Paint()..colorFilter = const ColorFilter.mode(Color(0x99FFFFFF), BlendMode.srcIn),
+            );
+          } else if (outline != null) {
+            canvas.drawImage(ball, Offset.zero, Paint());
+            shapedShell(canvas, outline);
+          } else if (program != null) {
+            // The full-size ball under frosted glass, so every cell reads
+            // as the same size.
+            canvas.drawImage(ball, Offset.zero, Paint());
+            shaderPass(canvas, const Color(0xFFFFFFFF), 1);
+          } else {
+            centred(canvas, (cv) => paintShell(cv, radius, c));
+            if (shapes) centred(canvas, (cv) => _paintSymbol(cv, radius, c));
+          }
+        }),
+      );
     }
 
     return OrbSprites._(
@@ -151,11 +206,23 @@ class OrbSprites {
       balls: balls,
       shells: shells,
       halos: [
-        for (final color in Palette.balls)
-          picture((canvas) => centred(canvas, (cv) => _paintHalo(cv, radius, color))),
+        for (final color in Palette.balls) picture((canvas) => centred(canvas, (cv) => _paintHalo(cv, radius, color))),
       ],
       stone: picture((canvas) => centred(canvas, (cv) => paintStone(cv, radius))),
       shadow: picture((canvas) => centred(canvas, (cv) => paintContactShadow(cv, radius))),
+      bomb: picture((canvas) {
+        final image = PieceArt.bomb;
+        if (image != null) {
+          canvas.drawImageRect(
+            image,
+            Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+            full,
+            Paint()..filterQuality = FilterQuality.medium,
+          );
+        } else {
+          centred(canvas, (cv) => paintBombFallback(cv, radius));
+        }
+      }),
       usesShader: program != null,
     );
   }
@@ -168,6 +235,10 @@ class OrbSprites {
   final Image stone;
   final Image shadow;
 
+  /// A bomb (Blender render, or a drawn fallback). Its fuse spark is drawn
+  /// live on top (orb_painter.dart).
+  final Image bomb;
+
   /// False when the shader could not be loaded and Canvas fallbacks are used.
   final bool usesShader;
 
@@ -178,8 +249,7 @@ class OrbSprites {
   final _paint = Paint()..filterQuality = FilterQuality.medium;
 
   /// Draws [image] centred on [center], scaled by [sx]/[sy], faded by [alpha].
-  void draw(Canvas canvas, Image image, Offset center,
-      {double sx = 1, double sy = 1, double alpha = 1}) {
+  void draw(Canvas canvas, Image image, Offset center, {double sx = 1, double sy = 1, double alpha = 1}) {
     if (alpha <= 0) return;
     final half = radius * pad;
     final dst = Rect.fromCenter(center: center, width: half * 2 * sx, height: half * 2 * sy);
@@ -189,7 +259,7 @@ class OrbSprites {
   }
 
   void dispose() {
-    for (final image in [..._balls, ..._shells, ..._halos, stone, shadow]) {
+    for (final image in [..._balls, ..._shells, ..._halos, stone, shadow, bomb]) {
       image.dispose();
     }
   }
@@ -215,15 +285,27 @@ class OrbSprites {
         }
         path.close();
       case 2:
-        path.addRRect(RRect.fromRectAndRadius(
-            Rect.fromCenter(center: Offset.zero, width: s * 1.5, height: s * 1.5), Radius.circular(s * 0.22)));
+        path.addRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(center: Offset.zero, width: s * 1.5, height: s * 1.5),
+            Radius.circular(s * 0.22),
+          ),
+        );
       case 3:
         final w = s * 0.5;
         path
-          ..addRRect(RRect.fromRectAndRadius(
-              Rect.fromCenter(center: Offset.zero, width: s * 1.9, height: w), Radius.circular(w * 0.3)))
-          ..addRRect(RRect.fromRectAndRadius(
-              Rect.fromCenter(center: Offset.zero, width: w, height: s * 1.9), Radius.circular(w * 0.3)));
+          ..addRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(center: Offset.zero, width: s * 1.9, height: w),
+              Radius.circular(w * 0.3),
+            ),
+          )
+          ..addRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(center: Offset.zero, width: w, height: s * 1.9),
+              Radius.circular(w * 0.3),
+            ),
+          );
       default:
         path
           ..fillType = PathFillType.evenOdd
@@ -232,10 +314,11 @@ class OrbSprites {
     }
     // A soft dark edge keeps white readable on the light yellow ball.
     canvas.drawPath(
-        path.shift(Offset(0, r * 0.03)),
-        Paint()
-          ..color = const Color(0x40000000)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.05));
+      path.shift(Offset(0, r * 0.03)),
+      Paint()
+        ..color = const Color(0x40000000)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.05),
+    );
     canvas.drawPath(path, Paint()..color = const Color(0xF2FFFFFF));
   }
 
@@ -245,11 +328,12 @@ class OrbSprites {
       Offset.zero,
       r * pad,
       Paint()
-        ..shader = Gradient.radial(Offset.zero, r * pad, [
-          color.withValues(alpha: 0.65),
-          color.withValues(alpha: 0.25),
-          color.withValues(alpha: 0),
-        ], const [0.5, 0.72, 1.0]),
+        ..shader = Gradient.radial(
+          Offset.zero,
+          r * pad,
+          [color.withValues(alpha: 0.65), color.withValues(alpha: 0.25), color.withValues(alpha: 0)],
+          const [0.5, 0.72, 1.0],
+        ),
     );
   }
 }

@@ -33,6 +33,8 @@ class HudState {
     this.hintColumn,
     this.newBest = false,
     this.newBestLevel = false,
+    this.bombs = 0,
+    this.bombArmed = false,
     this.levelNumber,
     this.dropsLeft,
     this.goals = const [],
@@ -83,6 +85,12 @@ class HudState {
   /// True when the finished Classic round reached a new highest level.
   final bool newBestLevel;
 
+  /// Bombs in the player's supply.
+  final int bombs;
+
+  /// The next drop is a bomb.
+  final bool bombArmed;
+
   /// The campaign level being played, or null in Endless.
   final int? levelNumber;
   bool get isLevel => levelNumber != null;
@@ -121,6 +129,8 @@ class HudState {
     bool clearHint = false,
     bool? newBest,
     bool? newBestLevel,
+    int? bombs,
+    bool? bombArmed,
     int? dropsLeft,
     List<GoalView>? goals,
     LevelClear? levelClear,
@@ -146,6 +156,8 @@ class HudState {
       hintColumn: clearHint ? null : hintColumn ?? this.hintColumn,
       newBest: newBest ?? this.newBest,
       newBestLevel: newBestLevel ?? this.newBestLevel,
+      bombs: bombs ?? this.bombs,
+      bombArmed: bombArmed ?? this.bombArmed,
       levelNumber: levelNumber,
       dropsLeft: dropsLeft ?? this.dropsLeft,
       goals: goals ?? this.goals,

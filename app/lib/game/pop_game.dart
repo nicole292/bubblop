@@ -11,6 +11,7 @@ import '../render/background.dart';
 import '../render/effects.dart';
 import '../progress/achievements.dart';
 import '../progress/progress.dart';
+import '../progress/rewards.dart';
 import '../render/orb_sprites.dart';
 import '../services/haptics.dart';
 import '../services/settings.dart';
@@ -84,6 +85,18 @@ class PopGame extends FlameGame {
 
   /// Seconds since start; drives idle animation.
   double time = 0;
+
+  /// The next drop is one of the player's bombs ([toggleBomb]).
+  bool bombArmed = false;
+
+  /// Seconds of cheering left after a chain: the balls look happy and hop.
+  double cheer = 0;
+
+  /// The round was lost: the balls look sad until the next one.
+  bool sad = false;
+
+  /// In Classic, every this-many rising rows brings a bomb.
+  static const classicBombEvery = 5;
 
   /// Where the previous chain step burst, for the sparkle trail.
   Offset? _lastStepCenter;
@@ -164,6 +177,7 @@ class PopGame extends FlameGame {
   void update(double dt) {
     super.update(dt);
     time += dt;
+    cheer = math.max(0, cheer - dt);
     if (Palette.dark != _dark) {
       _dark = Palette.dark;
       background.restyle();
@@ -237,10 +251,31 @@ class PopGame extends FlameGame {
     if (column != null) dropAt(column);
   }
 
+  /// Makes the next drop a bomb, or puts the bomb back. Needs a bomb in the
+  /// supply and a round in play.
+  void toggleBomb() {
+    if (rules.isOver || _levelWon) return;
+    if (!bombArmed && progress.bombs <= 0) {
+      sfx.deny();
+      haptics.deny();
+      _banner('No bombs left');
+      return;
+    }
+    bombArmed = !bombArmed;
+    sfx.tap();
+    haptics.tap();
+    _publishRulesState();
+  }
+
   void dropAt(int column) {
     if (_levelWon) return;
     if (!phases.isIdle) phases.speed = Timings.fastForward;
-    final result = rules.drop(column);
+    final bomb = bombArmed && progress.bombs > 0;
+    final result = bomb ? rules.dropBomb(column) : rules.drop(column);
+    if (bomb && result.accepted) {
+      bombArmed = false;
+      progress.useBomb();
+    }
     if (!result.accepted) {
       if (!rules.isOver) {
         scene.shake(column);
@@ -250,9 +285,12 @@ class PopGame extends FlameGame {
       return;
     }
     stats.recordMove(result);
-    final chain = result.events.whereType<ChainStep>().length;
+    final chain = result.events.whereType<ChainStep>().where((s) => s.groups.isNotEmpty).length;
     final chainAchievement = progress.recordChain(chain);
     if (chainAchievement != null) _roundAchievements.add(chainAchievement);
+    // A long chain earns a bomb, announced when the chain has played out.
+    final earnedBomb = chain >= bombChainSteps;
+    if (earnedBomb) progress.earnBombs(1);
     final tracker = _tracker;
     tracker?.record(result);
     final won = tracker != null && tracker.complete;
@@ -264,8 +302,10 @@ class PopGame extends FlameGame {
     }
     if (rules.isOver && !won) {
       final summary = stats.finishRound(score: rules.score, moves: rules.moves);
-      debugPrint('Round over score ${summary.score}, moves ${summary.moves}, '
-          'best chain ${summary.longestChain}');
+      debugPrint(
+        'Round over score ${summary.score}, moves ${summary.moves}, '
+        'best chain ${summary.longestChain}',
+      );
     }
 
     _choosePraise(result);
@@ -273,16 +313,27 @@ class PopGame extends FlameGame {
       phases.addAll(scene.phasesFor(event));
     }
     final popped = result.events.any((e) => e is ChainStep);
-    phases.addAll([Phase(0, onStart: () => _afterMove(popped))]);
+    phases.addAll([
+      Phase(
+        0,
+        onStart: () {
+          _afterMove(popped);
+          if (earnedBomb) {
+            _banner('+1 bomb!');
+            sfx.praise();
+          }
+        },
+      ),
+    ]);
     if (won) phases.addAll([Phase(Timings.levelWinDelay, onEnd: _levelComplete)]);
     _publishRulesState();
   }
 
   /// Praise words for big moments, shown as the last chain step bursts.
   void _choosePraise(MoveResult result) {
-    final steps = result.events.whereType<ChainStep>().toList();
+    final steps = result.events.whereType<ChainStep>().where((s) => s.groups.isNotEmpty).toList();
     _praiseText = null;
-    _praiseStep = steps.length;
+    _praiseStep = result.events.whereType<ChainStep>().length;
     if (steps.isEmpty) return;
     final biggest = steps.expand((s) => s.groups).map((g) => g.cells.length).reduce(math.max);
     _praiseText = switch (steps.length) {
@@ -297,13 +348,12 @@ class PopGame extends FlameGame {
   void _relayout({bool force = false}) {
     final area = _boardArea;
     if (area == null || area.isEmpty) return;
-    final next = BoardLayout(area.size,
-        columns: _config.columns, rows: _config.rows, offset: area.topLeft);
+    final next = BoardLayout(area.size, columns: _config.columns, rows: _config.rows, offset: area.topLeft);
     final radius = next.ballRadius;
     if (_programLoaded && (force || sprites == null || (sprites!.radius - radius).abs() > 0.5)) {
       sprites?.dispose();
       final ratio = DevOptions.pixelRatio;
-      sprites = OrbSprites.bake(radius, ratio, _orbProgram, shape: Palette.shape);
+      sprites = OrbSprites.bake(radius, ratio, _orbProgram, shape: Palette.shape, finish: Palette.finish);
       // New sprites: let the HUD redraw its ball icons with them.
       hud.value = hud.value.copyWith(spritesVersion: hud.value.spritesVersion + 1);
     }
@@ -315,10 +365,16 @@ class PopGame extends FlameGame {
     final level = this.level;
     // A level always deals the same balls and rows (its fixed seed).
     final seed = level?.seed ?? DevOptions.seed ?? math.Random().nextInt(1 << 31);
-    rules = DevOptions.demoGame(_config) ??
+    rules =
+        DevOptions.demoGame(_config) ??
         (tutorial
             ? Tutorial.game(_config, seed)
-            : level?.newGame(base: _config) ?? Game(seed: seed, config: _config));
+            : level?.newGame(base: _config) ??
+                  // Classic: a few bombs rise with the rows.
+                  Game(
+                    seed: seed,
+                    config: _config.copyWith(bombEvery: classicBombEvery),
+                  ));
     _tracker = level == null ? null : LevelTracker(level);
     _levelWon = false;
     _roundAchievements.clear();
@@ -332,6 +388,7 @@ class PopGame extends FlameGame {
       ..onGameOver = _gameOver
       ..onStepPopped = _stepEffects
       ..onCracked = _crackEffects
+      ..onBlast = _blastEffects
       ..onLanded = _landEffects
       ..onRose = _roseEffects
       ..onLevelUp = (_) {
@@ -341,6 +398,9 @@ class PopGame extends FlameGame {
       ..levelUpText = (level == null ? (n) => 'Level $n!' : (_) => 'Speed up!')
       ..load(rules.board);
     aimColumn = null;
+    bombArmed = false;
+    cheer = 0;
+    sad = false;
     boardLight = 0;
     shake = 0;
     _lastStepCenter = null;
@@ -379,10 +439,14 @@ class PopGame extends FlameGame {
     sfx.levelUp();
     haptics.big();
     _celebrate();
+    cheer = 3;
+    bombArmed = false;
     hud.value = hud.value.copyWith(
       isOver: true,
       goals: _goalViews(),
       levelClear: clear,
+      bombs: progress.bombs,
+      bombArmed: false,
       achievements: List.of(_roundAchievements),
       longestChain: tracker.bestChain,
       moves: rules.moves,
@@ -407,6 +471,8 @@ class PopGame extends FlameGame {
   void _gameOver() {
     // A won level shows its victory card instead.
     if (_levelWon) return;
+    sad = true;
+    bombArmed = false;
     // Show what happened: the board jolts as the round ends.
     shake = math.max(shake, (layout?.cell ?? 50) * 0.12);
     final last = stats.rounds.isEmpty ? null : stats.rounds.last;
@@ -537,15 +603,28 @@ class PopGame extends FlameGame {
       final color = Palette.balls[e.groups.first.color];
       effects
         ..trail(_lastStepCenter!, stepCenter, Palette.gold)
-        ..label(stepCenter.translate(0, -layout!.cell * 0.45), '×$step', color,
-            size: 0.5 + 0.07 * math.min(step, 5), life: 0.7, rise: 0.5);
+        ..label(
+          stepCenter.translate(0, -layout!.cell * 0.45),
+          '×$step',
+          color,
+          size: 0.5 + 0.07 * math.min(step, 5),
+          life: 0.7,
+          rise: 0.5,
+        );
     }
     // The total also lands in the score panel; this small tag says where.
-    effects.label(stepCenter.translate(0, layout!.cell * 0.25), '+${e.points}', Palette.ink,
-        size: 0.32 + 0.02 * math.min(step, 5), life: 0.6, rise: 0.8);
+    effects.label(
+      stepCenter.translate(0, layout!.cell * 0.25),
+      '+${e.points}',
+      Palette.ink,
+      size: 0.32 + 0.02 * math.min(step, 5),
+      life: 0.6,
+      rise: 0.8,
+    );
     _lastStepCenter = stepCenter;
 
     boardLight = math.min(1.0, 0.35 + 0.2 * (step - 1) + 0.05 * (total - 4));
+    if (step >= 2) cheer = math.max(cheer, 1.2 + 0.3 * step);
     if (step >= 3) shake = math.min(5, 1.2 * (step - 2) + 1);
 
     if (step == _praiseStep && _praiseText != null) {
@@ -568,6 +647,33 @@ class PopGame extends FlameGame {
       ..puff(at, count: 8, spread: 0.55, size: 0.11, color: const Color(0xFFC7D0FF))
       ..ring(at, Palette.balls[cell.color], from: 0.3, to: 0.85, life: 0.32, width: 0.12)
       ..sparkles(at, count: 2, spread: 0.4, color: Palette.gold);
+  }
+
+  /// A bomb goes off: a hot flash, a shock ring, smoke and sparks, and the
+  /// board jolts.
+  void _blastEffects(Blast blast) {
+    sfx.crack();
+    sfx.pop(4);
+    haptics.big();
+    final layout = this.layout;
+    if (layout == null) return;
+    final at = _at(blast.center);
+    const fire = Color(0xFFFF8A1A);
+    effects
+      ..flash(at, const Color(0xFFFFD45C), to: 1.7)
+      ..ring(at, fire, from: 0.3, to: 1.9, life: 0.4, width: 0.2)
+      ..puff(at, count: 10, spread: 1.2, size: 0.2, color: const Color(0xFFB9BDD6))
+      ..confetti(at, fire, count: 10, power: 3)
+      ..sparkles(at, count: 6, spread: 1.2, color: Palette.gold);
+    for (final p in blast.cleared.keys) {
+      final cell = blast.cleared[p]!;
+      if (cell.color >= 0) effects.confetti(_at(p), Palette.balls[cell.color], count: 2, power: 2.4);
+    }
+    boardLight = 1;
+    boardLightColor = fire;
+    shake = math.max(shake, layout.cell * 0.09);
+    // Everyone nearby is startled, then relieved.
+    cheer = math.max(cheer, 1.0);
   }
 
   void _landEffects(int column, int row) {
@@ -594,6 +700,8 @@ class PopGame extends FlameGame {
       pressureMax: rules.config.pressureInterval(rules.level),
       dropsLeft: rules.dropsLeft,
       best: _shownBest,
+      bombs: progress.bombs,
+      bombArmed: bombArmed,
     );
   }
 

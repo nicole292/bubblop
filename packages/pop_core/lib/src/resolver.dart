@@ -4,20 +4,25 @@ import 'events.dart';
 import 'rules_config.dart';
 import 'scoring.dart';
 
-/// Repeatedly pops groups, cracks neighbours and applies gravity until the
-/// board is stable. Mutates [board] and returns one [ChainStep] per round.
-List<ChainStep> resolveChains(Board board, RulesConfig config) {
+/// Repeatedly pops groups, cracks neighbours, sets off bombs next to a pop
+/// and applies gravity until the board is stable. Mutates [board] and returns
+/// one [ChainStep] per round, numbered from [firstStep].
+List<ChainStep> resolveChains(Board board, RulesConfig config,
+    {int firstStep = 1}) {
   final steps = <ChainStep>[];
-  for (var step = 1;; step++) {
+  for (var step = firstStep;; step++) {
     final groups = findGroups(board, config.matchSize);
     if (groups.isEmpty) return steps;
 
     final popped = {for (final g in groups) ...g.cells};
     final cracked = <CellPos, Cell>{};
+    final fuses = <CellPos>{};
     for (final pos in popped) {
       for (final n in _neighbours(board, pos)) {
         final cell = board.atPos(n);
-        if (cell != null && cell.isBreakable) cracked[n] = cell;
+        if (cell == null) continue;
+        if (cell.isBreakable) cracked[n] = cell;
+        if (cell.isBomb) fuses.add(n);
       }
     }
 
@@ -28,6 +33,7 @@ List<ChainStep> resolveChains(Board board, RulesConfig config) {
       board.set(pos.col, pos.row,
           cell.kind == CellKind.shell ? Cell.orb(cell.color) : null);
     });
+    final blasts = detonate(board, fuses);
 
     final falls = applyGravity(board);
     final points = chainStepPoints(
@@ -35,6 +41,7 @@ List<ChainStep> resolveChains(Board board, RulesConfig config) {
       distinctColors: groups.map((g) => g.color).toSet().length,
       cracked: cracked.length,
       step: step,
+      blasted: _blastedCount(blasts),
     );
     steps.add(ChainStep(
       step: step,
@@ -42,9 +49,49 @@ List<ChainStep> resolveChains(Board board, RulesConfig config) {
       cracked: cracked,
       falls: falls,
       points: points,
+      blasts: blasts,
     ));
   }
 }
+
+/// Sets off the bombs at [fuses]: each clears every cell in the 3×3 square
+/// around it, and a bomb caught in a blast goes off in turn. Mutates
+/// [board] (no gravity) and returns the blasts in the order they happened.
+List<Blast> detonate(Board board, Iterable<CellPos> fuses) {
+  final blasts = <Blast>[];
+  final queue = [...fuses];
+  final done = <CellPos>{};
+  while (queue.isNotEmpty) {
+    final center = queue.removeAt(0);
+    if (!done.add(center)) continue;
+    final cleared = <CellPos, Cell>{};
+    for (var dc = -1; dc <= 1; dc++) {
+      for (var dr = -1; dr <= 1; dr++) {
+        final col = center.col + dc, row = center.row + dr;
+        if (col < 0 || col >= board.columns || row < 0 || row >= board.rows) {
+          continue;
+        }
+        final pos = (col: col, row: row);
+        final cell = board.atPos(pos);
+        if (cell == null) continue;
+        if (cell.isBomb && pos != center) {
+          queue.add(pos);
+          continue;
+        }
+        cleared[pos] = cell;
+        board.set(col, row, null);
+      }
+    }
+    blasts.add(Blast(center: center, cleared: cleared));
+  }
+  return blasts;
+}
+
+/// Cells cleared by [blasts], not counting the bombs themselves.
+int blastedCount(List<Blast> blasts) => blasts.fold(
+    0, (sum, b) => sum + b.cleared.values.where((c) => !c.isBomb).length);
+
+int _blastedCount(List<Blast> blasts) => blastedCount(blasts);
 
 /// All groups of at least [minSize] orthogonally connected same-colour orbs.
 /// Shells and stones never belong to a group.

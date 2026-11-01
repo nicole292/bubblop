@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../game/palette.dart';
 import '../progress/cosmetics.dart';
 import '../progress/progress.dart';
+import '../progress/rewards.dart';
 import '../services/settings.dart';
+import 'bomb_icon.dart';
 import 'buttons.dart';
 import 'glass.dart';
 import 'swatches.dart';
@@ -42,7 +44,11 @@ class StyleScreen extends StatelessWidget {
                 children: [
                   GlassBackButton(onPressed: onBack),
                   Expanded(
-                    child: Text('Style', textAlign: TextAlign.center, style: PopType.of(26, 1000, color: Colors.white)),
+                    child: Text(
+                      'Style',
+                      textAlign: TextAlign.center,
+                      style: PopType.of(26, 1000, color: Colors.white),
+                    ),
                   ),
                   CoinChip(coins: progress.coins),
                 ],
@@ -58,11 +64,17 @@ class StyleScreen extends StatelessWidget {
                       _section('THEME'),
                       _themeCard(),
                       const SizedBox(height: 10),
+                      _section('BOMBS'),
+                      _bombCard(context),
+                      const SizedBox(height: 10),
                       _section('BALLS'),
                       for (final c in Cosmetics.ofKind(CosmeticKind.balls)) _item(context, c),
-                      const SizedBox(height: 10),
-                      _section('SHAPES'),
-                      for (final c in Cosmetics.ofKind(CosmeticKind.shape)) _item(context, c),
+                      // Shapes, grouped: the classic outlines, then each 3D family.
+                      for (final (family, shapes) in _shapeFamilies()) ...[
+                        const SizedBox(height: 10),
+                        _section(family),
+                        for (final c in shapes) _item(context, c),
+                      ],
                       const SizedBox(height: 10),
                       _section('SKY'),
                       for (final c in Cosmetics.ofKind(CosmeticKind.sky)) _item(context, c),
@@ -77,31 +89,138 @@ class StyleScreen extends StatelessWidget {
     );
   }
 
+  static List<(String, List<Cosmetic>)> _shapeFamilies() {
+    final families = <String, List<Cosmetic>>{};
+    for (final c in Cosmetics.ofKind(CosmeticKind.shape)) {
+      families.putIfAbsent((c.family ?? 'Shapes').toUpperCase(), () => []).add(c);
+    }
+    return [for (final e in families.entries) (e.key, e.value)];
+  }
+
+  /// The player's bombs and the two packs on sale.
+  Widget _bombCard(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+    decoration: BoxDecoration(
+      color: Palette.card,
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const BombIcon(size: 40),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(progress.bombs == 1 ? '1 bomb' : '${progress.bombs} bombs', style: PopType.of(19, 1000)),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Tap the bomb in a round, then a column: it clears the 3×3 square where it lands.',
+                    style: PopType.of(13, 700, color: Palette.inkSoft),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            for (final (i, pack) in BombPack.values.indexed) ...[
+              if (i > 0) const SizedBox(width: 10),
+              Expanded(child: _packButton(context, pack)),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Win bombs in gift boxes, or with a ×$bombChainSteps chain.',
+          style: PopType.of(12, 800, color: Palette.inkSoft),
+        ),
+      ],
+    ),
+  );
+
+  Widget _packButton(BuildContext context, BombPack pack) {
+    final afford = progress.coins >= pack.price;
+    return GestureDetector(
+      onTap: () => _buyPack(context, pack),
+      child: Container(
+        height: 46,
+        decoration: BoxDecoration(
+          color: afford ? Palette.cream : Palette.well,
+          borderRadius: BorderRadius.circular(23),
+          border: Border.all(color: afford ? Palette.gold : Palette.pipEmpty, width: 1.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('+${pack.bombs}', style: PopType.of(16, 1000, numbers: true)),
+            const SizedBox(width: 2),
+            const BombIcon(size: 20),
+            const SizedBox(width: 8),
+            const CoinIcon(size: 20),
+            const SizedBox(width: 4),
+            Text(
+              '${pack.price}',
+              style: PopType.of(15, 1000, color: afford ? Palette.ink : Palette.inkSoft, numbers: true),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _buyPack(BuildContext context, BombPack pack) async {
+    if (progress.coins < pack.price) {
+      onDeny();
+      _say(context, 'You need ${pack.price - progress.coins} more coins. Complete levels to earn them!');
+      return;
+    }
+    onTap();
+    final yes = await showDialog<bool>(
+      context: context,
+      barrierColor: Palette.scrim.withValues(alpha: 0.4),
+      builder: (context) => _Confirm(
+        title: pack.bombs == 1 ? '1 bomb' : '${pack.bombs} bombs',
+        preview: const BombIcon(size: 56),
+        price: pack.price,
+        action: 'Buy',
+      ),
+    );
+    if (yes == true && progress.buyBombs(pack)) onBought();
+  }
+
   /// Light, dark or follow the phone; the same setting as in the pause menu.
   Widget _themeCard() => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-        decoration: BoxDecoration(
-          color: Palette.card,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
-        ),
-        child: ListenableBuilder(
-          listenable: settings,
-          builder: (context, _) => ThemeRow(
-            value: settings.theme,
-            onChanged: (v) {
-              settings.theme = v;
-              onTap();
-            },
-          ),
-        ),
-      );
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+    decoration: BoxDecoration(
+      color: Palette.card,
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
+    ),
+    child: ListenableBuilder(
+      listenable: settings,
+      builder: (context, _) => ThemeRow(
+        value: settings.theme,
+        onChanged: (v) {
+          settings.theme = v;
+          onTap();
+        },
+      ),
+    ),
+  );
 
   Widget _section(String title) => Padding(
-        padding: const EdgeInsets.fromLTRB(6, 6, 6, 10),
-        child: Text(title, style: PopType.of(14, 900, color: Colors.white, spacing: 2)),
-      );
+    padding: const EdgeInsets.fromLTRB(6, 6, 6, 10),
+    child: Text(title, style: PopType.of(14, 900, color: Colors.white, spacing: 2)),
+  );
 
   Widget _item(BuildContext context, Cosmetic c) {
     final owned = progress.owns(c);
@@ -127,8 +246,10 @@ class StyleScreen extends StatelessWidget {
           children: [
             const CoinIcon(size: 22),
             const SizedBox(width: 5),
-            Text('${unlock.price}',
-                style: PopType.of(15, 1000, color: afford ? Palette.ink : Palette.inkSoft, numbers: true)),
+            Text(
+              '${unlock.price}',
+              style: PopType.of(15, 1000, color: afford ? Palette.ink : Palette.inkSoft, numbers: true),
+            ),
           ],
         ),
       );
@@ -155,10 +276,7 @@ class StyleScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  if (!owned) ...[
-                    Icon(Icons.lock_rounded, size: 18, color: Palette.inkSoft),
-                    const SizedBox(width: 6),
-                  ],
+                  if (!owned) ...[Icon(Icons.lock_rounded, size: 18, color: Palette.inkSoft), const SizedBox(width: 6)],
                   Expanded(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
@@ -202,7 +320,14 @@ class StyleScreen extends StatelessWidget {
       final yes = await showDialog<bool>(
         context: context,
         barrierColor: Palette.scrim.withValues(alpha: 0.4),
-        builder: (context) => _ConfirmUnlock(cosmetic: c, price: unlock.price),
+        builder: (context) => _Confirm(
+          title: c.name,
+          preview: c.kind != CosmeticKind.sky
+              ? CosmeticSwatch(cosmetic: c, height: 52)
+              : CosmeticSwatch(cosmetic: c, height: 48, wide: true),
+          price: unlock.price,
+          action: 'Unlock',
+        ),
       );
       if (yes == true && progress.buy(c)) {
         progress.select(c);
@@ -217,36 +342,47 @@ class StyleScreen extends StatelessWidget {
       _ => '',
     };
     if (!context.mounted) return;
+    _say(context, message);
+  }
+
+  void _say(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(message, style: PopType.of(15, 800, color: Colors.white)),
-        backgroundColor: Palette.ink,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        duration: const Duration(seconds: 2),
-      ));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message, style: PopType.of(15, 800, color: Colors.white)),
+          backgroundColor: Palette.ink,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   Widget _pill(String text, Color background, Color foreground, {IconData? icon}) => Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(19)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[Icon(icon, size: 16, color: foreground), const SizedBox(width: 4)],
-            Text(text, style: PopType.of(14, 900, color: foreground)),
-          ],
-        ),
-      );
+    height: 38,
+    padding: const EdgeInsets.symmetric(horizontal: 14),
+    decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(19)),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon != null) ...[Icon(icon, size: 16, color: foreground), const SizedBox(width: 4)],
+        Text(text, style: PopType.of(14, 900, color: foreground)),
+      ],
+    ),
+  );
 }
 
-/// "Unlock Ocean for 300 coins?", so coins are never spent by accident.
-class _ConfirmUnlock extends StatelessWidget {
-  const _ConfirmUnlock({required this.cosmetic, required this.price});
-  final Cosmetic cosmetic;
+/// "Unlock Ocean for 300 coins?" or "Buy 5 bombs for 160 coins?", so coins
+/// are never spent by accident.
+class _Confirm extends StatelessWidget {
+  const _Confirm({required this.title, required this.preview, required this.price, required this.action});
+  final String title;
+  final Widget preview;
   final int price;
+
+  /// The verb on the button: "Unlock" or "Buy".
+  final String action;
 
   @override
   Widget build(BuildContext context) {
@@ -264,13 +400,11 @@ class _ConfirmUnlock extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('UNLOCK', style: PopType.panelTitle),
+            Text(action.toUpperCase(), style: PopType.panelTitle),
             const SizedBox(height: 6),
-            Text(cosmetic.name, style: PopType.of(30, 1000, color: Palette.accent)),
+            Text(title, style: PopType.of(30, 1000, color: Palette.accent)),
             const SizedBox(height: 14),
-            cosmetic.kind != CosmeticKind.sky
-                ? CosmeticSwatch(cosmetic: cosmetic, height: 52)
-                : CosmeticSwatch(cosmetic: cosmetic, height: 48, wide: true),
+            preview,
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -281,7 +415,11 @@ class _ConfirmUnlock extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 18),
-            BigButton(label: 'Unlock', icon: Icons.lock_open_rounded, onPressed: () => Navigator.pop(context, true)),
+            BigButton(
+              label: action,
+              icon: action == 'Buy' ? Icons.shopping_bag_rounded : Icons.lock_open_rounded,
+              onPressed: () => Navigator.pop(context, true),
+            ),
             const SizedBox(height: 10),
             SoftButton(label: 'Not now', onPressed: () => Navigator.pop(context, false)),
           ],

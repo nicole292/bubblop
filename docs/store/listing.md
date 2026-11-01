@@ -48,9 +48,11 @@ plays the next note of a happy little tune.
 **Bubbles are your secret weapon.** Rows of bubbles rise from below. Pop balls next to a
 bubble to break it open and free the ball inside, which can set off an even bigger chain.
 
-★ 30 levels with clear goals and fun twists: shell walls, drop limits, fast rows
+★ 40 levels with clear goals and fun twists: shell walls, bomb rows, stone rows, drop limits
 ★ Gift boxes and special rewards as you go
-★ Unlock themed ball colours (Candy, Fruit, Ocean, Neon, Galaxy), piece shapes (hearts, stars, flowers…) and skies with the coins you earn
+★ Bombs: earn them and blast your way out of a tight spot
+★ Cute balls with faces that cheer, gasp and nap
+★ Unlock themed ball colours (Candy, Fruit, Ocean, Neon, Galaxy), 3D shapes (kitties, donuts, planets, strawberries…) and skies with the coins you earn
 ★ Dark mode for cosy night-time play, or let it follow your phone
 ★ Classic mode: no goals, just play and chase your best score
 ★ Learn in seconds, with a short guided first round
@@ -81,9 +83,12 @@ plain text). App Store Connect also refuses `★`, so start those lines with `- 
 
 ### What's New in This Version (1.3.0) [4000]
 ```
-- Dark mode: choose Light, Dark or Auto (follows your phone) in the pause menu or the Style screen
-- New ball colours: Fruit, Ocean and Galaxy, and a sweeter Candy set with chocolate
-- Jewel balls are retired: if you owned them, your 250 coins are back
+- Bombs! Earn them, then tap the bomb and a column to blast a 3x3 square. Some even rise with the rows
+- 10 new levels (31-40) with bomb rows, bomb walls, stone rows and a new "Blast bombs" goal
+- The balls have faces now: they blink, get excited, cheer after chains and look scared near the top
+- 13 new 3D shapes: kitties, bunnies, bears, frogs, donuts, cupcakes, macarons, planets, gems, moons, strawberries, apples and cherries
+- Every ball set has its own look: sugar sparkles, dewdrops, pearl, neon glow and starry galaxy
+- Dark mode: Light, Dark or Auto (follows your phone)
 ```
 
 ### Keywords [100, comma-separated, no spaces needed]

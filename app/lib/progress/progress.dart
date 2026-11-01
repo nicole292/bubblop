@@ -65,6 +65,7 @@ class Progress extends ChangeNotifier {
     _rewarded.addAll((prefs.getStringList(_rewardedKey) ?? const []).map(int.tryParse).whereType<int>());
     _unlocked = math.max(prefs.getInt(_unlockedKey) ?? 1, _derivedUnlocked);
     _coins = prefs.getInt(_coinsKey) ?? 0;
+    _bombs = prefs.getInt(_bombsKey) ?? startBombs;
     for (final name in prefs.getStringList(_achievementsKey) ?? const <String>[]) {
       final id = AchievementId.values.where((a) => a.name == name).firstOrNull;
       if (id != null) _achievements.add(id);
@@ -96,6 +97,10 @@ class Progress extends ChangeNotifier {
   static const _ballsKey = 'style.balls';
   static const _shapeKey = 'style.shape';
   static const _skyKey = 'style.sky';
+  static const _bombsKey = 'progress.bombs';
+
+  /// Bombs a new player starts with, so they can try one straight away.
+  static const startBombs = 3;
 
   final SharedPreferences? _prefs;
 
@@ -122,6 +127,7 @@ class Progress extends ChangeNotifier {
   final _rewarded = <int>{};
   int _unlocked = 1;
   int _coins = 0;
+  int _bombs = startBombs;
   final _achievements = <AchievementId>{};
   final _owned = <String>{};
   Cosmetic _balls = Cosmetics.defaultBalls;
@@ -171,6 +177,7 @@ class Progress extends ChangeNotifier {
       _coins += coins;
       if (contents != null) {
         _coins += contents.coins;
+        _bombs += contents.bombs;
         final cosmetic = contents.cosmetic;
         if (cosmetic != null) {
           if (owns(cosmetic)) {
@@ -204,6 +211,38 @@ class Progress extends ChangeNotifier {
       duplicateCosmetic: duplicate,
       achievements: achievements,
     );
+  }
+
+  // --- Bombs ---------------------------------------------------------------
+
+  /// Bombs the player has to drop (any mode).
+  int get bombs => _bombs;
+
+  /// Uses one bomb. Returns false if there are none.
+  bool useBomb() {
+    if (_bombs <= 0) return false;
+    _bombs--;
+    _save();
+    notifyListeners();
+    return true;
+  }
+
+  /// A big moment earned bombs (a long chain).
+  void earnBombs(int count) {
+    if (count <= 0) return;
+    _bombs += count;
+    _save();
+    notifyListeners();
+  }
+
+  /// Buys [pack] bombs. Returns false if the player can't afford it.
+  bool buyBombs(BombPack pack) {
+    if (_coins < pack.price) return false;
+    _coins -= pack.price;
+    _bombs += pack.bombs;
+    _save();
+    notifyListeners();
+    return true;
   }
 
   // --- Coins and achievements ----------------------------------------------
@@ -257,10 +296,10 @@ class Progress extends ChangeNotifier {
   Cosmetic get shape => _shape;
   Cosmetic get sky => _sky;
   Cosmetic selected(CosmeticKind kind) => switch (kind) {
-        CosmeticKind.balls => _balls,
-        CosmeticKind.shape => _shape,
-        CosmeticKind.sky => _sky,
-      };
+    CosmeticKind.balls => _balls,
+    CosmeticKind.shape => _shape,
+    CosmeticKind.sky => _sky,
+  };
 
   /// Unlocks a coin cosmetic. Returns false if it isn't for sale, is
   /// already owned, or the player can't afford it.
@@ -297,6 +336,7 @@ class Progress extends ChangeNotifier {
     prefs.setStringList(_rewardedKey, [for (final l in _rewarded) '$l']);
     prefs.setInt(_unlockedKey, _unlocked);
     prefs.setInt(_coinsKey, _coins);
+    prefs.setInt(_bombsKey, _bombs);
     prefs.setStringList(_achievementsKey, [for (final a in _achievements) a.name]);
     prefs.setStringList(_ownedKey, _owned.toList());
     prefs.setString(_ballsKey, _balls.id);

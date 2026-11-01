@@ -105,16 +105,19 @@ void main() {
 
     test('total coins match everything the campaign promises', () {
       final p = Progress.memory();
-      clearUpTo(p, 30);
+      clearUpTo(p, Campaign.count);
       var expected = 0;
-      for (var level = 1; level <= 30; level++) {
+      var bombs = Progress.startBombs;
+      for (var level = 1; level <= Campaign.count; level++) {
         final r = LevelRewards.forLevel(level);
         expected += r.coins + (r.contents?.coins ?? 0);
+        bombs += r.contents?.bombs ?? 0;
       }
       for (final a in Achievements.all) {
         if (a.target != null) expected += a.coins;
       }
       expect(p.coins, expected);
+      expect(p.bombs, bombs, reason: 'every gift adds its bombs');
     });
   });
 

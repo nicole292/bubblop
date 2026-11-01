@@ -28,8 +28,23 @@ Status: draft spec for the first prototype. Every number here lives in
 4. If there are none, the move ends.
 5. Pop all of those groups at once.
 6. Every shell orthogonally adjacent to a popped orb cracks and becomes a normal orb of its colour.
-7. Apply gravity: everything (orbs and shells) falls straight down.
-8. k = k + 1 and go back to step 3.
+7. Every **bomb** orthogonally adjacent to a popped orb goes off: it clears every cell in
+   the 3×3 square around it (orbs, shells and stones alike). A bomb caught in a blast goes
+   off in turn.
+8. Apply gravity: everything falls straight down.
+9. k = k + 1 and go back to step 3.
+
+## Bombs
+- **Rising bombs:** with `bombEvery` = n, every nth rising row carries one bomb in place
+  of a shell (Classic: every 5th row; the *Bomb rows* and *Bomb wall* levels). Off, the
+  rows are dealt exactly as before (the generator is not touched).
+- **The player's bombs** (app): a supply kept with the coins. Tap the bomb button, then a
+  column: the bomb goes off where it would land (on the top cell of a full column),
+  clearing that 3×3 square, then everything falls and chains as usual (`Game.dropBomb`).
+  It counts as a drop but leaves the ball queue alone. Its own blast is chain step 1
+  with no groups; pops it causes are steps 2, 3…, and only steps with pops count as a chain.
+- Earned: 3 to start, 1 in every gift box, 3 in every special gift, 1 for a ×4 chain.
+  Sold for coins in the Style screen: 1 for 40, 5 for 160.
 
 ## Pressure (shells)
 - A countdown starts at 9 pips. Every drop ticks it by 1.
@@ -50,6 +65,7 @@ Status: draft spec for the first prototype. Every number here lives in
 - Chain step k multiplies everything popped in that step by **k²**.
 - Several colours popping in the same step: +50% for each extra colour (applied before k²).
 - Cracked shell: 5 × k².
+- Each cell a bomb clears (not the bomb itself): 10 × k².
 - Board fully cleared after a move: +1000 × level.
 
 ## Levels (in-round difficulty)
@@ -58,7 +74,7 @@ Status: draft spec for the first prototype. Every number here lives in
 - In the campaign the same thing happens, but the banner says "Speed up!" so it is not
   confused with the campaign level number.
 
-## Campaign (30 levels)
+## Campaign (40 levels)
 Defined in `packages/pop_core/lib/src/levels.dart`; same rules as Endless, plus a few
 per-level twists.
 - Each level has a **fixed deal** (seed): every attempt gets the same balls and rows.
@@ -66,18 +82,25 @@ per-level twists.
   - **Score** N points (the round's score),
   - **Pop** N balls (balls popped in groups; cracked shells don't count),
   - **Chain** ×N (a chain of N steps from one drop),
-  - **Crack** N shells (shells cracked open next to a pop).
+  - **Crack** N shells (shells cracked open next to a pop, or blasted),
+  - **Blast** N bombs (bombs that rose with the rows going off; the player's own bombs
+    don't count). Blasted balls also count towards **Pop**.
 - Some levels have a **drop limit** ("in 45 drops"): the round ends when it is used up
   (levels 6, 12, 16, 17, 18, 29).
 - Some levels have a **setup** twist, shown on the level card:
   - **Shell wall**: starts with 3 rows of shells and 1 open row (levels 8, 13, 19, 22, 23, 27),
   - **Three colours**: only 3 colours all round, for long chains (levels 10, 17, 25),
-  - **Fast rows**: the row countdown starts at 6 instead of 9 (levels 14, 20, 26, 30).
+  - **Fast rows**: the row countdown starts at 6 instead of 9 (levels 14, 20, 26, 30),
+  - **Bomb rows**: every other rising row carries a bomb (levels 31, 32, 35, 37, 40),
+  - **Bomb wall**: 3 rows to start, each with a bomb, and a bomb in every row after
+    (levels 33, 36, 39),
+  - **Stone rows**: grey stones rise instead of shells (levels 34, 38).
 - The level is **won the moment its goals are met** (after that move plays out), even if
   the same move would also have ended the round. A round that ends first is a loss and
   records nothing.
 - Levels 1–20 have one goal (score, pop, chain and crack are each introduced alone, small
-  targets first); 21–30 raise the targets and combine two familiar goals.
+  targets first); 21–30 raise the targets and combine two familiar goals; 31–40 bring
+  bombs (Blast is introduced alone in level 31) and stones.
 - Targets and seeds were set with `dart run tool/levels.dart` (a greedy bot that never plans
   chains): early levels are won by the bot ~95–100% of the time, later ones 15–85%. A
   winning move list for every level is in `test/level_solutions.dart`, and
@@ -85,14 +108,26 @@ per-level twists.
 - Level 1 plays on the tutorial board for a player who hasn't done the tutorial.
 
 ## Rewards (app, cosmetic only)
-- First clear of a level: 10 coins (levels 1–9), 15 (10–19), 20 (20–30). Replays pay
+- First clear of a level: 10 coins (levels 1–9), 15 (10–19), 20 (20–29), 25 (30–40). Replays pay
   nothing more and only keep the best score.
-- Gift box after levels 3, 6, 9, 12, 15, 18, 21, 24, 27: 30–75 coins (fixed, shown).
-- Special gift after 10, 20, 30: 100 coins plus Candy balls / Sunset sky / Twilight sky.
+- Gift box after every third level (3, 6 … 39, except the special ones): 30–120 coins and
+  1 bomb (fixed, shown).
+- Special gift after 10, 20, 30, 40: 100 coins and 3 bombs plus Candy balls / Sunset sky /
+  Twilight sky / Cherries.
 - Achievements (each once): First win 20, Chain reaction 20, Complete 5 levels 40,
-  Complete 10 levels 60, Personal best (Classic) 30, All 30 levels 250 coins.
+  Complete 10 levels 60, Personal best (Classic) 30, All 40 levels 250 coins.
 - Coins unlock Fruit (200), Ocean (300), Neon (400) and Galaxy (500) balls, the Jelly (150),
-  Hearts (250), Stars (300) and Flowers (350) shapes, and the Mint sky (200). No purchases.
+  Hearts (250), Stars (300) and Flowers (350) shapes, the 3D shapes (Animals: Kitties,
+  Bunnies 400, Bears, Frogs 450; Treats: Donuts, Macarons 500, Cupcakes 550; Space: Moons
+  600, Planets 650, Gems 750; Fruits: Apples 400, Strawberries 450; Cherries are the
+  level 40 gift), the Mint sky (200) and bombs. No real-money purchases.
+- Each ball set has its own surface: Classic gloss, Candy sugar sparkles, Fruit dewdrops,
+  Ocean pearl, Neon glow, Galaxy stars.
+- 3D shapes are rendered in Blender (`tools/blender/make_pieces.py`, then
+  `split_layers.py`) as layers the game tints with each ball colour.
+- Faces (on by default, switch in the pause menu): balls blink and watch the aim, get
+  excited before popping, cheer after a chain, look scared near the top or beside an
+  aimed bomb, sleep inside shells and look sad when a round is lost.
   Jewel balls were retired in 1.3.0; anyone who owned them got their 250 coins back.
 - Theme: Auto (follows the phone), Light or Dark, in the pause menu and the Style screen.
 - Everything is saved on the device the moment it is earned (`app/lib/progress/`).

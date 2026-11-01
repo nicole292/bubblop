@@ -7,6 +7,7 @@ import 'package:pop_core/pop_core.dart';
 import '../render/orb_sprites.dart';
 import 'board_layout.dart';
 import 'dev_options.dart';
+import 'faces.dart';
 import 'orb_painter.dart';
 import 'palette.dart';
 import 'pop_game.dart';
@@ -70,10 +71,10 @@ class BoardComponent extends Component {
       _paintDanger(canvas, layout, board);
     }
 
-    // Aim: a soft lane of the held ball's colour.
+    // Aim: a soft lane of the held ball's colour (fiery for a bomb).
     if (aim != null) {
       final lane = layout.lane(aim).deflate(cell * 0.06);
-      final color = Palette.balls[rules.currentColor];
+      final color = game.bombArmed ? const Color(0xFFFF8A1A) : Palette.balls[rules.currentColor];
       _fill.shader = Gradient.linear(lane.topCenter, lane.bottomCenter, [
         color.withValues(alpha: 0.22),
         color.withValues(alpha: 0.08),
@@ -94,7 +95,20 @@ class BoardComponent extends Component {
     // Landing guide: a faint ghost ball inside a dashed-feeling ring. Hidden
     // while a move is still animating: the rules board is already ahead of
     // the picture then, so the ring would float above the settling balls.
-    if (aim != null && game.phases.isIdle) {
+    if (aim != null && game.phases.isIdle && game.bombArmed) {
+      // The square the bomb will clear.
+      final row = math.min(board.height(aim), layout.rows - 1);
+      final pulse = 0.6 + 0.4 * math.sin(time * 8);
+      final a = layout.center(aim - 1.5, row + 1.5), b = layout.center(aim + 1.5, row - 1.5);
+      final square = Rect.fromPoints(a, b).intersect(layout.rect.inflate(cell * 0.04));
+      _fill.color = const Color(0xFFFF8A1A).withValues(alpha: 0.14 * pulse);
+      canvas.drawRRect(RRect.fromRectAndRadius(square, Radius.circular(cell * 0.3)), _fill);
+      _stroke
+        ..strokeWidth = cell * 0.05
+        ..color = const Color(0xFFFF8A1A).withValues(alpha: 0.8 * pulse);
+      canvas.drawRRect(RRect.fromRectAndRadius(square, Radius.circular(cell * 0.3)), _stroke);
+      sprites.draw(canvas, sprites.bomb, layout.center(aim.toDouble(), row.toDouble()), alpha: 0.5);
+    } else if (aim != null && game.phases.isIdle) {
       final row = rules.landingRow(aim);
       if (row != null) {
         final color = Palette.balls[rules.currentColor];
@@ -109,27 +123,59 @@ class BoardComponent extends Component {
     }
 
     final scene = game.scene;
+    final faces = game.settings.faces;
     final centers = <VisualOrb, Offset>{};
+    final moods = <VisualOrb, Mood?>{};
     for (final orb in scene.orbs) {
       var c = layout.center(orb.col + orb.dx, orb.row + orb.dy);
       if (scene.shakeTime > 0 && orb.col.round() == scene.shakeColumn) {
         final t = scene.shakeTime / Timings.shake;
         c = c.translate(math.sin(t * math.pi * 6) * cell * 0.08 * t, 0);
       }
+      final mood = faces ? _moodOf(orb, board, aim) : null;
+      // Happy balls hop; scared ones tremble.
+      if (mood == Mood.happy) {
+        c = c.translate(0, -(math.sin(time * 11 + orb.seed) * 0.5 + 0.5) * cell * 0.06 * math.min(1, game.cheer));
+      } else if (mood == Mood.scared) {
+        c = c.translate(math.sin(time * 45 + orb.seed) * cell * 0.012, 0);
+      }
       centers[orb] = c;
+      moods[orb] = mood;
     }
     if (!DevOptions.skip('orbs')) {
       for (final e in centers.entries) {
         paintOrbShadow(canvas, sprites, e.value, e.key);
       }
       for (final e in centers.entries) {
-        paintOrb(canvas, sprites, e.value, e.key);
+        final orb = e.key;
+        // Idle eyes follow the aim, or glance up at where the next ball comes from.
+        final look = aim == null
+            ? Offset(math.sin(time * 0.6 + orb.seed) * 0.6, -0.4)
+            : Offset(((aim - orb.col) * 0.6).clamp(-1.0, 1.0), -0.6);
+        paintOrb(canvas, sprites, e.value, orb, mood: moods[orb], look: look, time: time, shape: Palette.shape);
       }
     }
     canvas.restore();
 
     if (!DevOptions.skip('fx')) game.effects.render(canvas);
     canvas.restore();
+  }
+
+  /// How [orb] feels: sad after a lost round, excited just before it pops,
+  /// happy after a chain, scared near the top or beside an aimed bomb,
+  /// otherwise idle. Shells sleep (orb_painter.dart).
+  Mood _moodOf(VisualOrb orb, Board board, int? aim) {
+    if (!orb.cell.isOrb && orb.cell.kind != CellKind.shell) return Mood.idle;
+    if (game.sad) return Mood.sad;
+    if (orb.glow > 0) return Mood.excited;
+    if (game.cheer > 0) return Mood.happy;
+    final col = orb.col.round();
+    if (col >= 0 && col < board.columns && board.height(col) >= board.rows - 2) return Mood.scared;
+    if (game.bombArmed && aim != null && (col - aim).abs() <= 1) {
+      final row = math.min(board.height(aim), board.rows - 1);
+      if ((orb.row.round() - row).abs() <= 1) return Mood.scared;
+    }
+    return Mood.idle;
   }
 
   /// The board's border lights up in the colour of a pop, stronger in chains.
@@ -199,7 +245,7 @@ class BoardComponent extends Component {
       final at = Offset(layout.center(c.toDouble(), 0).dx, y);
       final bob = math.sin(game.time * 1.8 + c * 0.9) * cell * 0.02 - lift;
       final orb = VisualOrb(row[c], c.toDouble(), 0)..scale = 0.62;
-      paintOrb(canvas, sprites, at.translate(0, bob), orb);
+      paintOrb(canvas, sprites, at.translate(0, bob), orb, time: game.time);
     }
   }
 

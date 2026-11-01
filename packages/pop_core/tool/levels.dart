@@ -26,10 +26,13 @@ const attempts = 80;
   final chain3 = level.goals.any((g) => g.kind == GoalKind.chain && g.target >= 3);
   final chain4 = level.goals.any((g) => g.kind == GoalKind.chain && g.target >= 4);
   if (n <= 3) return (0.95, 1.0);
+  // The bot never aims at bombs, so it sets them off only by chance.
+  if (level.goals.any((g) => g.kind == GoalKind.blast)) return (0.2, 0.9);
   if (chain4) return (0.04, 0.6);
   if (chain3) return n <= 15 ? (0.25, 0.9) : (0.15, 0.8);
   if (n <= 9) return (0.8, 1.0);
   if (n <= 20) return (0.55, 0.95);
+  if (n > 30) return (0.3, 0.85);
   return (0.35, 0.85);
 }
 

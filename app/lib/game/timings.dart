@@ -8,6 +8,10 @@ abstract final class Timings {
   static const highlight = 0.100;
   static const pop = 0.150;
   static const gravity = 0.150;
+
+  /// A bomb: the fuse fizzes for [fuse], then the blast clears its square.
+  static const fuse = 0.180;
+  static const blast = 0.220;
   static const rowRise = 0.250;
   static const shake = 0.200;
   static const gameOverDelay = 0.300;

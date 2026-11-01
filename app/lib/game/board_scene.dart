@@ -11,8 +11,7 @@ import 'visual_orb.dart';
 /// that the rules produce, so once every phase has finished it matches the
 /// rules board exactly (checked in test/board_scene_test.dart).
 class BoardScene {
-  BoardScene(this.columns, this.rows)
-      : _grid = List<VisualOrb?>.filled(columns * rows, null);
+  BoardScene(this.columns, this.rows) : _grid = List<VisualOrb?>.filled(columns * rows, null);
 
   final int columns;
   final int rows;
@@ -31,6 +30,9 @@ class BoardScene {
   /// [onStepPopped] fires as a chain step's groups burst.
   void Function(ChainStep step)? onStepPopped;
   void Function(CellPos pos, Cell cell)? onCracked;
+
+  /// A bomb goes off ([Blast.center]); fires once per bomb, in order.
+  void Function(Blast blast)? onBlast;
   void Function(int column, int row)? onLanded;
   void Function()? onRose;
   void Function(int level)? onLevelUp;
@@ -42,7 +44,11 @@ class BoardScene {
   int? shakeColumn;
   double shakeTime = 0;
 
-  Iterable<VisualOrb> get orbs => _grid.whereType<VisualOrb>();
+  /// A dropped bomb on its way down or fizzing on top of a full column: drawn,
+  /// but not part of the board (the rules never place it).
+  final _loose = <VisualOrb>[];
+
+  Iterable<VisualOrb> get orbs => [..._grid.whereType<VisualOrb>(), ..._loose];
 
   VisualOrb? _at(int col, int row) => _grid[row * columns + col];
   void _put(int col, int row, VisualOrb? orb) => _grid[row * columns + col] = orb;
@@ -83,25 +89,30 @@ class BoardScene {
   }
 
   List<Phase> phasesFor(GameEvent event) => switch (event) {
-        OrbDropped() => [_drop(event)],
-        ChainStep() => _chain(event),
-        RowRose() => [_rise(event)],
-        BoardCleared(:final bonus) => [
-            Phase(0, onStart: () {
-              onBanner?.call('Board clear! +$bonus');
-              onPoints?.call(bonus);
-            }),
-          ],
-        LevelUp(:final level) => [
-            Phase(0, onStart: () {
-              onBanner?.call(levelUpText(level));
-              onLevelUp?.call(level);
-            }),
-          ],
-        GameOver() => [
-            Phase(Timings.gameOverDelay, onEnd: () => onGameOver?.call()),
-          ],
-      };
+    OrbDropped() => [_drop(event)],
+    BombDropped() => [_dropBomb(event)],
+    ChainStep() => _chain(event),
+    RowRose() => [_rise(event)],
+    BoardCleared(:final bonus) => [
+      Phase(
+        0,
+        onStart: () {
+          onBanner?.call('Board clear! +$bonus');
+          onPoints?.call(bonus);
+        },
+      ),
+    ],
+    LevelUp(:final level) => [
+      Phase(
+        0,
+        onStart: () {
+          onBanner?.call(levelUpText(level));
+          onLevelUp?.call(level);
+        },
+      ),
+    ],
+    GameOver() => [Phase(Timings.gameOverDelay, onEnd: () => onGameOver?.call())],
+  };
 
   Phase _drop(OrbDropped e) {
     final startRow = rows + 0.2;
@@ -120,7 +131,86 @@ class BoardScene {
     );
   }
 
+  Phase _dropBomb(BombDropped e) {
+    final startRow = rows + 0.2;
+    late VisualOrb bomb;
+    return Phase(
+      Timings.drop(startRow - e.row),
+      onStart: () {
+        bomb = VisualOrb(const Cell.bomb(), e.column.toDouble(), startRow);
+        _loose.add(bomb);
+      },
+      // A full column: the bomb lands on top of its highest ball.
+      onUpdate: (t) =>
+          bomb.row = _lerp(startRow, e.row + (_at(e.column, e.row) == null ? 0.0 : 0.55), Curves.easeIn.transform(t)),
+      onEnd: () {
+        bomb.squash = Timings.squash;
+        onLanded?.call(e.column, e.row);
+      },
+    );
+  }
+
+  /// Bombs going off, one after another as they set each other off: each
+  /// fizzes and swells, then everything in its square bursts.
+  List<Phase> _blasts(ChainStep e, double f) {
+    return [
+      for (final blast in e.blasts)
+        ...() {
+          var hit = <VisualOrb>[];
+          VisualOrb? bomb;
+          return [
+            Phase(
+              Timings.fuse * f,
+              onStart: () {
+                final c = blast.center;
+                bomb = _at(c.col, c.row);
+                if (bomb == null || !bomb!.cell.isBomb) {
+                  bomb = _loose.isEmpty ? null : _loose.first;
+                }
+                hit = [for (final p in blast.cleared.keys) ?_at(p.col, p.row)];
+              },
+              onUpdate: (t) {
+                final b = bomb;
+                if (b == null) return;
+                b.scale = 1 + 0.25 * Curves.easeIn.transform(t);
+                b.glow = t;
+              },
+            ),
+            Phase(
+              Timings.blast * f,
+              onStart: () => onBlast?.call(blast),
+              onUpdate: (t) {
+                for (final o in {...hit, ?bomb}) {
+                  o.scale = 1 + 0.35 * t;
+                  o.alpha = (1 - t * 1.8).clamp(0.0, 1.0);
+                }
+              },
+              onEnd: () {
+                for (final p in blast.cleared.keys) {
+                  _put(p.col, p.row, null);
+                }
+                _loose.remove(bomb);
+              },
+            ),
+          ];
+        }(),
+    ];
+  }
+
   List<Phase> _chain(ChainStep e) {
+    if (e.groups.isEmpty) {
+      // A dropped bomb's own blast: no group to pop first.
+      final f = Timings.chainFactor(e.step);
+      return [
+        ..._blasts(e, f),
+        Phase(0, onStart: () => onPoints?.call(e.points)),
+        if (e.falls.isNotEmpty) _fall(e.falls, Timings.gravity * f),
+      ];
+    }
+    return [..._popPhases(e), if (e.falls.isNotEmpty) _fall(e.falls, Timings.gravity * Timings.chainFactor(e.step))];
+  }
+
+  List<Phase> _popPhases(ChainStep e) {
     final f = Timings.chainFactor(e.step);
     final popped = [for (final g in e.groups) ...g.cells];
     var popOrbs = <VisualOrb>[];
@@ -219,7 +309,7 @@ class BoardScene {
           onPoints?.call(e.points);
         },
       ),
-      if (e.falls.isNotEmpty) _fall(e.falls, Timings.gravity * f),
+      ..._blasts(e, f),
     ];
   }
 

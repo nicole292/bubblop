@@ -54,10 +54,14 @@ abstract final class Palette {
   /// The outline of every piece, from the chosen shape set ([apply]).
   static PieceShape shape = PieceShape.ball;
 
+  /// The surface of the chosen ball set ([apply]).
+  static Finish finish = Finish.gloss;
+
   /// Switches to the player's chosen ball set, shape and sky.
   static void apply({required Cosmetic balls, required Cosmetic shape, required Cosmetic sky}) {
     Palette.balls = balls.colors;
     Palette.shape = shape.shape;
+    Palette.finish = balls.finish;
     _skyTop = sky.colors[0];
     _skyMid = sky.colors[1];
     _skyBottom = sky.colors[2];

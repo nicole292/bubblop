@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../game/hud_state.dart';
 import '../game/palette.dart';
 import '../render/orb_sprites.dart';
+import 'bomb_icon.dart';
 import 'goal_icon.dart';
 import 'orb_icon.dart';
 import 'type.dart';
@@ -15,11 +16,21 @@ import 'type.dart';
 /// Laid out at [designHeight] and scaled to fit the header, so it keeps its
 /// proportions on every screen.
 class HudBar extends StatelessWidget {
-  const HudBar({super.key, required this.hud, required this.sprites, required this.onPause, this.showNext = true});
+  const HudBar({
+    super.key,
+    required this.hud,
+    required this.sprites,
+    required this.onPause,
+    this.onBomb,
+    this.showNext = true,
+  });
 
   final HudState hud;
   final OrbSprites? sprites;
   final VoidCallback onPause;
+
+  /// Arms (or disarms) a bomb for the next drop. Null hides the button.
+  final VoidCallback? onBomb;
 
   /// The next balls usually float just above the stack instead; they come
   /// up here only when the stack is too tall to leave them room.
@@ -56,6 +67,10 @@ class HudBar extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (onBomb != null) ...[
+                    _BombButton(count: hud.bombs, armed: hud.bombArmed, onPressed: onBomb!),
+                    const SizedBox(width: 6),
+                  ],
                   if (showNext) NextBalls(sprites: sprites, queue: hud.queue),
                 ],
               ),
@@ -63,6 +78,65 @@ class HudBar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// The player's bombs: tap to make the next drop a bomb (it glows while
+/// armed), tap again to put it back. Greyed out with none left.
+class _BombButton extends StatelessWidget {
+  const _BombButton({required this.count, required this.armed, required this.onPressed});
+  final int count;
+  final bool armed;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: armed ? 'Bomb ready: tap a column' : 'Use a bomb',
+      child: GestureDetector(
+        onTap: onPressed,
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: armed ? const Color(0xFFFFE2B8) : const Color(0x40FF8A1A),
+                  border: Border.all(color: armed ? const Color(0xFFFF8A1A) : Colors.transparent, width: 2.5),
+                  boxShadow: armed
+                      ? const [BoxShadow(color: Color(0x99FF8A1A), blurRadius: 14, spreadRadius: 1)]
+                      : null,
+                ),
+                child: Opacity(
+                  opacity: count > 0 || armed ? 1 : 0.4,
+                  child: const Center(child: BombIcon(size: 30)),
+                ),
+              ),
+              Positioned(
+                right: -2,
+                top: -2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: count > 0 ? Palette.danger : Palette.inkSoft,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Palette.card, width: 2),
+                  ),
+                  child: Text('$count', style: PopType.of(12, 1000, color: Colors.white, numbers: true)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -82,11 +156,7 @@ class _PauseButton extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onPressed,
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(Icons.pause_rounded, size: 24, color: Palette.inkSoft),
-          ),
+          child: SizedBox(width: 44, height: 44, child: Icon(Icons.pause_rounded, size: 24, color: Palette.inkSoft)),
         ),
       ),
     );
@@ -278,9 +348,7 @@ class NextBalls extends StatelessWidget {
       decoration: BoxDecoration(
         color: floating ? Palette.card.withValues(alpha: 0.92) : Palette.well,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: floating
-            ? [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: Offset(0, 5))]
-            : null,
+        boxShadow: floating ? [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: Offset(0, 5))] : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

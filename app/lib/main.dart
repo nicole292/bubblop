@@ -6,6 +6,7 @@ import 'game/dev_options.dart';
 import 'game/palette.dart';
 import 'progress/cosmetics.dart';
 import 'progress/progress.dart';
+import 'render/piece_art.dart';
 import 'services/haptics.dart';
 import 'services/settings.dart';
 import 'services/sfx.dart';
@@ -30,6 +31,7 @@ Future<void> main() async {
       progress.select(cosmetic);
     }
   }
+  await PieceArt.load();
   // The chosen ball set, shape and sky style everything from the first frame.
   Palette.apply(balls: progress.balls, shape: progress.shape, sky: progress.sky);
   final sfx = Sfx(settings);

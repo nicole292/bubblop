@@ -30,6 +30,7 @@ class RulesConfig {
     this.levelsPerPressureStep = 2,
     this.startRows = 1,
     this.startOpenRows = 2,
+    this.bombEvery = 0,
   });
 
   final int columns;
@@ -67,6 +68,9 @@ class RulesConfig {
   /// no group already complete, so early drops can pop and crack shells.
   final int startOpenRows;
 
+  /// Every [bombEvery]th rising row carries a bomb. 0 turns it off.
+  final int bombEvery;
+
   /// The countdown shortens by one every [levelsPerPressureStep] levels.
   final int levelsPerPressureStep;
 
@@ -88,6 +92,7 @@ class RulesConfig {
     int? extraColorLevel,
     int? startRows,
     int? startOpenRows,
+    int? bombEvery,
   }) {
     return RulesConfig(
       columns: columns,
@@ -105,6 +110,7 @@ class RulesConfig {
       levelsPerPressureStep: levelsPerPressureStep ?? this.levelsPerPressureStep,
       startRows: startRows ?? this.startRows,
       startOpenRows: startOpenRows ?? this.startOpenRows,
+      bombEvery: bombEvery ?? this.bombEvery,
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -33,7 +34,7 @@ void main() {
         for (var j = i + 1; j < 5; j++) {
           expect(
             difference(set.colors[i], set.colors[j]),
-            greaterThan(35),
+            greaterThan(45),
             reason: '${set.name}: colours $i and $j look too alike',
           );
         }
@@ -82,6 +83,20 @@ void main() {
         expect(path, isNull);
         continue;
       }
+      if (set.shape.isArt) {
+        // A Blender piece: its layers must be in the assets (the renders keep
+        // within the same frame as a ball, tools/blender/make_pieces.py).
+        expect(path, isNull, reason: set.name);
+        for (final layer in ['body', 'gloss']) {
+          expect(
+            File('assets/pieces/${set.shape.name}_$layer.png').existsSync(),
+            isTrue,
+            reason: '${set.name}: $layer layer missing',
+          );
+        }
+        expect(set.family, isNotNull, reason: '${set.name} needs a family in the Style screen');
+        continue;
+      }
       final bounds = path!.getBounds();
       expect(bounds.width, inInclusiveRange(r * 1.7, r * 2.12), reason: set.name);
       expect(bounds.height, inInclusiveRange(r * 1.7, r * 2.12), reason: set.name);
@@ -99,6 +114,15 @@ void main() {
         }
       }
     }
+  });
+
+  test('every 3D piece has a cosmetic, and every ball set its own finish', () {
+    final shapes = Cosmetics.ofKind(CosmeticKind.shape).map((c) => c.shape).toSet();
+    for (final shape in PieceShape.values) {
+      expect(shapes, contains(shape), reason: '$shape can never be chosen');
+    }
+    final finishes = ballSets.map((c) => c.finish).toSet();
+    expect(finishes.length, ballSets.length);
   });
 
   test('ids are unique and every id can be looked up', () {

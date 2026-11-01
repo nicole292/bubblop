@@ -27,6 +27,8 @@ flutter:
   assets:
     - assets/sfx/
     - assets/music/
+    # 3D pieces and the bomb, rendered by tools/blender/make_pieces.py.
+    - assets/pieces/
   shaders:
     - shaders/ball.frag
   fonts:

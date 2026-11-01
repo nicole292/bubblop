@@ -18,6 +18,7 @@ class Settings extends ChangeNotifier {
   static const _tutorialKey = 'tutorialDone';
   static const _gamesKey = 'gamesPlayed';
   static const _themeKey = 'theme';
+  static const _facesKey = 'faces';
 
   final SharedPreferences? _prefs;
 
@@ -42,6 +43,7 @@ class Settings extends ChangeNotifier {
   late int _bestLevel = _prefs?.getInt(_bestLevelKey) ?? 0;
   late bool _tutorialDone = _prefs?.getBool(_tutorialKey) ?? false;
   late int _gamesPlayed = _prefs?.getInt(_gamesKey) ?? 0;
+  late bool _faces = _prefs?.getBool(_facesKey) ?? true;
   late ThemeChoice _theme =
       ThemeChoice.values.where((t) => t.name == _prefs?.getString(_themeKey)).firstOrNull ?? ThemeChoice.auto;
 
@@ -57,6 +59,15 @@ class Settings extends ChangeNotifier {
   bool get tutorialDone => _tutorialDone;
   int get gamesPlayed => _gamesPlayed;
   ThemeChoice get theme => _theme;
+
+  /// Cute faces on the balls that react to the game.
+  bool get faces => _faces;
+
+  set faces(bool value) {
+    _faces = value;
+    _prefs?.setBool(_facesKey, value);
+    notifyListeners();
+  }
 
   set sound(bool value) {
     _sound = value;

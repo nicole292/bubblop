@@ -67,6 +67,12 @@ class PauseMenu extends StatelessWidget {
                     value: settings.haptics,
                     onChanged: (v) => settings.haptics = v,
                   ),
+                  ToggleRow(
+                    icon: Icons.emoji_emotions_rounded,
+                    label: 'Faces',
+                    value: settings.faces,
+                    onChanged: (v) => settings.faces = v,
+                  ),
                   ThemeRow(value: settings.theme, onChanged: (v) => settings.theme = v),
                   const SizedBox(height: 10),
                   SoftButton(label: 'Restart', icon: Icons.refresh_rounded, onPressed: onRestart),

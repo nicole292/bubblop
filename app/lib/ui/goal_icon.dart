@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pop_core/pop_core.dart';
 
 import '../game/palette.dart';
+import 'bomb_icon.dart';
 
 /// One icon per goal type, used on the level card, the header and results:
 /// a star for points, a ball for popping, linked rings for a chain, bubbles
@@ -17,6 +18,7 @@ class GoalIcon extends StatelessWidget {
         GoalKind.pop => Icon(Icons.circle, size: size * 0.82, color: Palette.balls[3]),
         GoalKind.chain => Icon(Icons.link_rounded, size: size, color: Palette.accent),
         GoalKind.crack => Icon(Icons.bubble_chart_rounded, size: size, color: Palette.balls[2]),
+        GoalKind.blast => BombIcon(size: size),
       };
 }
 

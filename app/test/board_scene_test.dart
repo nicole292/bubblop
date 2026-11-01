@@ -13,6 +13,7 @@ final seen = <String, int>{};
   required RulesConfig config,
   required double frameSeconds,
   int maxMoves = 300,
+  int bombEvery = 0,
 }) {
   final rules = Game(seed: seed, config: config);
   // Rounds start with balls on the board; the app loads them the same way.
@@ -28,12 +29,16 @@ final seen = <String, int>{};
       if (rules.board.height(c) < rules.board.height(column)) column = c;
     }
     if (!phases.isIdle) phases.speed = 3;
-    final result = rules.drop((column + move) % config.columns);
+    // Every [bombEvery]th move drops one of the player's bombs instead.
+    final MoveResult result = bombEvery > 0 && move % bombEvery == bombEvery - 1
+        ? rules.dropBomb((column + move) % config.columns)
+        : rules.drop((column + move) % config.columns);
     final events = result.accepted ? result.events : rules.drop(column).events;
     for (final e in events) {
       seen[e is ChainStep && e.step > 1 ? 'chain2+' : e.runtimeType.toString()] =
           (seen[e.runtimeType.toString()] ?? 0) + 1;
       if (e is ChainStep && e.cracked.isNotEmpty) seen['crack'] = 1;
+      if (e is ChainStep && e.blasts.any((b) => b.cleared[b.center]?.isBomb ?? false)) seen['row bomb'] = 1;
       phases.addAll(scene.phasesFor(e));
     }
     phases.update(frameSeconds);
@@ -44,7 +49,7 @@ final seen = <String, int>{};
 
 void main() {
   tearDownAll(() {
-    for (final kind in ['ChainStep', 'chain2+', 'crack', 'RowRose', 'GameOver', 'LevelUp']) {
+    for (final kind in ['ChainStep', 'chain2+', 'crack', 'RowRose', 'GameOver', 'LevelUp', 'BombDropped', 'row bomb']) {
       expect(seen.keys, contains(kind), reason: 'no game produced $kind');
     }
   });
@@ -85,8 +90,11 @@ void main() {
     double pullAt(int col) => scene.orbs.firstWhere((o) => o.col == col && o.row == 0).dx;
     expect(pullAt(1), greaterThan(0));
     expect(pullAt(4), lessThan(0));
-    expect(scene.orbs.where((o) => o.col == 0).every((o) => o.dx == 0 && o.dy == 0), isTrue,
-        reason: 'balls that are not popping stay put');
+    expect(
+      scene.orbs.where((o) => o.col == 0).every((o) => o.dx == 0 && o.dy == 0),
+      isTrue,
+      reason: 'balls that are not popping stay put',
+    );
 
     var maxPull = 0.0;
     for (var frame = 0; frame < 600 && !phases.isIdle; frame++) {
@@ -131,8 +139,7 @@ void main() {
       test('after animations finish, the scene equals the rules board', () {
         for (var seed = 1; seed <= 20; seed++) {
           final r = play(seed: seed, config: config, frameSeconds: 1000);
-          expect(r.scene.toBoard().toPicture(), r.rules.board.toPicture(),
-              reason: 'seed $seed');
+          expect(r.scene.toBoard().toPicture(), r.rules.board.toPicture(), reason: 'seed $seed');
         }
       });
 
@@ -140,8 +147,7 @@ void main() {
         for (var seed = 1; seed <= 20; seed++) {
           for (final frame in [0.0, 0.016, 0.05, 0.12]) {
             final r = play(seed: seed, config: config, frameSeconds: frame);
-            expect(r.scene.toBoard().toPicture(), r.rules.board.toPicture(),
-                reason: 'seed $seed, frame $frame');
+            expect(r.scene.toBoard().toPicture(), r.rules.board.toPicture(), reason: 'seed $seed, frame $frame');
             expect(r.points, r.rules.score, reason: 'displayed score');
             expect(r.phases.isIdle, isTrue);
           }
@@ -149,4 +155,18 @@ void main() {
       });
     });
   }
+
+  test('with bombs (rising and dropped) the scene still ends up matching the rules', () {
+    for (var seed = 1; seed <= 12; seed++) {
+      final r = play(
+        seed: seed,
+        config: const RulesConfig(bombEvery: 1),
+        frameSeconds: seed.isEven ? 0.05 : 1.0,
+        bombEvery: 7,
+      );
+      expect(r.scene.toBoard().toPicture(), r.rules.board.toPicture(), reason: 'seed $seed');
+      expect(r.points, r.rules.score, reason: 'seed $seed: displayed score');
+      expect(r.scene.orbs.every((o) => o.alpha > 0), isTrue, reason: 'no half-gone pieces left behind');
+    }
+  });
 }

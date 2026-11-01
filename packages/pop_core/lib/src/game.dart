@@ -126,11 +126,15 @@ class Game {
   /// The row the current orb would land in, or null if [column] is not legal.
   int? landingRow(int column) => canDrop(column) ? _board.height(column) : null;
 
+  /// Whether one of the player's bombs can go into [column]. Unlike a ball,
+  /// a bomb also fits a full column: it goes off on the top cell.
+  bool canBomb(int column) =>
+      !_isOver && column >= 0 && column < config.columns;
+
   MoveResult drop(int column) {
     if (!canDrop(column)) return const MoveResult.rejected();
 
     final events = <GameEvent>[];
-    var points = 0;
     _moves++;
 
     final color = _queue.removeAt(0);
@@ -139,10 +143,48 @@ class Game {
     _board.set(column, row, Cell.orb(color));
     events.add(OrbDropped(column: column, row: row, color: color));
 
-    final steps = resolveChains(_board, config);
+    return _settle(events, resolveChains(_board, config));
+  }
+
+  /// Drops one of the player's bombs into [column]. It goes off where it
+  /// lands, clearing the 3×3 square around it (bombs in range go off too),
+  /// then everything falls and chains as usual. Uses a drop like a ball, but
+  /// leaves the ball queue alone.
+  MoveResult dropBomb(int column) {
+    if (!canBomb(column)) return const MoveResult.rejected();
+
+    final events = <GameEvent>[];
+    _moves++;
+    final row = math.min(_board.height(column), config.rows - 1);
+    events.add(BombDropped(column: column, row: row));
+    final blasts = detonate(_board, [(col: column, row: row)]);
+    final falls = applyGravity(_board);
+    final steps = [
+      ChainStep(
+        step: 1,
+        groups: const [],
+        cracked: const {},
+        falls: falls,
+        points: chainStepPoints(
+            groupSizes: const [],
+            distinctColors: 0,
+            cracked: 0,
+            step: 1,
+            blasted: blastedCount(blasts)),
+        blasts: blasts,
+      ),
+      ...resolveChains(_board, config, firstStep: 2),
+    ];
+    return _settle(events, steps);
+  }
+
+  /// Scores [steps], then levels, rising rows and the end of the round, as
+  /// after every drop.
+  MoveResult _settle(List<GameEvent> events, List<ChainStep> steps) {
+    var points = 0;
     for (final step in steps) {
       points += step.points;
-      _orbsCleared += step.orbsPopped;
+      _orbsCleared += step.orbsPopped + step.orbsBlasted;
       events.add(step);
     }
 
@@ -203,16 +245,26 @@ class Game {
   }
 
   /// Rows are generated one rise ahead so [nextRow] can be shown. A level-up
-  /// therefore affects the row after the one already previewed.
+  /// therefore affects the row after the one already previewed. Every
+  /// [RulesConfig.bombEvery]th row carries one bomb.
   List<Cell> _generateRow() {
     final colorCount = config.colorsForLevel(_level);
-    return [
+    final row = [
       for (var c = 0; c < config.columns; c++)
         config.risingRowKind == RisingRowKind.shells
             ? Cell.shell(_rowRandom.nextInt(colorCount))
             : const Cell.stone(),
     ];
+    _rowsMade++;
+    // Only draws from the generator when bombs are on, so other rounds deal
+    // exactly the same rows as before.
+    if (config.bombEvery > 0 && _rowsMade % config.bombEvery == 0) {
+      row[_rowRandom.nextInt(config.columns)] = const Cell.bomb();
+    }
+    return row;
   }
+
+  int _rowsMade = 0;
 
   List<Cell> _raiseRow() {
     final newRow = _nextRow;

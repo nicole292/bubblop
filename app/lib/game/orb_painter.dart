@@ -4,7 +4,9 @@ import 'dart:ui';
 import 'package:flutter/animation.dart' show Curves;
 import 'package:pop_core/pop_core.dart';
 
+import '../progress/cosmetics.dart';
 import '../render/orb_sprites.dart';
+import 'faces.dart';
 import 'timings.dart';
 import 'visual_orb.dart';
 
@@ -18,8 +20,18 @@ final _crackLight = Paint()
   ..strokeJoin = StrokeJoin.round;
 
 /// Draws one on-screen ball from the baked sprites, applying its animation
-/// state (squash, pre-pop glow, cracks, shell reveal, pop, reveal bounce).
-void paintOrb(Canvas canvas, OrbSprites sprites, Offset center, VisualOrb orb) {
+/// state (squash, pre-pop glow, cracks, shell reveal, pop, reveal bounce),
+/// and its face when [mood] is given. Bombs fizz at the fuse ([time]).
+void paintOrb(
+  Canvas canvas,
+  OrbSprites sprites,
+  Offset center,
+  VisualOrb orb, {
+  Mood? mood,
+  Offset look = Offset.zero,
+  double time = 0,
+  PieceShape shape = PieceShape.ball,
+}) {
   if (orb.alpha <= 0 || orb.scale <= 0) return;
   final s = orb.squash / Timings.squash;
   final flash = orb.flash / Timings.revealFlash;
@@ -31,7 +43,37 @@ void paintOrb(Canvas canvas, OrbSprites sprites, Offset center, VisualOrb orb) {
   final c = center.translate(0, sprites.radius * orb.scale * 0.12 * s);
   final color = orb.cell.color;
 
+  void face(double scale, {Mood? as}) {
+    final m = as ?? mood;
+    if (m == null) return;
+    paintFace(
+      canvas,
+      c,
+      sprites.radius * scale,
+      m,
+      shape: shape,
+      look: look,
+      time: time,
+      seed: orb.seed,
+      alpha: orb.alpha,
+    );
+  }
+
   switch (orb.cell.kind) {
+    case CellKind.bomb:
+      if (orb.glow > 0) {
+        // About to blow: a hot glow swells behind it.
+        sprites.draw(canvas, sprites.halo(0), c, sx: sx * 1.2, sy: sy * 1.2, alpha: orb.alpha * orb.glow);
+      }
+      sprites.draw(canvas, sprites.bomb, c, sx: sx, sy: sy, alpha: orb.alpha);
+      _paintSpark(
+        canvas,
+        c.translate(sprites.radius * 0.42 * sx, -sprites.radius * 1.25 * sy),
+        sprites.radius,
+        time + orb.seed * 0.37,
+        orb.alpha,
+        hot: orb.glow,
+      );
     case CellKind.stone:
       sprites.draw(canvas, sprites.stone, c, sx: sx, sy: sy, alpha: orb.alpha);
     case CellKind.shell:
@@ -46,6 +88,8 @@ void paintOrb(Canvas canvas, OrbSprites sprites, Offset center, VisualOrb orb) {
         final k = 0.9 + 0.1 * Curves.easeOutBack.transform(t);
         sprites.draw(canvas, sprites.ball(color), c, sx: sx * k, sy: sy * k, alpha: orb.alpha * t);
       }
+      // Asleep under the glass until a pop frees it.
+      if (t < 0.5 && mood != null) face(sx, as: Mood.asleep);
     case CellKind.orb:
       final g = math.max(orb.glow, flash);
       if (g > 0) {
@@ -53,6 +97,38 @@ void paintOrb(Canvas canvas, OrbSprites sprites, Offset center, VisualOrb orb) {
         sprites.draw(canvas, sprites.halo(color), c, sx: sx * k, sy: sy * k, alpha: orb.alpha * g * 0.55);
       }
       sprites.draw(canvas, sprites.ball(color), c, sx: sx, sy: sy, alpha: orb.alpha);
+      face(math.min(sx, sy));
+  }
+}
+
+final _sparkPaint = Paint();
+
+/// The burning tip of a bomb's fuse: a flickering star with a few embers.
+/// [hot] (0–1) makes it flare just before the blast.
+void _paintSpark(Canvas canvas, Offset at, double r, double time, double alpha, {double hot = 0}) {
+  if (alpha <= 0) return;
+  final flicker = 0.75 + 0.25 * math.sin(time * 37) * math.sin(time * 23);
+  final size = r * (0.2 + 0.08 * flicker + 0.25 * hot);
+  _sparkPaint.shader = Gradient.radial(
+    at,
+    size * 1.6,
+    [Color.fromRGBO(255, 245, 200, alpha), Color.fromRGBO(255, 170, 40, 0.8 * alpha), const Color(0x00FF6A00)],
+    const [0.0, 0.35, 1.0],
+  );
+  canvas.drawCircle(at, size * 1.6, _sparkPaint);
+  _sparkPaint.shader = null;
+  _sparkPaint.color = Color.fromRGBO(255, 255, 240, alpha);
+  for (var i = 0; i < 4; i++) {
+    final a = time * 3 + i * math.pi / 2;
+    final ray = Offset(math.cos(a), math.sin(a)) * size * 1.1;
+    canvas.drawLine(at - ray, at + ray, _sparkPaint..strokeWidth = math.max(1.0, r * 0.05));
+  }
+  for (var i = 0; i < 3; i++) {
+    final life = (time * 1.7 + i / 3) % 1.0;
+    final a = -math.pi / 2 + (i - 1) * 0.9 + math.sin(time + i) * 0.3;
+    final p = at + Offset(math.cos(a), math.sin(a)) * r * 0.5 * life;
+    _sparkPaint.color = Color.fromRGBO(255, 190, 60, alpha * (1 - life));
+    canvas.drawCircle(p, r * 0.05 * (1 - life), _sparkPaint);
   }
 }
 

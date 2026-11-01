@@ -19,6 +19,8 @@ Path? piecePath(PieceShape shape, double r) => switch (shape) {
       PieceShape.heart => _heart(r),
       PieceShape.star => _star(r),
       PieceShape.flower => _flower(r),
+      // 3D pieces are images, not outlines (render/piece_art.dart).
+      _ => null,
     };
 
 /// Two round lobes meeting in a soft point, nudged up so it looks centred.

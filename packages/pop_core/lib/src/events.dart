@@ -28,7 +28,24 @@ class Fall {
   final Cell cell;
 }
 
-/// One round of pop → crack → gravity. [step] starts at 1.
+/// A bomb going off at [center] and everything it cleared, with what each
+/// cell held. Other bombs in range go off as their own [Blast].
+class Blast {
+  const Blast({required this.center, required this.cleared});
+  final CellPos center;
+  final Map<CellPos, Cell> cleared;
+}
+
+/// The player dropped one of their bombs; it goes off where it lands
+/// ([row] is the top cell when the column was full).
+class BombDropped extends GameEvent {
+  const BombDropped({required this.column, required this.row});
+  final int column;
+  final int row;
+}
+
+/// One round of pop → crack → blast → gravity. [step] starts at 1. A dropped
+/// bomb's own blast is step 1 with no [groups].
 class ChainStep extends GameEvent {
   const ChainStep({
     required this.step,
@@ -36,9 +53,13 @@ class ChainStep extends GameEvent {
     required this.cracked,
     required this.falls,
     required this.points,
+    this.blasts = const [],
   });
   final int step;
   final List<PoppedGroup> groups;
+
+  /// Bombs that went off this step, in the order they were set off.
+  final List<Blast> blasts;
 
   /// Shells/stones next to a popped orb, with what they were before cracking.
   final Map<CellPos, Cell> cracked;
@@ -46,6 +67,19 @@ class ChainStep extends GameEvent {
   final int points;
 
   int get orbsPopped => groups.fold(0, (sum, g) => sum + g.cells.length);
+
+  /// Balls (not shells, stones or bombs) cleared by blasts.
+  int get orbsBlasted => blasts.fold(
+      0, (sum, b) => sum + b.cleared.values.where((c) => c.isOrb).length);
+
+  /// Shells cracked open or blasted away.
+  int get shellsBroken =>
+      cracked.values.where((c) => c.kind == CellKind.shell).length +
+      blasts.fold(
+          0,
+          (sum, b) =>
+              sum +
+              b.cleared.values.where((c) => c.kind == CellKind.shell).length);
 }
 
 class BoardCleared extends GameEvent {

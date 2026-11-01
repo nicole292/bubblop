@@ -33,7 +33,7 @@ void main() {
     expect(find.bySemanticsLabel('Level 1, completed'), findsOneWidget);
     expect(find.bySemanticsLabel('Level 4'), findsOneWidget, reason: 'the next level is open');
     expect(find.bySemanticsLabel('Level 5, locked'), findsOneWidget);
-    expect(find.text('3 of 30 complete'), findsOneWidget);
+    expect(find.text('3 of 40 complete'), findsOneWidget);
 
     // A locked level does not open, and says why.
     await tester.tap(find.bySemanticsLabel('Level 5, locked'));
