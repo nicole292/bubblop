@@ -87,6 +87,7 @@ plain text).
 | iPhone 6.9" Display (1320×2868, upload in this order) | `ios-6.9in-1.png` … `ios-6.9in-7.png` |
 | iPhone 6.5" Display (1284×2778), if App Store Connect asks for 6.5" instead | `ios-6.5in-1.png` … `ios-6.5in-7.png` |
 | Other accepted sizes, if one is refused | `ios-6.5in-b-*.png` (1242×2688), `ios-6.7in-*.png` (1290×2796) |
+| Medium iPhone sizes (optional) | `ios-6.3in-*.png` (1206×2622), `ios-6.1in-*.png` (1179×2556), `ios-6.1in-b-*.png` (1170×2532) |
 
 The app is iPhone-only, so no iPad screenshots are needed. If App Store Connect asks for
 a different iPhone size first, the guide explains how to remake them in one command.
