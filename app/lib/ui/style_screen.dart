@@ -69,12 +69,9 @@ class StyleScreen extends StatelessWidget {
                       const SizedBox(height: 10),
                       _section('BALLS'),
                       for (final c in Cosmetics.ofKind(CosmeticKind.balls)) _item(context, c),
-                      // Shapes, grouped: the classic outlines, then each 3D family.
-                      for (final (family, shapes) in _shapeFamilies()) ...[
-                        const SizedBox(height: 10),
-                        _section(family),
-                        for (final c in shapes) _item(context, c),
-                      ],
+                      const SizedBox(height: 10),
+                      _section('SHAPES'),
+                      _shapeCard(context),
                       const SizedBox(height: 10),
                       _section('SKY'),
                       for (final c in Cosmetics.ofKind(CosmeticKind.sky)) _item(context, c),
@@ -95,6 +92,100 @@ class StyleScreen extends StatelessWidget {
       families.putIfAbsent((c.family ?? 'Shapes').toUpperCase(), () => []).add(c);
     }
     return [for (final e in families.entries) (e.key, e.value)];
+  }
+
+  /// Every shape in one card: a small tile per shape showing a single piece,
+  /// grouped by family (the classic outlines, then each 3D family).
+  Widget _shapeCard(BuildContext context) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+        decoration: BoxDecoration(
+          color: Palette.card,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
+        ),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            // Four tiles a row on most phones, three on narrow ones.
+            final perRow = box.maxWidth >= 340 ? 4 : 3;
+            final tile = (box.maxWidth - 8 * (perRow - 1)) / perRow;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final (family, shapes) in _shapeFamilies()) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
+                    child: Text(family, style: PopType.of(12, 900, color: Palette.inkSoft, spacing: 1.5)),
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final c in shapes) _shapeTile(context, c, tile),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
+            );
+          },
+        ),
+      );
+
+  /// The one soft colour every shape tile uses, so the tiles show the shape,
+  /// not a ball colour. Reads on both the light and the dark card.
+  static const _shapeTint = Color(0xFFB9BEDF);
+
+  /// One shape: a single piece in a neutral colour, its name, and what it
+  /// takes to get it. No tile background; the shape in use gets a ring.
+  Widget _shapeTile(BuildContext context, Cosmetic c, double width) {
+    final owned = progress.owns(c);
+    final inUse = progress.selected(c.kind) == c;
+    final unlock = c.unlock;
+    final status = inUse
+        ? Icon(Icons.check_circle_rounded, size: 18, color: Palette.success)
+        : owned
+            ? Text('Use', style: PopType.of(12, 900, color: Palette.accent))
+            : switch (unlock) {
+                CoinUnlock(:final price) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CoinIcon(size: 14),
+                      const SizedBox(width: 3),
+                      Text('$price',
+                          style: PopType.of(12, 900,
+                              color: progress.coins >= price ? Palette.ink : Palette.inkSoft, numbers: true)),
+                    ],
+                  ),
+                GiftUnlock(:final level) => Text('Lv $level gift', style: PopType.of(11, 900, color: Palette.inkSoft)),
+                _ => const SizedBox.shrink(),
+              };
+    return GestureDetector(
+      onTap: () => _tapItem(context, c),
+      child: Container(
+        width: width,
+        padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: inUse ? Palette.success : Colors.transparent, width: 2.5),
+        ),
+        child: Column(
+          children: [
+            Opacity(
+              opacity: owned ? 1 : 0.75,
+              child: GlossyBall(color: _shapeTint, size: width * 0.5, shape: c.shape),
+            ),
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(c.name, maxLines: 1, style: PopType.of(13, 900)),
+            ),
+            const SizedBox(height: 3),
+            SizedBox(height: 18, child: Center(child: status)),
+          ],
+        ),
+      ),
+    );
   }
 
   /// The player's bombs and the two packs on sale.
