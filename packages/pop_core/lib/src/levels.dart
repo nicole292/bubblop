@@ -61,7 +61,7 @@ enum LevelSetup {
   bombs('Bomb rows', 'Bombs rise with the rows'),
 
   /// Three rows to start, each with a bomb, and a bomb in every row after.
-  bombWall('Bomb wall', 'Starts with a wall full of bombs'),
+  bombWall('Bomb wall', 'Starts full of bombs'),
 
   /// Grey stones rise instead of shells: pop beside them to clear them.
   stones('Stone rows', 'Stones rise instead of shells');

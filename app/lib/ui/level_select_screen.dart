@@ -574,7 +574,8 @@ class _Twists extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: Palette.ink),
             const SizedBox(width: 5),
-            Text(text, style: PopType.of(14, 900)),
+            // Wraps rather than overflowing the card with large text.
+            Flexible(child: Text(text, style: PopType.of(14, 900), textAlign: TextAlign.center)),
           ],
         ),
       );

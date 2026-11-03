@@ -23,11 +23,12 @@ ACCENT = (0x7B, 0x5C, 0xFF)
 # (raw screenshot, caption): only things the game really does.
 SHOTS = [
     ('chain', 'Huge chain reactions!'),
-    ('map', '30 levels to beat'),
-    ('level_card', 'Clear goals, fun twists'),
-    ('gift', 'Win gifts and new styles'),
-    ('style', 'Unlock new shapes, colours and skies'),
-    ('chain_hearts', 'Play with cute shapes'),
+    ('bomb', 'Charge the bomb and blast!'),
+    ('map', '40 levels to beat'),
+    ('level_card', 'Every level plays its own way'),
+    ('shapes', 'Unlock cute 3D shapes'),
+    ('dark', 'Starry dark mode'),
+    ('gift', 'Win coins and gift boxes'),
     ('home', 'Plays offline, no ads'),
 ]
 
@@ -93,6 +94,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for i, (shot, caption) in enumerate(SHOTS, 1):
         compose(shot, caption, 1320, 2868, f'ios-6.9in-{i}')       # App Store, 6.9" iPhone
+        compose(shot, caption, 1284, 2778, f'ios-6.5in-{i}')       # App Store, 6.5" iPhone
         compose(shot, caption, 1080, 1920, f'android-phone-{i}')   # Google Play phone
 
     # Google Play feature graphic: the home screen's logo, cropped to 1024x500.
