@@ -100,6 +100,7 @@ plain text). App Store Connect also refuses `★`, so start those lines with `- 
 |---|---|
 | iPhone 6.9" Display (1320×2868, upload in this order) | `ios-6.9in-1.png` … `ios-6.9in-8.png` |
 | iPhone 6.5" Display (1284×2778), if App Store Connect asks for 6.5" instead | `ios-6.5in-1.png` … `ios-6.5in-8.png` |
+| iPhone 6.1"/6.3" Display (1206×2622), if App Store Connect asks for that size | `ios-6.3in-1.png` … `ios-6.3in-8.png` |
 
 The app is iPhone-only, so no iPad screenshots are needed. If App Store Connect asks for
 a different iPhone size first, the guide explains how to remake them in one command.

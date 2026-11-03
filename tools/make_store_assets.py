@@ -95,6 +95,7 @@ def main():
     for i, (shot, caption) in enumerate(SHOTS, 1):
         compose(shot, caption, 1320, 2868, f'ios-6.9in-{i}')       # App Store, 6.9" iPhone
         compose(shot, caption, 1284, 2778, f'ios-6.5in-{i}')       # App Store, 6.5" iPhone
+        compose(shot, caption, 1206, 2622, f'ios-6.3in-{i}')       # App Store, 6.1"/6.3" iPhone
         compose(shot, caption, 1080, 1920, f'android-phone-{i}')   # Google Play phone
 
     # Google Play feature graphic: the home screen's logo, cropped to 1024x500.
