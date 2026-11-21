@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:pop_core/pop_core.dart';
 
 import '../game/board_layout.dart';
+import '../dev/shot_driver.dart';
 import '../game/dev_options.dart';
 import '../game/hud_state.dart';
 import '../game/pop_game.dart';
@@ -97,6 +98,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   /// Leaving the app mid-round pauses it, so nothing happens unseen.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Developer screenshot runs keep playing when their window loses focus.
+    if (DevPhone.enabled) return;
     if (state != AppLifecycleState.resumed && _mode == _Mode.playing && !game.hud.value.isOver) {
       _pause();
     }

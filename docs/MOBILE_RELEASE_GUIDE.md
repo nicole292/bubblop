@@ -222,7 +222,7 @@ Connect **Users and Access**), and the games can be transferred to your own acco
 8. **TestFlight:** add yourself under **Internal Testing**. Install **TestFlight** on your
    iPhone and play the game.
 9. **App Store page** (App Store Connect → your app → **iOS App 1.0**):
-   1. Screenshots: drag in `ios-6.9in-1.png` … `ios-6.9in-7.png` under **iPhone 6.9"
+   1. Screenshots: drag in `ios-6.9in-1.png` … `ios-6.9in-8.png` under **iPhone 6.9"
       Display**. If App Store Connect asks for a different size first, see section 14.
    2. Promotional text, description, keywords, support URL, marketing URL and copyright
       from `docs\store\listing.md`.
@@ -298,7 +298,10 @@ Connect **Users and Access**), and the games can be transferred to your own acco
      "--dart-define=POP_SHOT=wait 5; shot home; tap 220 603; wait 1; tap 220 920; wait 0.8; shot map"
    ```
    `POP_PROGRESS=11` starts with levels 1–11 done (in memory only). `POP_STYLE=shape.hearts` buys
-   and uses that style for the run (the 1.2.0 shots use Hearts). Shots land in
+   and uses that shape for the run (ids are in `app\lib\progress\cosmetics.dart`); `POP_COINS=1000`
+   gives the run coins to buy it with. `POP_LEVEL=3` opens a level straight away and
+   `POP_BOOST=bomb` starts it with a booster. The 1.4.0 shots use Strawberries (chain, gift,
+   level 3), Planets (bomb, level 45), Kitties (home, map, card, shapes) and Donuts (level 24). Shots land in
    `app\build\shots\`. Copy the ones you want into `app\build\store_raw\` with the names
    listed in `tools\make_store_assets.py` (`chain`, `map`, `level_card`, `gift`, `style`, `chain_hearts`,
    `home`). The chain, goal card and gift come from playing level 10 with its recorded

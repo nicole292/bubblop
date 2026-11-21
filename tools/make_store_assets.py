@@ -24,10 +24,10 @@ ACCENT = (0x7B, 0x5C, 0xFF)
 SHOTS = [
     ('chain', 'Huge chain reactions!'),
     ('bomb', 'Charge the bomb and blast!'),
-    ('map', '40 levels to beat'),
-    ('level_card', 'Every level plays its own way'),
+    ('map', '560 levels to beat'),
+    ('level_card', 'Boosters help you win'),
     ('shapes', 'Unlock cute 3D shapes'),
-    ('dark', 'Starry dark mode'),
+    ('themes', 'Every shape brings its own colours'),
     ('gift', 'Win coins and gift boxes'),
     ('home', 'Plays offline, no ads'),
 ]

@@ -24,6 +24,7 @@ Future<void> main() async {
     for (var level = 1; level <= DevOptions.progressLevels; level++) {
       progress.completeLevel(level, score: 1000);
     }
+    if (DevOptions.coins > 0) progress.grantCoinsForScreenshots(DevOptions.coins);
     settings.theme = ThemeChoice.values.where((t) => t.name == DevOptions.theme).firstOrNull ?? settings.theme;
     for (final id in DevOptions.style.split(',')) {
       final cosmetic = Cosmetics.byId(id);

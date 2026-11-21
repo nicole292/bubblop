@@ -1,7 +1,7 @@
 # Store listing: ready to paste
 
-Everything below matches what the game really does (checked against the code on
-2026-10-22). Character limits are in brackets.
+Everything below matches what the game really does (checked against the code of
+1.4.0 build 7 on 2026-11-21). Character limits are in brackets.
 
 ---
 
@@ -48,18 +48,20 @@ plays the next note of a happy little tune.
 **Bubbles are your secret weapon.** Rows of bubbles rise from below. Pop balls next to a
 bubble to break it open and free the ball inside, which can set off an even bigger chain.
 
-★ 40 levels, each with its own board: pyramids, towers, shell vaults, bomb nests and puzzles where the rows stand still
-★ Gift boxes and special rewards as you go
+★ 560 levels that get harder as you go: pyramids, towers, shell vaults, bomb nests, stone cages and puzzles where the rows stand still
+★ Boss levels with three goals at once, and easier breather levels in between
 ★ Pop balls to charge your bomb, then blast your way out of a tight spot
-★ Cute balls with faces that cheer, gasp and nap
+★ Spend coins on boosters: start a level with the bomb ready, or get 5 extra drops
 ★ Unlock 3D shapes with the coins you earn: kitties, bunnies, donuts, planets, gems, strawberries…
-★ Dark mode for cosy night-time play, or let it follow your phone
+★ Every shape brings its own colours and sky, and pops into its own little hearts, paw prints, sprinkles or stars
+★ Gift boxes and special rewards as you go
+★ Turn on cute faces that cheer, gasp and nap
+★ Light or starry dark mode
 ★ Classic mode: no goals, just play and chase your best score
 ★ Learn in seconds, with a short guided first round
 ★ One-thumb play: tap a column, or drag to aim and release to drop
 ★ Big, juicy chain reactions with sound and vibration
 ★ Relaxing background music (turn it off any time)
-★ Beat your best score: every round takes just a few minutes
 ★ Plays offline · No account needed · No ads · No data collected
 
 ### Graphics (in docs/store/assets/)
@@ -74,22 +76,61 @@ bubble to break it open and free the ball inside, which can set off an even bigg
 ## App Store
 
 ### Promotional text [170] (can be changed any time without a new version)
-Drop, match 4 and pop! Set off chain reactions, free balls trapped in bubbles and beat
-your best score. One thumb, quick rounds, no ads.
+Drop, match 4 and pop! 560 levels, chain reactions, bombs and cute 3D shapes that bring their own colours. One thumb, quick rounds, no ads.
 
 ### Description [4000]
-Use the Google Play full description above, without the `**` marks (the App Store shows
-plain text). App Store Connect also refuses `★`, so start those lines with `- `, and write `…` as "and more" and `·` as commas.
-
-### What's New in This Version (1.3.0) [4000]
+Paste this plain-text version (App Store Connect refuses `★` and `**`):
 ```
-- Bombs! Pop 30 balls to charge the bomb, then tap it and a column to blast a 3x3 square
-- Every level has its own board now: pyramids, towers, shell vaults, bomb nests and stone walls, plus puzzle levels where the rows stand still
-- 10 new levels (31-40) with bomb rows, bomb walls, stone rows and a new "Blast bombs" goal
-- The balls have faces: they blink, wobble, cheer after chains, look scared near the top and nap in their shells
-- 13 new 3D shapes, each in its own colour: kitties, bunnies, bears, frogs, donuts, cupcakes, macarons, planets, gems, moons, strawberries, apples and cherries
-- Dark mode with a starry night sky: Light, Dark or Auto (follows your phone)
-- A new home screen: Levels, Shapes and How to play
+Drop. Match. Chain!
+
+Bubblop is a bright, satisfying puzzle game you can play with one thumb. Drop balls into the board, connect 4 of the same colour to pop them, and watch the board come alive with confetti.
+
+Chain reactions are the real prize. When balls pop, everything above falls, and if that makes a new match, it pops too. Every step of a chain scores more than the last and plays the next note of a happy little tune.
+
+Bubbles are your secret weapon. Rows of bubbles rise from below. Pop balls next to a bubble to break it open and free the ball inside, which can set off an even bigger chain.
+
+- 560 levels that get harder as you go: pyramids, towers, shell vaults, bomb nests, stone cages and puzzles where the rows stand still
+- Boss levels with three goals at once, and easier breather levels in between
+- Pop balls to charge your bomb, then blast your way out of a tight spot
+- Spend coins on boosters: start a level with the bomb ready, or get 5 extra drops
+- Unlock 3D shapes with the coins you earn: kitties, bunnies, donuts, planets, gems, strawberries and more
+- Every shape brings its own colours and sky, and pops into its own little hearts, paw prints, sprinkles or stars
+- Gift boxes and special rewards as you go
+- Turn on cute faces that cheer, gasp and nap
+- Light or starry dark mode
+- Classic mode: no goals, just play and chase your best score
+- Learn in seconds, with a short guided first round
+- One-thumb play: tap a column, or drag to aim and release to drop
+- Big, juicy chain reactions with sound and vibration
+- Relaxing background music (turn it off any time)
+- Plays offline, no account needed, no ads, no data collected
+```
+
+### What's New in This Version (1.4.0) [4000]
+App Store Connect has no What's New box on an app's first release (Bubblop isn't out yet), so you may not see it there. Use the same text for the Google Play release notes (first 500 characters):
+```
+- 560 levels! Levels 41-60 are hand-made and hard, then 500 more that keep getting harder, with boss levels that ask for three things at once
+- Every shape brings its own colours and sky, and pops into its own little hearts, paw prints, sprinkles, stars or leaves
+- Boosters: spend coins to start a level with the bomb ready, or to get 5 extra drops
+- A clearer mission bar: every goal in words, with a bar that fills as you go
+- The bomb glows and says READY! when it can be used
+- Prettier gift boxes, and points and coins that never look alike
+- Settings (sound, music, vibration, faces, light or dark) behind one button on the home screen
+```
+
+### Notes for App Review
+Paste into **App Review Information → Notes** (and reply with it to the 5.6 message):
+```
+Bubblop has no hidden features, no remote switches and no content that changes after review. It works fully offline, with no accounts, ads, in-app purchases or data collection. Everything in the screenshots is in this build; some of it opens as the player progresses:
+
+- Levels: tap "LEVEL 1" or "Levels" on the home screen. Each level unlocks the next; there are 560.
+- Bombs: in any round, popping 30 balls charges the bomb button (top right). Tap it, then a column.
+- Boosters: on a level's card before Play, spend coins earned by playing.
+- 3D shapes: tap "Shapes" on the home screen. They cost coins earned by playing; some are gifts for finishing levels 10, 20, 30 and 40. Each shape changes the colours and sky.
+- Settings and dark mode: the gear on the home screen, or the pause button in a round.
+- Classic mode: on the home screen, under the level button.
+
+The app is made for iPhone (not iPad).
 ```
 
 ### Keywords [100, comma-separated, no spaces needed]

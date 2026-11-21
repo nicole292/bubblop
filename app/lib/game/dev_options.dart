@@ -41,6 +41,10 @@ abstract final class DevOptions {
   /// these cosmetics in phone-frame screenshot runs.
   static const style = String.fromEnvironment('POP_STYLE');
 
+  /// POP_COINS=n gives phone-frame screenshot runs n extra coins (in memory
+  /// only), e.g. to buy a POP_STYLE shape.
+  static const coins = int.fromEnvironment('POP_COINS');
+
   /// POP_THEME=dark (or light) sets the theme in phone-frame screenshot runs.
   static const theme = String.fromEnvironment('POP_THEME');
 

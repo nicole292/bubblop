@@ -73,7 +73,13 @@ Status: draft spec for the first prototype. Every number here lives in
 - In the campaign the same thing happens, but the banner says "Speed up!" so it is not
   confused with the campaign level number.
 
-## Campaign (40 levels)
+## Campaign (560 levels)
+Levels 1-60 are hand-made (`Campaign.handmade`). Levels 61-560 come from a recipe in
+`packages/pop_core/lib/src/generated_levels.dart`: harder every 50 levels, a boss with three
+goals every 10th, a one-goal breather every 5th. `tool/generate_levels.dart` tunes each one's
+deal and target size until the greedy bot can win it, and records a winning line in
+`test/generated_solutions.dart`.
+
 Defined in `packages/pop_core/lib/src/levels.dart`; same rules as Endless, but every level
 plays its own way, unlike Classic's endless rising rows:
 - **Hand-built starting boards** (`Layouts`): pyramid, stairs, towers, valley, zigzag,
@@ -119,7 +125,11 @@ plays its own way, unlike Classic's endless rising rows:
   (fixed, shown).
 - Special gift after 10, 20, 30, 40: 100 coins plus Kitties / Donuts / Planets / Cherries.
 - Achievements (each once): First win 20, Chain reaction 20, Complete 5 levels 40,
-  Complete 10 levels 60, Personal best (Classic) 30, All 40 levels 250 coins.
+  Complete 10 levels 60, Personal best (Classic) 30, All 560 levels 1000 coins.
+- After 40: 35 coins a level (41-60), then 40, 45, 50; gift boxes keep coming every third
+  level, and every 50th level (and 60) is a special gift of 300+ coins.
+- Boosters on the level card, for one try: Bomb ready (40 coins), +5 drops (30, levels with
+  a drop limit only).
 - Coins unlock Fruit (200), Ocean (300), Neon (400) and Galaxy (500) balls, the Jelly (150),
   Hearts (250), Stars (300) and Flowers (350) shapes, the 3D shapes (Animals: Kitties,
   Bunnies 400, Bears, Frogs 450; Treats: Donuts, Macarons 500, Cupcakes 550; Space: Moons
@@ -129,11 +139,14 @@ plays its own way, unlike Classic's endless rising rows:
   Ocean pearl, Neon glow, Galaxy stars.
 - 3D shapes are rendered in Blender (`tools/blender/make_pieces.py`, then
   `split_layers.py`) as layers the game tints with each ball colour.
-- Faces (on by default, switch in the pause menu): balls blink and watch the aim, get
+- Faces (off for new players, switch in Settings or the pause menu): balls blink and watch the aim, get
   excited before popping, cheer after a chain, look scared near the top or beside an
   aimed bomb, sleep inside shells and look sad when a round is lost.
   Jewel balls were retired in 1.3.0; anyone who owned them got their 250 coins back.
-- Theme: Auto (follows the phone), Light or Dark, in the pause menu and the Style screen.
+- Theme: Light (new players) or Dark, in Settings (gear on the home screen) and the pause
+  menu. An old saved Auto counts as Light.
+- Each shape other than the plain ball brings its own five ball colours and sky
+  (`ShapeThemes` in `app/lib/progress/cosmetics.dart`), and pops into its own little bits.
 - Home: the big button plays the next level; the round buttons below open the level map
   (Levels), the Shapes screen and How to play, each drawn as a colourful piece with a face.
   Awards open from the trophy on the level map.

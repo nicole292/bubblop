@@ -262,6 +262,15 @@ class Progress extends ChangeNotifier {
     CosmeticKind.sky => _sky,
   };
 
+  /// Adds coins without saving. Developer screenshot runs only (POP_COINS),
+  /// on an in-memory save.
+  void grantCoinsForScreenshots(int amount) {
+    assert(_prefs == null, 'only for in-memory saves');
+    if (_prefs != null) return;
+    _coins += amount;
+    notifyListeners();
+  }
+
   /// Pays [amount] coins (for boosters). Returns false, and pays nothing,
   /// if the player can't afford it.
   bool spend(int amount) {
