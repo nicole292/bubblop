@@ -7,6 +7,7 @@ import 'game/palette.dart';
 import 'progress/cosmetics.dart';
 import 'progress/progress.dart';
 import 'render/piece_art.dart';
+import 'services/age_signals.dart';
 import 'services/haptics.dart';
 import 'services/settings.dart';
 import 'services/sfx.dart';
@@ -38,6 +39,9 @@ Future<void> main() async {
   await sfx.init();
   final app = PopApp(settings: settings, progress: progress, sfx: sfx, haptics: Haptics(settings));
   runApp(DevPhone.enabled ? DevPhone(child: app) : app);
+  // Once the first frame is up (Play may show its own prompt), and only if
+  // the law requires it where the player is (services/age_signals.dart).
+  WidgetsBinding.instance.addPostFrameCallback((_) => AgeSignals.checkOnce());
 }
 
 class PopApp extends StatelessWidget {

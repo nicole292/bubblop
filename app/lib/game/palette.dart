@@ -62,12 +62,16 @@ abstract final class Palette {
   static Finish finish = Finish.gloss;
 
   /// Switches to the player's chosen ball set, shape and sky.
+  /// A shape other than the plain ball brings its own colours and sky
+  /// ([PieceShape.theme]), so the whole game matches it.
   static void apply({required Cosmetic balls, required Cosmetic shape, required Cosmetic sky}) {
-    Palette.balls = balls.colors;
+    final theme = shape.shape.theme;
+    Palette.balls = theme?.balls ?? balls.colors;
     Palette.shape = shape.shape;
     Palette.finish = balls.finish;
-    _skyTop = sky.colors[0];
-    _skyMid = sky.colors[1];
-    _skyBottom = sky.colors[2];
+    final skyColors = theme?.sky ?? sky.colors;
+    _skyTop = skyColors[0];
+    _skyMid = skyColors[1];
+    _skyBottom = skyColors[2];
   }
 }

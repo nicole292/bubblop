@@ -70,6 +70,11 @@ class LevelResultPanel extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Money at the top, points in the middle: they never sit together.
+        if (clear.firstTime) ...[
+          _CoinBadge(coins: clear.coins),
+          const SizedBox(height: 12),
+        ],
         Text('LEVEL ${clear.level}', style: PopType.panelTitle),
         const SizedBox(height: 4),
         FittedBox(
@@ -81,25 +86,14 @@ class LevelResultPanel extends StatelessWidget {
           _GoalResult(view: g),
           const SizedBox(height: 6),
         ],
-        const SizedBox(height: 4),
-        Text(
-          clear.newBest
-              ? 'Score ${clear.score}   ·   New best!'
-              : clear.firstTime
-                  ? 'Score ${clear.score}'
-                  : 'Score ${clear.score}   ·   Best ${clear.bestScore}',
-          style: PopType.of(14, 800, color: Palette.inkSoft, numbers: true),
-        ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 8),
+        _Points(score: clear.score, note: clear.newBest
+            ? 'New best!'
+            : clear.firstTime
+                ? null
+                : 'Best ${clear.bestScore}'),
+        const SizedBox(height: 10),
         if (clear.firstTime) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CoinIcon(size: 26),
-              const SizedBox(width: 6),
-              Text('+${clear.coins} coins', style: PopType.of(20, 1000, numbers: true)),
-            ],
-          ),
           if (clear.gift != GiftKind.none && clear.giftContents != null) ...[
             const SizedBox(height: 8),
             GiftBox(
@@ -252,6 +246,70 @@ class AchievementChips extends StatelessWidget {
               ],
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// The coins a level paid, as a gold badge at the top of the card.
+class _CoinBadge extends StatelessWidget {
+  const _CoinBadge({required this.coins});
+  final int coins;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.6, end: 1),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.elasticOut,
+      builder: (context, s, child) => Transform.scale(scale: s, child: child),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 5, 16, 5),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFFFFF3C4), Color(0xFFFFE08A)]),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFFF0A000), width: 2),
+          boxShadow: const [BoxShadow(color: Color(0x40F0A000), blurRadius: 10, offset: Offset(0, 3))],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CoinIcon(size: 28),
+            const SizedBox(width: 6),
+            Text('+$coins coins', style: PopType.of(19, 1000, color: const Color(0xFF7A4A00), numbers: true)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The level's points, big in the middle of the card, with a star (stars
+/// always mean points).
+class _Points extends StatelessWidget {
+  const _Points({required this.score, this.note});
+  final int score;
+  final String? note;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.star_rounded, size: 34, color: Palette.gold),
+            const SizedBox(width: 4),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: score.toDouble()),
+              duration: const Duration(milliseconds: 900),
+              curve: Curves.easeOutCubic,
+              builder: (context, v, _) => Text('${v.round()}', style: PopType.of(40, 1000, numbers: true)),
+            ),
+          ],
+        ),
+        Text(note == null ? 'POINTS' : 'POINTS  ·  ${note!.toUpperCase()}',
+            style: PopType.of(12, 900, color: Palette.inkSoft, spacing: 1.5)),
       ],
     );
   }

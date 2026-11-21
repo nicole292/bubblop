@@ -22,7 +22,7 @@ void main() {
         body: LevelSelectScreen(
           progress: progress,
           onBack: () {},
-          onPlay: (level) => played = level,
+          onPlay: (level, _) => played = level,
           onAwards: () {},
           onTap: () {},
           onDeny: () => denied++,
@@ -34,7 +34,7 @@ void main() {
     expect(find.bySemanticsLabel('Level 1, completed'), findsOneWidget);
     expect(find.bySemanticsLabel('Level 4'), findsOneWidget, reason: 'the next level is open');
     expect(find.bySemanticsLabel('Level 5, locked'), findsOneWidget);
-    expect(find.text('3 of 40 complete'), findsOneWidget);
+    expect(find.text('3 of 560 complete'), findsOneWidget);
 
     // A locked level does not open, and says why.
     await tester.tap(find.bySemanticsLabel('Level 5, locked'));
@@ -65,7 +65,7 @@ void main() {
           progress: progress,
           openLevel: 1,
           onBack: () {},
-          onPlay: (_) {},
+          onPlay: (_, _) {},
           onAwards: () {},
           onTap: () {},
           onDeny: () {},
@@ -90,7 +90,7 @@ void main() {
           progress: Progress.memory(),
           openLevel: 1,
           onBack: () {},
-          onPlay: (_) {},
+          onPlay: (_, _) {},
           onAwards: () {},
           onTap: () {},
           onDeny: () {},

@@ -26,9 +26,14 @@ double difference(Color a, Color b) {
 
 void main() {
   final ballSets = Cosmetics.ofKind(CosmeticKind.balls);
+  // Ball sets, and the colours each shape brings with it.
+  final colourSets = [
+    ...ballSets,
+    for (final t in ShapeThemes.all) Cosmetic('theme.${t.name}', CosmeticKind.balls, t.name, t.balls, const FreeUnlock()),
+  ];
 
   test('every ball set has five colours that are easy to tell apart', () {
-    for (final set in ballSets) {
+    for (final set in colourSets) {
       expect(set.colors.length, 5, reason: set.name);
       for (var i = 0; i < 5; i++) {
         for (var j = i + 1; j < 5; j++) {
@@ -43,7 +48,7 @@ void main() {
   });
 
   test('every ball stands out on the light and the dark board', () {
-    for (final set in ballSets) {
+    for (final set in colourSets) {
       for (final (i, color) in set.colors.indexed) {
         for (final well in [const Color(0xFFF1F4FF), const Color(0xFF1C1F3E)]) {
           expect(difference(color, well), greaterThan(35), reason: '${set.name}: colour $i fades into the board');
@@ -53,19 +58,22 @@ void main() {
   });
 
   test('ball sets look clearly different from each other', () {
-    for (var a = 0; a < ballSets.length; a++) {
-      for (var b = a + 1; b < ballSets.length; b++) {
+    for (var a = 0; a < colourSets.length; a++) {
+      for (var b = a + 1; b < colourSets.length; b++) {
         var total = 0.0;
         for (var i = 0; i < 5; i++) {
-          total += difference(ballSets[a].colors[i], ballSets[b].colors[i]);
+          total += difference(colourSets[a].colors[i], colourSets[b].colors[i]);
         }
-        expect(total / 5, greaterThan(22), reason: '${ballSets[a].name} and ${ballSets[b].name} look alike');
+        expect(total / 5, greaterThan(22), reason: '${colourSets[a].name} and ${colourSets[b].name} look alike');
       }
     }
   });
 
   test('skies have three colours and stay light behind white text', () {
-    for (final sky in Cosmetics.ofKind(CosmeticKind.sky)) {
+    for (final sky in [
+      ...Cosmetics.ofKind(CosmeticKind.sky),
+      for (final t in ShapeThemes.all) Cosmetic('sky.${t.name}', CosmeticKind.sky, t.name, t.sky, const FreeUnlock()),
+    ]) {
       expect(sky.colors.length, 3, reason: sky.name);
       for (final c in sky.colors) {
         expect(lab(c)[0], inInclusiveRange(50, 85), reason: '${sky.name}: too dark or too pale');

@@ -68,3 +68,9 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Google Play Age Signals: asked once per launch, only where Play says
+    // mandatory age sharing applies (MainActivity.kt). The age is never kept.
+    implementation("com.google.android.play:age-signals:0.0.6")
+}

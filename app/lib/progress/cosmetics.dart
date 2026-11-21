@@ -29,6 +29,21 @@ enum PieceShape {
   /// Drawn from Blender layers in assets/pieces/ rather than an outline.
   bool get isArt => index > PieceShape.flower.index;
 
+  /// The colours and sky that suit this shape, used whenever it is chosen,
+  /// or null for the plain ball (Classic colours, Day sky). Each set's five
+  /// colours stay easy to tell apart (test/cosmetics_test.dart).
+  ShapeTheme? get theme => switch (this) {
+        ball => null,
+        jelly => ShapeThemes.gummy,
+        heart => ShapeThemes.valentine,
+        star => ShapeThemes.starlight,
+        flower => ShapeThemes.garden,
+        kitty || bunny || bear || frog => ShapeThemes.cozy,
+        donut || cupcake || macaron => ShapeThemes.sweet,
+        planet || gem || moon => ShapeThemes.cosmic,
+        strawberry || apple || cherry => ShapeThemes.orchard,
+      };
+
   /// The colour the shape is shown in on its own (the Shapes screen and the
   /// home icon): one that suits it, not a ball colour.
   Color get signature => switch (this) {
@@ -51,6 +66,44 @@ enum PieceShape {
         apple => const Color(0xFF7ED957),
         cherry => const Color(0xFFE8344E),
       };
+}
+
+/// A shape's own look: five ball colours (in colour-index order) and a sky
+/// (top, middle, bottom), so the whole game matches the chosen shape.
+class ShapeTheme {
+  const ShapeTheme(this.name, this.balls, this.sky);
+  final String name;
+  final List<Color> balls;
+  final List<Color> sky;
+}
+
+abstract final class ShapeThemes {
+  static const gummy = ShapeTheme('Gummy',
+      [Color(0xFFFF3B5C), Color(0xFFFFB000), Color(0xFF7ED321), Color(0xFF00B8D9), Color(0xFF9D4EDD)],
+      [Color(0xFF5FD9C4), Color(0xFF6FB8FF), Color(0xFFA98BFF)]);
+  static const valentine = ShapeTheme('Valentine',
+      [Color(0xFFE8174A), Color(0xFFFF8FB1), Color(0xFFFFC94D), Color(0xFF3DC9A8), Color(0xFF8A4FFF)],
+      [Color(0xFFFF9EC4), Color(0xFFFF8FB0), Color(0xFFC49CFF)]);
+  static const starlight = ShapeTheme('Starlight',
+      [Color(0xFFFFD23F), Color(0xFFFF6A3D), Color(0xFFF2559B), Color(0xFF3FA9F5), Color(0xFF2EC9A0)],
+      [Color(0xFF6C8CFF), Color(0xFF8F7BFF), Color(0xFFB57BFF)]);
+  static const garden = ShapeTheme('Garden',
+      [Color(0xFFE63946), Color(0xFFFFC300), Color(0xFF6BBF45), Color(0xFF3D6BFF), Color(0xFFFF7FD0)],
+      [Color(0xFF7ED8A0), Color(0xFF8FCBFF), Color(0xFFF0A3CB)]);
+  static const cozy = ShapeTheme('Cozy',
+      [Color(0xFFFF8A3D), Color(0xFFF781B4), Color(0xFF8CD867), Color(0xFF4FA8F0), Color(0xFF8A5CD6)],
+      [Color(0xFFFFBE85), Color(0xFFFFA9BE), Color(0xFFC2A3FF)]);
+  static const sweet = ShapeTheme('Sweet shop',
+      [Color(0xFFFF6FA0), Color(0xFFA8652F), Color(0xFFFFD966), Color(0xFF5FD6B8), Color(0xFFA98BFF)],
+      [Color(0xFFFFADCF), Color(0xFFF2B0EA), Color(0xFFB3A3FF)]);
+  static const cosmic = ShapeTheme('Cosmic',
+      [Color(0xFF6F55FF), Color(0xFFFF4FA0), Color(0xFF33D1E0), Color(0xFFFFA233), Color(0xFF9BE15D)],
+      [Color(0xFF6A7DF0), Color(0xFF8B6CF0), Color(0xFFBE6CE6)]);
+  static const orchard = ShapeTheme('Orchard',
+      [Color(0xFFE5243B), Color(0xFFFF8C1A), Color(0xFFFFEE58), Color(0xFF5CB83E), Color(0xFF7B3FA0)],
+      [Color(0xFF86CC66), Color(0xFFFFC766), Color(0xFFFF9A76)]);
+
+  static const all = [gummy, valentine, starlight, garden, cozy, sweet, cosmic, orchard];
 }
 
 /// The surface of a ball set, painted over every ball so sets differ in

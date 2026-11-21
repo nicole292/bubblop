@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:pop_core/pop_core.dart';
 
 import '../game/palette.dart';
+import '../progress/boosters.dart';
 import '../progress/progress.dart';
 import '../progress/rewards.dart';
+import 'bomb_icon.dart';
 import 'buttons.dart';
 import 'glass.dart';
 import 'goal_icon.dart';
@@ -29,7 +31,9 @@ class LevelSelectScreen extends StatefulWidget {
 
   final Progress progress;
   final VoidCallback onBack;
-  final ValueChanged<LevelDef> onPlay;
+
+  /// Starts a level with the boosters bought for it.
+  final void Function(LevelDef level, Set<Booster> boosters) onPlay;
 
   /// Opens the awards (achievements).
   final VoidCallback onAwards;
@@ -43,8 +47,12 @@ class LevelSelectScreen extends StatefulWidget {
   State<LevelSelectScreen> createState() => LevelSelectScreenState();
 }
 
-class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerProviderStateMixin {
-  late final _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat();
+class LevelSelectScreenState extends State<LevelSelectScreen>
+    with SingleTickerProviderStateMixin {
+  late final _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat();
   final _currentKey = GlobalKey();
   late int? _open = widget.openLevel;
 
@@ -78,14 +86,20 @@ class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerP
       widget.onDeny();
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          content: Text('Complete level ${widget.progress.unlockedLevel} to unlock the next one!',
-              style: PopType.of(15, 800, color: Colors.white)),
-          backgroundColor: Palette.ink,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          duration: const Duration(seconds: 2),
-        ));
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              'Complete level ${widget.progress.unlockedLevel} to unlock the next one!',
+              style: PopType.of(15, 800, color: Colors.white),
+            ),
+            backgroundColor: Palette.ink,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       return;
     }
     widget.onTap();
@@ -109,10 +123,17 @@ class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerP
                       Expanded(
                         child: Column(
                           children: [
-                            Text('Levels', style: PopType.of(26, 1000, color: Colors.white)),
+                            Text(
+                              'Levels',
+                              style: PopType.of(26, 1000, color: Colors.white),
+                            ),
                             Text(
                               '${progress.completedCount} of ${Campaign.count} complete',
-                              style: PopType.of(13, 800, color: const Color(0xD9FFFFFF)),
+                              style: PopType.of(
+                                13,
+                                800,
+                                color: const Color(0xD9FFFFFF),
+                              ),
                             ),
                           ],
                         ),
@@ -133,7 +154,10 @@ class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerP
                       final width = math.min(constraints.maxWidth, 460.0);
                       // Five per row inside a group card: page padding 2×16,
                       // card padding 2×14 and its border, four gaps, and slack.
-                      final node = ((width - 32 - 28 - 4 * _gap - 8) / 5).clamp(44.0, 72.0);
+                      final node = ((width - 32 - 28 - 4 * _gap - 8) / 5).clamp(
+                        44.0,
+                        72.0,
+                      );
                       return SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
                         child: Center(
@@ -141,7 +165,11 @@ class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerP
                             width: width - 32,
                             child: Column(
                               children: [
-                                for (var chapter = 0; chapter < Campaign.count ~/ 10; chapter++)
+                                for (
+                                  var chapter = 0;
+                                  chapter < Campaign.count ~/ 10;
+                                  chapter++
+                                )
                                   _chapter(chapter, node),
                               ],
                             ),
@@ -158,7 +186,8 @@ class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerP
             LevelIntro(
               level: Campaign.level(_open!),
               progress: progress,
-              onPlay: () => widget.onPlay(Campaign.level(_open!)),
+              onPlay: (boosters) =>
+                  widget.onPlay(Campaign.level(_open!), boosters),
               onClose: () {
                 widget.onTap();
                 setState(() => _open = null);
@@ -174,7 +203,9 @@ class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerP
   Widget _chapter(int chapter, double node) {
     final first = chapter * 10 + 1;
     final last = first + 9;
-    final done = [for (var l = first; l <= last; l++) widget.progress.isCompleted(l)].where((c) => c).length;
+    final done = [
+      for (var l = first; l <= last; l++) widget.progress.isCompleted(l),
+    ].where((c) => c).length;
     return Padding(
       padding: const EdgeInsets.only(bottom: 22),
       child: Container(
@@ -184,9 +215,20 @@ class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerP
           children: [
             Row(
               children: [
-                Text('Levels $first–$last', style: PopType.of(15, 900, color: Colors.white)),
+                Text(
+                  'Levels $first–$last',
+                  style: PopType.of(15, 900, color: Colors.white),
+                ),
                 const Spacer(),
-                Text('$done/10', style: PopType.of(14, 900, color: const Color(0xD9FFFFFF), numbers: true)),
+                Text(
+                  '$done/10',
+                  style: PopType.of(
+                    14,
+                    900,
+                    color: const Color(0xD9FFFFFF),
+                    numbers: true,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -197,7 +239,9 @@ class LevelSelectScreenState extends State<LevelSelectScreen> with SingleTickerP
               children: [
                 for (var level = first; level <= last; level++)
                   _LevelNode(
-                    key: level == widget.progress.currentLevel ? _currentKey : null,
+                    key: level == widget.progress.currentLevel
+                        ? _currentKey
+                        : null,
                     level: level,
                     size: node,
                     progress: widget.progress,
@@ -247,10 +291,24 @@ class _LevelNode extends StatelessWidget {
             radius: 0.95,
             colors: [Color.lerp(color, Colors.white, 0.35)!, color],
           ),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.45), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.45),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         alignment: Alignment.center,
-        child: Text('$level', style: PopType.of(size * 0.38, 1000, color: Colors.white, numbers: true)),
+        child: Text(
+          '$level',
+          style: PopType.of(
+            size * 0.38,
+            1000,
+            color: Colors.white,
+            numbers: true,
+          ),
+        ),
       );
     } else if (current) {
       face = AnimatedBuilder(
@@ -267,14 +325,26 @@ class _LevelNode extends StatelessWidget {
                   blurRadius: 4,
                   spreadRadius: size * 0.22 * t,
                 ),
-                BoxShadow(color: Palette.panelShadow, blurRadius: 10, offset: Offset(0, 4)),
+                BoxShadow(
+                  color: Palette.panelShadow,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
               ],
             ),
             alignment: Alignment.center,
             child: child,
           );
         },
-        child: Text('$level', style: PopType.of(size * 0.4, 1000, color: Palette.accent, numbers: true)),
+        child: Text(
+          '$level',
+          style: PopType.of(
+            size * 0.4,
+            1000,
+            color: Palette.accent,
+            numbers: true,
+          ),
+        ),
       );
     } else {
       face = Container(
@@ -287,8 +357,20 @@ class _LevelNode extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.lock_rounded, size: size * 0.26, color: const Color(0xB3FFFFFF)),
-            Text('$level', style: PopType.of(size * 0.22, 900, color: const Color(0xB3FFFFFF), numbers: true)),
+            Icon(
+              Icons.lock_rounded,
+              size: size * 0.26,
+              color: const Color(0xB3FFFFFF),
+            ),
+            Text(
+              '$level',
+              style: PopType.of(
+                size * 0.22,
+                900,
+                color: const Color(0xB3FFFFFF),
+                numbers: true,
+              ),
+            ),
           ],
         ),
       );
@@ -297,7 +379,12 @@ class _LevelNode extends StatelessWidget {
     return Semantics(
       button: true,
       excludeSemantics: true,
-      label: 'Level $level${completed ? ', completed' : unlocked ? '' : ', locked'}',
+      label:
+          'Level $level${completed
+              ? ', completed'
+              : unlocked
+              ? ''
+              : ', locked'}',
       child: GestureDetector(
         onTap: onTap,
         child: SizedBox.square(
@@ -310,7 +397,11 @@ class _LevelNode extends StatelessWidget {
                 Positioned(
                   right: -2,
                   bottom: -2,
-                  child: _Badge(size: size * 0.36, color: Palette.success, icon: Icons.check_rounded),
+                  child: _Badge(
+                    size: size * 0.36,
+                    color: Palette.success,
+                    icon: Icons.check_rounded,
+                  ),
                 ),
               if (gift != GiftKind.none)
                 Positioned(
@@ -319,9 +410,15 @@ class _LevelNode extends StatelessWidget {
                   child: Opacity(
                     opacity: completed ? 0.55 : 1,
                     child: _Badge(
-                      size: gift == GiftKind.special ? size * 0.46 : size * 0.36,
-                      color: gift == GiftKind.special ? Palette.accent : Palette.gold,
-                      icon: gift == GiftKind.special ? Icons.auto_awesome_rounded : Icons.card_giftcard_rounded,
+                      size: gift == GiftKind.special
+                          ? size * 0.46
+                          : size * 0.36,
+                      color: gift == GiftKind.special
+                          ? Palette.accent
+                          : Palette.gold,
+                      icon: gift == GiftKind.special
+                          ? Icons.auto_awesome_rounded
+                          : Icons.card_giftcard_rounded,
                     ),
                   ),
                 ),
@@ -341,21 +438,27 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 2),
-          boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 4, offset: Offset(0, 2))],
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+      border: Border.all(color: Colors.white, width: 2),
+      boxShadow: [
+        BoxShadow(
+          color: Palette.panelShadow,
+          blurRadius: 4,
+          offset: Offset(0, 2),
         ),
-        child: Icon(icon, size: size * 0.62, color: Colors.white),
-      );
+      ],
+    ),
+    child: Icon(icon, size: size * 0.62, color: Colors.white),
+  );
 }
 
-/// The goal card shown before a level starts: what to do, what you'll get,
-/// and one big Play button.
-class LevelIntro extends StatelessWidget {
+//// The goal card shown before a level starts: what to do, what you'll get,
+/// boosters to buy with coins, and one big Play button.
+class LevelIntro extends StatefulWidget {
   const LevelIntro({
     super.key,
     required this.level,
@@ -366,73 +469,283 @@ class LevelIntro extends StatelessWidget {
 
   final LevelDef level;
   final Progress progress;
-  final VoidCallback onPlay;
+
+  /// Starts the level with the boosters chosen (already paid for).
+  final ValueChanged<Set<Booster>> onPlay;
   final VoidCallback onClose;
 
   @override
+  State<LevelIntro> createState() => _LevelIntroState();
+}
+
+class _LevelIntroState extends State<LevelIntro> {
+  final _chosen = <Booster>{};
+
+  List<Booster> get _offered => [
+    Booster.bomb,
+    if (widget.level.drops != null) Booster.drops,
+  ];
+
+  int get _cost => _chosen.fold(0, (sum, b) => sum + b.price);
+
+  void _toggle(Booster b) {
+    setState(() {
+      if (!_chosen.remove(b)) {
+        // Only if the coins cover it together with what is already chosen.
+        if (_cost + b.price <= widget.progress.coins) _chosen.add(b);
+      }
+    });
+  }
+
+  void _play() {
+    final chosen = widget.progress.spend(_cost) ? {..._chosen} : <Booster>{};
+    widget.onPlay(chosen);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final level = widget.level;
+    final progress = widget.progress;
     final rewards = LevelRewards.forLevel(level.number);
     final completed = progress.isCompleted(level.number);
     return GestureDetector(
-      onTap: onClose,
+      onTap: widget.onClose,
       child: ColoredBox(
         color: Palette.scrim.withValues(alpha: 0.4),
         child: Center(
-          child: GestureDetector(
-            onTap: () {},
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.85, end: 1),
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeOutBack,
-              builder: (context, s, child) => Transform.scale(scale: s, child: child),
-              child: Container(
-                width: 320,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.fromLTRB(22, 14, 22, 22),
-                decoration: BoxDecoration(
-                  color: Palette.card,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: Palette.edge, width: 1.2),
-                  boxShadow: const [BoxShadow(color: Color(0x663A2D9E), blurRadius: 30, offset: Offset(0, 12))],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: IconButton(
-                        tooltip: 'Close',
-                        onPressed: onClose,
-                        icon: Icon(Icons.close_rounded, color: Palette.inkSoft),
-                      ),
+          // Shrinks on small phones rather than running off the screen.
+          child: SafeArea(
+            minimum: const EdgeInsets.symmetric(vertical: 12),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: GestureDetector(
+                onTap: () {},
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.85, end: 1),
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutBack,
+                  builder: (context, s, child) =>
+                      Transform.scale(scale: s, child: child),
+                  child: Container(
+                    width: 320,
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.fromLTRB(22, 14, 22, 22),
+                    decoration: BoxDecoration(
+                      color: Palette.card,
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Palette.edge, width: 1.2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x663A2D9E),
+                          blurRadius: 30,
+                          offset: Offset(0, 12),
+                        ),
+                      ],
                     ),
-                    Text('LEVEL', style: PopType.panelTitle),
-                    Text('${level.number}', style: PopType.of(52, 1000, color: Palette.accent, numbers: true)),
-                    const SizedBox(height: 10),
-                    if (level.layout != null) ...[
-                      _BoardPreview(board: level.newGame().board),
-                      const SizedBox(height: 12),
-                    ] else
-                      const SizedBox(height: 2),
-                    for (final goal in level.goals) ...[
-                      _GoalRow(goal: goal),
-                      const SizedBox(height: 8),
-                    ],
-                    if (level.drops != null || level.setup != LevelSetup.normal || level.still) ...[
-                      _Twists(level: level),
-                      const SizedBox(height: 8),
-                    ],
-                    const SizedBox(height: 8),
-                    _RewardRow(rewards: rewards, completed: completed, best: progress.bestScore(level.number)),
-                    const SizedBox(height: 18),
-                    BigButton(
-                      label: completed ? 'Play again' : 'Play',
-                      icon: Icons.play_arrow_rounded,
-                      onPressed: onPlay,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            tooltip: 'Close',
+                            onPressed: widget.onClose,
+                            icon: Icon(
+                              Icons.close_rounded,
+                              color: Palette.inkSoft,
+                            ),
+                          ),
+                        ),
+                        Text('LEVEL', style: PopType.panelTitle),
+                        Text(
+                          '${level.number}',
+                          style: PopType.of(
+                            52,
+                            1000,
+                            color: Palette.accent,
+                            numbers: true,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        if (level.layout != null) ...[
+                          _BoardPreview(board: level.newGame().board),
+                          const SizedBox(height: 12),
+                        ] else
+                          const SizedBox(height: 2),
+                        for (final goal in level.goals) ...[
+                          _GoalRow(goal: goal),
+                          const SizedBox(height: 8),
+                        ],
+                        if (level.drops != null ||
+                            level.setup != LevelSetup.normal ||
+                            level.still) ...[
+                          _Twists(level: level),
+                          const SizedBox(height: 8),
+                        ],
+                        const SizedBox(height: 8),
+                        _RewardRow(
+                          rewards: rewards,
+                          completed: completed,
+                          best: progress.bestScore(level.number),
+                        ),
+                        const SizedBox(height: 14),
+                        _BoosterRow(
+                          offered: _offered,
+                          chosen: _chosen,
+                          coins: progress.coins - _cost,
+                          onToggle: _toggle,
+                        ),
+                        const SizedBox(height: 14),
+                        BigButton(
+                          label: completed ? 'Play again' : 'Play',
+                          icon: Icons.play_arrow_rounded,
+                          onPressed: _play,
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Boosters to take into the level, each with its price; the coins left
+/// after the chosen ones are shown beside the title.
+class _BoosterRow extends StatelessWidget {
+  const _BoosterRow({
+    required this.offered,
+    required this.chosen,
+    required this.coins,
+    required this.onToggle,
+  });
+  final List<Booster> offered;
+  final Set<Booster> chosen;
+
+  /// Coins left after paying for [chosen].
+  final int coins;
+  final ValueChanged<Booster> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('BOOSTERS', style: PopType.label),
+            const SizedBox(width: 10),
+            const CoinIcon(size: 16),
+            const SizedBox(width: 3),
+            Text(
+              '$coins',
+              style: PopType.of(13, 900, color: Palette.inkSoft, numbers: true),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            for (final (i, b) in offered.indexed) ...[
+              if (i > 0) const SizedBox(width: 8),
+              Expanded(
+                child: _BoosterChip(
+                  booster: b,
+                  on: chosen.contains(b),
+                  affordable: chosen.contains(b) || coins >= b.price,
+                  onTap: () => onToggle(b),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _BoosterChip extends StatelessWidget {
+  const _BoosterChip({
+    required this.booster,
+    required this.on,
+    required this.affordable,
+    required this.onTap,
+  });
+  final Booster booster;
+  final bool on;
+  final bool affordable;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const fire = Color(0xFFFF8A1A);
+    final tint = booster == Booster.bomb ? fire : Palette.balls[3];
+    return Opacity(
+      opacity: affordable ? 1 : 0.45,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: affordable ? onTap : null,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            decoration: BoxDecoration(
+              color: on ? tint.withValues(alpha: 0.16) : Palette.well,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: on ? tint : Palette.edge,
+                width: on ? 2.5 : 1.2,
+              ),
+            ),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 28,
+                  child: Center(
+                    child: booster == Booster.bomb
+                        ? const BombIcon(size: 26)
+                        : Icon(Icons.water_drop_rounded, size: 24, color: tint),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(booster.label, style: PopType.of(13, 900)),
+                ),
+                const SizedBox(height: 3),
+                on
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 15,
+                            color: tint,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Added',
+                            style: PopType.of(12, 900, color: tint),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CoinIcon(size: 15),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${booster.price}',
+                            style: PopType.of(13, 900, numbers: true),
+                          ),
+                        ],
+                      ),
+              ],
             ),
           ),
         ),
@@ -456,7 +769,10 @@ class _BoardPreview extends StatelessWidget {
     const cell = 18.0;
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: Palette.well,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: SizedBox(
         width: cell * board.columns,
         height: cell * top,
@@ -479,25 +795,42 @@ class _BoardPreviewPainter extends CustomPainter {
       for (var col = 0; col < board.columns; col++) {
         final c = board.at(col, row);
         if (c == null) continue;
-        final at = Offset(col * cell + cell / 2, (rows - 1 - row) * cell + cell / 2);
+        final at = Offset(
+          col * cell + cell / 2,
+          (rows - 1 - row) * cell + cell / 2,
+        );
         switch (c.kind) {
           case CellKind.orb:
             canvas.drawCircle(at, r, Paint()..color = Palette.balls[c.color]);
           case CellKind.shell:
-            canvas.drawCircle(at, r, Paint()..color = Palette.balls[c.color].withValues(alpha: 0.45));
             canvas.drawCircle(
-                at,
-                r * 0.86,
-                Paint()
-                  ..style = PaintingStyle.stroke
-                  ..strokeWidth = r * 0.28
-                  ..color = Colors.white.withValues(alpha: 0.9));
+              at,
+              r,
+              Paint()..color = Palette.balls[c.color].withValues(alpha: 0.45),
+            );
+            canvas.drawCircle(
+              at,
+              r * 0.86,
+              Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = r * 0.28
+                ..color = Colors.white.withValues(alpha: 0.9),
+            );
           case CellKind.stone:
-            canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCircle(center: at, radius: r), Radius.circular(r * 0.35)),
-                Paint()..color = const Color(0xFF9A9FB8));
+            canvas.drawRRect(
+              RRect.fromRectAndRadius(
+                Rect.fromCircle(center: at, radius: r),
+                Radius.circular(r * 0.35),
+              ),
+              Paint()..color = const Color(0xFF9A9FB8),
+            );
           case CellKind.bomb:
             canvas.drawCircle(at, r, Paint()..color = const Color(0xFF22232E));
-            canvas.drawCircle(at.translate(r * 0.55, -r * 0.8), r * 0.28, Paint()..color = const Color(0xFFFFA62B));
+            canvas.drawCircle(
+              at.translate(r * 0.55, -r * 0.8),
+              r * 0.28,
+              Paint()..color = const Color(0xFFFFA62B),
+            );
         }
       }
     }
@@ -515,7 +848,10 @@ class _GoalRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(18)),
+      decoration: BoxDecoration(
+        color: Palette.well,
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Row(
         children: [
           GoalIcon(kind: goal.kind, size: 26),
@@ -546,50 +882,64 @@ class _Twists extends StatelessWidget {
       spacing: 8,
       runSpacing: 6,
       children: [
-        if (level.still) _tag(Icons.extension_rounded, 'Puzzle: rows stay still'),
+        if (level.still)
+          _tag(Icons.extension_rounded, 'Puzzle: rows stay still'),
         if (drops != null) _tag(Icons.water_drop_rounded, 'In $drops drops'),
-        if (level.setup != LevelSetup.normal) _tag(_setupIcon(level.setup), level.setup.about),
+        if (level.setup != LevelSetup.normal)
+          _tag(_setupIcon(level.setup), level.setup.about),
       ],
     );
   }
 
   static IconData _setupIcon(LevelSetup setup) => switch (setup) {
-        LevelSetup.wall => Icons.bubble_chart_rounded,
-        LevelSetup.calm => Icons.palette_rounded,
-        LevelSetup.rush => Icons.keyboard_double_arrow_up_rounded,
-        LevelSetup.bombs || LevelSetup.bombWall => Icons.local_fire_department_rounded,
-        LevelSetup.stones => Icons.landscape_rounded,
-        LevelSetup.normal => Icons.circle,
-      };
+    LevelSetup.wall => Icons.bubble_chart_rounded,
+    LevelSetup.calm => Icons.palette_rounded,
+    LevelSetup.rush => Icons.keyboard_double_arrow_up_rounded,
+    LevelSetup.bombs ||
+    LevelSetup.bombWall => Icons.local_fire_department_rounded,
+    LevelSetup.stones => Icons.landscape_rounded,
+    LevelSetup.normal => Icons.circle,
+  };
 
   Widget _tag(IconData icon, String text) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: Palette.cream,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Palette.gold, width: 1.5),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+    decoration: BoxDecoration(
+      color: Palette.cream,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: Palette.gold, width: 1.5),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: Palette.ink),
+        const SizedBox(width: 5),
+        // Wraps rather than overflowing the card with large text.
+        Flexible(
+          child: Text(
+            text,
+            style: PopType.of(14, 900),
+            textAlign: TextAlign.center,
+          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: Palette.ink),
-            const SizedBox(width: 5),
-            // Wraps rather than overflowing the card with large text.
-            Flexible(child: Text(text, style: PopType.of(14, 900), textAlign: TextAlign.center)),
-          ],
-        ),
-      );
+      ],
+    ),
+  );
 }
 
 class _RewardRow extends StatelessWidget {
-  const _RewardRow({required this.rewards, required this.completed, required this.best});
+  const _RewardRow({
+    required this.rewards,
+    required this.completed,
+    required this.best,
+  });
   final LevelRewards rewards;
   final bool completed;
   final int? best;
 
   @override
   // Shrinks to fit rather than overflow with long numbers or large text.
-  Widget build(BuildContext context) => FittedBox(fit: BoxFit.scaleDown, child: _row());
+  Widget build(BuildContext context) =>
+      FittedBox(fit: BoxFit.scaleDown, child: _row());
 
   Widget _row() {
     if (completed) {
@@ -602,7 +952,10 @@ class _RewardRow extends StatelessWidget {
           Text('Completed', style: PopType.of(15, 900, color: Palette.success)),
           if (best != null) ...[
             const SizedBox(width: 10),
-            Text('Best $best', style: PopType.of(15, 800, color: Palette.inkSoft, numbers: true)),
+            Text(
+              'Best $best',
+              style: PopType.of(15, 800, color: Palette.inkSoft, numbers: true),
+            ),
           ],
         ],
       );
@@ -618,14 +971,24 @@ class _RewardRow extends StatelessWidget {
         if (rewards.gift != GiftKind.none) ...[
           const SizedBox(width: 12),
           Icon(
-            rewards.gift == GiftKind.special ? Icons.auto_awesome_rounded : Icons.card_giftcard_rounded,
+            rewards.gift == GiftKind.special
+                ? Icons.auto_awesome_rounded
+                : Icons.card_giftcard_rounded,
             size: 20,
-            color: rewards.gift == GiftKind.special ? Palette.accent : Palette.gold,
+            color: rewards.gift == GiftKind.special
+                ? Palette.accent
+                : Palette.gold,
           ),
           const SizedBox(width: 4),
           Text(
             rewards.gift == GiftKind.special ? 'Special gift' : 'Gift box',
-            style: PopType.of(15, 900, color: rewards.gift == GiftKind.special ? Palette.accent : Palette.ink),
+            style: PopType.of(
+              15,
+              900,
+              color: rewards.gift == GiftKind.special
+                  ? Palette.accent
+                  : Palette.ink,
+            ),
           ),
         ],
       ],

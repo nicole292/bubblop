@@ -9,6 +9,7 @@ import '../game/board_layout.dart';
 import '../game/dev_options.dart';
 import '../game/hud_state.dart';
 import '../game/pop_game.dart';
+import '../progress/boosters.dart';
 import '../progress/progress.dart';
 import '../services/haptics.dart';
 import '../services/settings.dart';
@@ -56,7 +57,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     haptics: widget.haptics,
   );
   final _stackKey = GlobalKey();
-  _Mode _mode = DevOptions.demo.isNotEmpty || DevOptions.isBench || DevOptions.startPlaying
+  _Mode _mode = DevOptions.demo.isNotEmpty || DevOptions.isBench || DevOptions.startPlaying || DevOptions.startLevel > 0
       ? _Mode.playing
       : _Mode.home;
 
@@ -70,6 +71,20 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (DevOptions.startLevel > 0) {
+      // Developer screenshot runs: once the game has loaded, open the level.
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (!mounted) return;
+        _play(
+          tutorial: false,
+          level: Campaign.level(DevOptions.startLevel),
+          boosters: {
+            for (final b in Booster.values)
+              if (DevOptions.boost.split(',').contains(b.name)) b,
+          },
+        );
+      });
+    }
   }
 
   @override
@@ -93,9 +108,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   }
 
   /// Starts a round: Endless, or the campaign [level].
-  void _play({bool? tutorial, LevelDef? level}) {
+  void _play({bool? tutorial, LevelDef? level, Set<Booster> boosters = const {}}) {
     _tap();
-    game.restart(tutorial: tutorial, level: level);
+    game.restart(tutorial: tutorial, level: level, boosters: boosters);
     game.resumeEngine();
     setState(() => _mode = _Mode.playing);
   }
@@ -223,7 +238,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             PauseMenu(
               settings: widget.settings,
               onResume: _resume,
-              onRestart: () => _play(tutorial: false, level: game.level),
+              onRestart: () => _play(tutorial: false, level: game.level == null ? null : Campaign.level(game.level!.number)),
               onHowToPlay: () => _play(tutorial: true),
               onHome: _home,
             ),
@@ -260,7 +275,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                       progress: widget.progress,
                       openLevel: _openLevel,
                       onBack: () => _show(_Mode.home),
-                      onPlay: (level) => _play(level: level),
+                      onPlay: (level, boosters) => _play(level: level, boosters: boosters),
                       onAwards: () => _show(_Mode.achievements),
                       onTap: _tap,
                       onDeny: _deny,

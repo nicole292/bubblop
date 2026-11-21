@@ -47,6 +47,11 @@ abstract final class DevOptions {
   /// POP_DEV=true shows the developer bar (4/3-match switch, session stats).
   static const showDevBar = bool.fromEnvironment('POP_DEV');
 
+  /// POP_LEVEL=n opens campaign level n straight away (screenshot runs);
+  /// POP_BOOST=bomb,drops starts it with those boosters (free).
+  static const startLevel = int.fromEnvironment('POP_LEVEL');
+  static const boost = String.fromEnvironment('POP_BOOST');
+
   /// POP_SKIP=bg,board,fx,orbs,dock,hud : turns layers off to find what costs
   /// raster time (profiling only).
   static const _skip = String.fromEnvironment('POP_SKIP');

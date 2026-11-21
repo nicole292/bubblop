@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../game/palette.dart';
 import '../progress/cosmetics.dart';
 import '../progress/progress.dart';
+import '../render/effects.dart' show BitGlyph;
+import '../render/piece_shapes.dart' show popGlyph;
 import '../services/settings.dart';
 import 'buttons.dart';
 import 'glass.dart';
@@ -59,11 +61,6 @@ class StyleScreen extends StatelessWidget {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     children: [
-                      _section('THEME'),
-                      _themeCard(),
-                      const SizedBox(height: 10),
-                      const SizedBox(height: 10),
-                      _section('SHAPES'),
                       _shapeCard(context),
                     ],
                   ),
@@ -158,32 +155,6 @@ class StyleScreen extends StatelessWidget {
   }
 
   /// Light, dark or follow the phone; the same setting as in the pause menu.
-  Widget _themeCard() => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-    decoration: BoxDecoration(
-      color: Palette.card,
-      borderRadius: BorderRadius.circular(22),
-      border: Border.all(color: Palette.edge, width: 1.2),
-      boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 12, offset: const Offset(0, 4))],
-    ),
-    child: ListenableBuilder(
-      listenable: settings,
-      builder: (context, _) => ThemeRow(
-        value: settings.theme,
-        onChanged: (v) {
-          settings.theme = v;
-          onTap();
-        },
-      ),
-    ),
-  );
-
-  Widget _section(String title) => Padding(
-    padding: const EdgeInsets.fromLTRB(6, 6, 6, 10),
-    child: Text(title, style: PopType.of(14, 900, color: Colors.white, spacing: 2)),
-  );
-
   /// Owned: use it. Coin item: ask before spending. Otherwise say how to get it.
   Future<void> _tapItem(BuildContext context, Cosmetic c) async {
     if (progress.selected(c.kind) == c) return;
@@ -205,6 +176,7 @@ class StyleScreen extends StatelessWidget {
               : CosmeticSwatch(cosmetic: c, height: 48, wide: true),
           price: unlock.price,
           action: 'Unlock',
+          perk: c.kind == CosmeticKind.shape ? shapePerk(c.shape) : null,
         ),
       );
       if (yes == true && progress.buy(c)) {
@@ -240,9 +212,29 @@ class StyleScreen extends StatelessWidget {
 
 /// "Unlock Ocean for 300 coins?" or "Buy 5 bombs for 160 coins?", so coins
 /// are never spent by accident.
+/// What a shape adds in play, for the unlock card.
+String? shapePerk(PieceShape shape) {
+  final glyph = popGlyph(shape);
+  if (glyph == null) return null;
+  final bits = switch (glyph) {
+    BitGlyph.heart => 'little hearts',
+    BitGlyph.star => 'little stars',
+    BitGlyph.petal => 'flower petals',
+    BitGlyph.paw => 'paw prints',
+    BitGlyph.sprinkle => 'sprinkles',
+    BitGlyph.diamond => 'tiny gems',
+    BitGlyph.leaf => 'leaves',
+    BitGlyph.cube => 'jelly cubes',
+  };
+  return 'Its own colours, sparkles on the board, and pops into $bits!';
+}
+
 class _Confirm extends StatelessWidget {
-  const _Confirm({required this.title, required this.preview, required this.price, required this.action});
+  const _Confirm({required this.title, required this.preview, required this.price, required this.action, this.perk});
   final String title;
+
+  /// What the shape adds in play ("Sparkles, and pops into paw prints").
+  final String? perk;
   final Widget preview;
   final int price;
 
@@ -271,6 +263,21 @@ class _Confirm extends StatelessWidget {
             Text(title, style: PopType.of(30, 1000, color: Palette.accent)),
             const SizedBox(height: 14),
             preview,
+            if (perk case final perk?) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(color: Palette.cream, borderRadius: BorderRadius.circular(14)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome_rounded, size: 18, color: Palette.gold),
+                    const SizedBox(width: 6),
+                    Flexible(child: Text(perk, style: PopType.of(14, 900), textAlign: TextAlign.center)),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

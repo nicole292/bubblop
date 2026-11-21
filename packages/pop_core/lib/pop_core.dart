@@ -6,6 +6,7 @@ export 'src/cell.dart';
 export 'src/color_bag.dart';
 export 'src/events.dart';
 export 'src/game.dart';
+export 'src/generated_levels.dart';
 export 'src/levels.dart';
 export 'src/random.dart';
 export 'src/resolver.dart' show findGroups, applyGravity, resolveChains;

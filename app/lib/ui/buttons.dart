@@ -187,14 +187,14 @@ class ToggleRow extends StatelessWidget {
   }
 }
 
-/// A settings row choosing Auto, Light or Dark (Auto follows the phone).
+/// A settings row choosing Light or Dark.
 class ThemeRow extends StatelessWidget {
   const ThemeRow({super.key, required this.value, required this.onChanged});
 
   final ThemeChoice value;
   final ValueChanged<ThemeChoice> onChanged;
 
-  static const _labels = {ThemeChoice.auto: 'Auto', ThemeChoice.light: 'Light', ThemeChoice.dark: 'Dark'};
+  static const _labels = {ThemeChoice.light: 'Light', ThemeChoice.dark: 'Dark'};
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +242,7 @@ class ThemeRow extends StatelessWidget {
       decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(18)),
       child: Row(
         mainAxisSize: stretch ? MainAxisSize.max : MainAxisSize.min,
-        children: [for (final choice in ThemeChoice.values) stretch ? Expanded(child: chip(choice)) : chip(choice)],
+        children: [for (final choice in _labels.keys) stretch ? Expanded(child: chip(choice)) : chip(choice)],
       ),
     );
   }

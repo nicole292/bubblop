@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'events.dart';
+import 'generated_levels.dart';
 import 'game.dart';
 import 'rules_config.dart';
 
@@ -227,9 +228,55 @@ ssosss""";
 o.oo.o
 oooooo
 ######""";
+  static const crown = """
+o.o.o.
+oooooo
+oooooo
+ssssss""";
+  static const fortress = """
+o.oo.o
+o.oo.o
+oooooo
+######""";
+  static const twinPeaks = """
+.o..o.
+oo..oo
+oooooo
+ssssss""";
+  static const shellTower = """
+..ss..
+..ss..
+.ssss.
+ssssss
+ssssss""";
+  static const deepVault = """
+ssssss
+#ssss#
+#ssss#
+#ssss#
+######""";
+  static const bombCross = """
+..*...
+.*o*..
+oo*ooo
+ssssss""";
+  static const stoneCage = """
+#....#
+#.oo.#
+#oooo#
+######""";
+  static const canyon = """
+oo..oo
+oo..oo
+oo.ooo
+ssssss""";
+  static const bombBase = """
+.o..o.
+******
+ssssss""";
 }
 
-/// The 40 levels. Every one starts its own way: a hand-built board
+/// The 60 levels. Every one starts its own way: a hand-built board
 /// ([Layouts]: pyramids, towers, stairs, shell vaults, bomb nests, stone
 /// walls) or a [LevelSetup] twist, and some are puzzles whose rows never
 /// rise ([LevelDef.still]): a fixed board and a number of drops. Early
@@ -237,7 +284,14 @@ oooooo
 /// combine two. The targets were set from the greedy bot in tool/levels.dart,
 /// and each seed was chosen so the bot wins its level at the intended rate.
 abstract final class Campaign {
-  static const levels = <LevelDef>[
+  /// Every level: the 60 hand-made ones, then [GeneratedLevels] (61-560).
+  static final List<LevelDef> levels = List.unmodifiable([
+    ...handmade,
+    for (var n = GeneratedLevels.first; n <= GeneratedLevels.last; n++) GeneratedLevels.level(n),
+  ]);
+
+  /// Levels 1-60, made by hand.
+  static const handmade = <LevelDef>[
     LevelDef(1, 1101, [LevelGoal.pop(8)], layout: Layouts.pyramid),
     LevelDef(2, 1201, [LevelGoal.score(300)], layout: Layouts.stairs),
     LevelDef(3, 1301, [LevelGoal.chain(2)], layout: Layouts.towers),
@@ -279,6 +333,28 @@ abstract final class Campaign {
     LevelDef(38, 4802, [LevelGoal.pop(80), LevelGoal.chain(2)], setup: LevelSetup.stones, layout: Layouts.valley),
     LevelDef(39, 4911, [LevelGoal.blast(5)], drops: 90, setup: LevelSetup.bombWall),
     LevelDef(40, 5001, [LevelGoal.score(2500), LevelGoal.blast(4)], setup: LevelSetup.bombs, layout: Layouts.bombNest),
+    // Levels 41-60: the hard chapters. Bigger targets, two or three goals
+    // at once, tighter drop limits and the toughest boards.
+    LevelDef(41, 6101, [LevelGoal.pop(120), LevelGoal.chain(3)], layout: Layouts.crown),
+    LevelDef(42, 6372, [LevelGoal.crack(16)], drops: 70, still: true, layout: Layouts.deepVault),
+    LevelDef(43, 6340, [LevelGoal.score(3000)], setup: LevelSetup.rush, layout: Layouts.fortress),
+    LevelDef(44, 6401, [LevelGoal.chain(4)], setup: LevelSetup.calm, layout: Layouts.twinPeaks),
+    LevelDef(45, 6502, [LevelGoal.blast(5), LevelGoal.pop(110)], drops: 80, setup: LevelSetup.bombs, layout: Layouts.bombCross),
+    LevelDef(46, 6601, [LevelGoal.crack(35), LevelGoal.chain(3)], setup: LevelSetup.wall),
+    LevelDef(47, 6707, [LevelGoal.pop(110)], drops: 100, layout: Layouts.stoneCage),
+    LevelDef(48, 6804, [LevelGoal.score(3500)], drops: 110, layout: Layouts.canyon),
+    LevelDef(49, 6903, [LevelGoal.blast(8)], drops: 70, setup: LevelSetup.bombWall),
+    LevelDef(50, 7015, [LevelGoal.score(4000), LevelGoal.chain(4)], setup: LevelSetup.rush, layout: Layouts.crown),
+    LevelDef(51, 7101, [LevelGoal.crack(20), LevelGoal.pop(60)], drops: 60, still: true, layout: Layouts.shellTower),
+    LevelDef(52, 7401, [LevelGoal.pop(120), LevelGoal.chain(3)], setup: LevelSetup.stones, layout: Layouts.stoneCage),
+    LevelDef(53, 7301, [LevelGoal.blast(8), LevelGoal.crack(30)], drops: 55, setup: LevelSetup.bombWall, layout: Layouts.bombBase),
+    LevelDef(54, 7401, [LevelGoal.chain(4), LevelGoal.pop(100)], setup: LevelSetup.calm, layout: Layouts.valley),
+    LevelDef(55, 7701, [LevelGoal.score(4000)], drops: 140, setup: LevelSetup.rush, layout: Layouts.fortress),
+    LevelDef(56, 7616, [LevelGoal.crack(40), LevelGoal.blast(3)], setup: LevelSetup.bombs, layout: Layouts.deepVault),
+    LevelDef(57, 7840, [LevelGoal.pop(140)], drops: 130, setup: LevelSetup.rush, layout: Layouts.canyon),
+    LevelDef(58, 7803, [LevelGoal.chain(4), LevelGoal.score(3000)], setup: LevelSetup.rush, layout: Layouts.twinPeaks),
+    LevelDef(59, 7908, [LevelGoal.blast(7), LevelGoal.pop(100)], drops: 100, setup: LevelSetup.bombs, layout: Layouts.bombCross),
+    LevelDef(60, 8045, [LevelGoal.score(3000), LevelGoal.chain(4), LevelGoal.crack(15)], setup: LevelSetup.rush, layout: Layouts.shellTower),
   ];
 
   static int get count => levels.length;

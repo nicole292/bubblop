@@ -10,8 +10,11 @@ import 'package:pop_core/pop_core.dart';
 import '../render/background.dart';
 import '../render/effects.dart';
 import '../progress/achievements.dart';
+import '../progress/boosters.dart';
+import '../progress/cosmetics.dart' show PieceShape;
 import '../progress/progress.dart';
 import '../render/orb_sprites.dart';
+import '../render/piece_shapes.dart';
 import '../services/haptics.dart';
 import '../services/settings.dart';
 import '../services/sfx.dart';
@@ -90,6 +93,9 @@ class PopGame extends FlameGame {
 
   /// Balls popped (or blasted) this round towards the next bomb.
   int _charge = 0;
+
+  /// The round starts with the bomb charged (the Bomb ready booster).
+  bool _startCharged = false;
 
   /// Balls to pop to charge the bomb at the top.
   static const popsPerBomb = 30;
@@ -195,10 +201,31 @@ class PopGame extends FlameGame {
     final scaled = dt * phases.speed;
     scene.update(scaled);
     effects.update(scaled);
+    _twinkle(dt);
     boardLight = math.max(0, boardLight - scaled * 1.8);
     shake = math.max(0, shake - scaled * 30);
     _updateTutorial(dt);
     if (_bench != null) _benchStep(dt);
+  }
+
+  double _twinkleIn = 0;
+  final _twinkleRandom = math.Random();
+
+  /// Shaped pieces (not the plain ball) catch the light: every so often a
+  /// little glint twinkles on one of them, so they look extra special.
+  void _twinkle(double dt) {
+    final layout = this.layout;
+    if (layout == null || Palette.shape == PieceShape.ball || DevOptions.isBench) return;
+    _twinkleIn -= dt;
+    if (_twinkleIn > 0) return;
+    _twinkleIn = 0.28 + _twinkleRandom.nextDouble() * 0.3;
+    final orbs = scene.orbs.where((o) => o.cell.isOrb).toList();
+    if (orbs.isEmpty) return;
+    final orb = orbs[_twinkleRandom.nextInt(orbs.length)];
+    final c = layout.center(orb.col + orb.dx, orb.row + orb.dy);
+    final side = _twinkleRandom.nextBool() ? -1.0 : 1.0;
+    effects.star(c.translate(side * layout.cell * 0.28, -layout.cell * 0.3),
+        size: 0.13 + _twinkleRandom.nextDouble() * 0.07, life: 0.6);
   }
 
   /// Called by the screen with the board slot's rectangle in canvas
@@ -228,14 +255,23 @@ class PopGame extends FlameGame {
   /// Starts a fresh round: Endless, or the campaign [level] when given. The
   /// first round on a new install is the tutorial (level 1 plays on the
   /// tutorial board then).
-  void restart({RulesConfig? config, bool? tutorial, LevelDef? level}) {
+  ///
+  /// [boosters] (already paid for) apply to this round only: a charged
+  /// bomb, or extra drops on a level with a drop limit.
+  void restart({RulesConfig? config, bool? tutorial, LevelDef? level, Set<Booster> boosters = const {}}) {
     if (config != null) {
       _config = config;
       _relayout(force: true);
     }
     phases.clear();
     effects.clear();
+    final drops = level?.drops;
+    if (level != null && drops != null && boosters.contains(Booster.drops)) {
+      level = LevelDef(level.number, level.seed, level.goals,
+          drops: drops + Booster.extraDrops, setup: level.setup, layout: level.layout, still: level.still);
+    }
     this.level = level;
+    _startCharged = boosters.contains(Booster.bomb);
     final firstTime = !settings.tutorialDone;
     _startRound(tutorial: tutorial ?? (firstTime && (level == null || level.number == 1)));
   }
@@ -415,7 +451,7 @@ class PopGame extends FlameGame {
       ..load(rules.board);
     aimColumn = null;
     bombArmed = false;
-    _charge = 0;
+    _charge = _startCharged ? popsPerBomb : 0;
     cheer = 0;
     sad = false;
     boardLight = 0;
@@ -434,6 +470,7 @@ class PopGame extends FlameGame {
       hintColumn: _tutorial == TutorialStep.drop ? Tutorial.dropColumn : null,
       levelNumber: level?.number,
       goals: _goalViews(),
+      bombCharge: _charge / popsPerBomb,
     );
     _publishRulesState();
   }
@@ -603,6 +640,9 @@ class PopGame extends FlameGame {
           // A twinkle of stars in the ball's own colour.
           ..star(at, size: 0.3, color: Color.lerp(color, const Color(0xFFFFFFFF), 0.4)!, life: 0.4)
           ..sparkles(at, count: 2, spread: 0.45, color: color);
+        // Shaped pieces burst into their own little shapes too.
+        final glyph = popGlyph(Palette.shape);
+        if (glyph != null) effects.bits(at, color, glyph, count: (2 + 0.8 * intensity).round(), power: intensity);
       }
       final center = sum / n.toDouble();
       stepCenter += sum;

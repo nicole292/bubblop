@@ -31,9 +31,28 @@ class LevelRewards {
         ? 15
         : level <= 29
         ? 20
-        : 25;
-    // A special gift after levels 10, 20, 30 and 40; a gift box after every
-    // other third level.
+        : level <= 40
+        ? 25
+        : level <= 60
+        ? 35
+        : level <= 200
+        ? 40
+        : level <= 400
+        ? 45
+        : 50;
+    // A special gift after levels 10, 20, 30 and 40 (a new shape), and a
+    // big pile of coins after 50 and 60; a gift box after every other third
+    // level.
+    // After 60, every 50th level is a special gift too, growing as you go.
+    final specialCoins = switch (level) {
+      50 => 300,
+      60 => 500,
+      _ when level > 60 && level % 50 == 0 => 300 + level ~/ 50 * 50,
+      _ => null,
+    };
+    if (specialCoins != null) {
+      return LevelRewards(coins: coins, gift: GiftKind.special, contents: GiftContents(coins: specialCoins));
+    }
     final special = switch (level) {
       10 => Cosmetics.kitties,
       20 => Cosmetics.donuts,
@@ -49,7 +68,7 @@ class LevelRewards {
       );
     }
     if (level % 3 == 0) {
-      const boxCoins = [30, 30, 40, 40, 50, 50, 60, 60, 75, 80, 90, 100, 120];
+      const boxCoins = [30, 30, 40, 40, 50, 50, 60, 60, 75, 80, 90, 100, 120, 130, 140, 150, 160, 180, 200];
       final i = (level ~/ 3 - 1).clamp(0, boxCoins.length - 1);
       return LevelRewards(
         coins: coins,

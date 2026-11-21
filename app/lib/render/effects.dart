@@ -4,7 +4,12 @@ import 'dart:ui';
 import 'package:flutter/painting.dart'
     show TextPainter, TextSpan, TextStyle, TextDirection;
 
-enum _Kind { confetti, star, ring, puff, flash, label }
+enum _Kind { confetti, star, ring, puff, flash, label, bit }
+
+/// The little pieces a shaped piece bursts into (see [Effects.bits]), so
+/// every shape pops in its own way: hearts into hearts, treats into
+/// sprinkles, animals into paw prints.
+enum BitGlyph { heart, star, petal, paw, sprinkle, diamond, leaf, cube }
 
 class _Fx {
   _Kind kind = _Kind.confetti;
@@ -14,6 +19,7 @@ class _Fx {
   double size = 1, endSize = 1;
   double angle = 0, spin = 0;
   bool round = true;
+  BitGlyph glyph = BitGlyph.heart;
   Color color = const Color(0xFFFFFFFF);
   TextPainter? fill;
   TextPainter? outline;
@@ -94,6 +100,84 @@ class Effects {
         ..color = i.isEven ? color : light;
     }
   }
+
+  /// Little [glyph] shapes thrown up and out like confetti, in [color] and
+  /// a lighter tint (sprinkles get a mix of bright candy colours).
+  void bits(Offset at, Color color, BitGlyph glyph, {int count = 4, double power = 1}) {
+    final light = Color.lerp(color, const Color(0xFFFFFFFF), 0.5)!;
+    const candy = [Color(0xFFFF5C8A), Color(0xFFFFD23F), Color(0xFF4CD6F0), Color(0xFF7ED957), Color(0xFFFFFFFF)];
+    for (var i = 0; i < count; i++) {
+      final p = _take();
+      if (p == null) return;
+      final angle = -math.pi / 2 + (_random.nextDouble() - 0.5) * math.pi * 1.5;
+      final speed = cell * (2.6 + _random.nextDouble() * 3.2) * (0.85 + 0.2 * power);
+      p
+        ..kind = _Kind.bit
+        ..glyph = glyph
+        ..x = at.dx
+        ..y = at.dy
+        ..vx = math.cos(angle) * speed
+        ..vy = math.sin(angle) * speed
+        ..life = 0.7 + _random.nextDouble() * 0.35
+        ..size = cell * (0.13 + _random.nextDouble() * 0.08)
+        ..angle = (_random.nextDouble() - 0.5) * 0.8
+        ..spin = (_random.nextDouble() - 0.5) * (glyph == BitGlyph.sprinkle ? 14 : 5)
+        ..color = switch (glyph) {
+          BitGlyph.sprinkle => candy[_random.nextInt(candy.length)],
+          BitGlyph.leaf => i.isEven ? const Color(0xFF5BC236) : const Color(0xFF8BE05E),
+          BitGlyph.star when i.isOdd => const Color(0xFFFFD84D),
+          _ => i.isEven ? color : light,
+        };
+    }
+  }
+
+  static final _glyphPaths = <BitGlyph, Path>{
+    BitGlyph.heart: () {
+      final p = Path()..moveTo(0, -0.35);
+      p.cubicTo(0.25, -0.95, 1.05, -0.75, 0.95, -0.15);
+      p.cubicTo(0.88, 0.3, 0.4, 0.6, 0, 0.95);
+      p.cubicTo(-0.4, 0.6, -0.88, 0.3, -0.95, -0.15);
+      p.cubicTo(-1.05, -0.75, -0.25, -0.95, 0, -0.35);
+      return p..close();
+    }(),
+    BitGlyph.star: () {
+      final p = Path();
+      for (var i = 0; i < 10; i++) {
+        final a = -math.pi / 2 + i * math.pi / 5;
+        final r = i.isEven ? 1.0 : 0.45;
+        i == 0 ? p.moveTo(math.cos(a) * r, math.sin(a) * r) : p.lineTo(math.cos(a) * r, math.sin(a) * r);
+      }
+      return p..close();
+    }(),
+    BitGlyph.petal: Path()
+      ..moveTo(0, -1)
+      ..quadraticBezierTo(0.75, -0.3, 0, 1)
+      ..quadraticBezierTo(-0.75, -0.3, 0, -1)
+      ..close(),
+    BitGlyph.paw: Path()
+      ..addOval(Rect.fromCenter(center: const Offset(0, 0.35), width: 1.1, height: 0.9))
+      ..addOval(Rect.fromCenter(center: const Offset(-0.62, -0.25), width: 0.42, height: 0.52))
+      ..addOval(Rect.fromCenter(center: const Offset(-0.22, -0.62), width: 0.42, height: 0.52))
+      ..addOval(Rect.fromCenter(center: const Offset(0.22, -0.62), width: 0.42, height: 0.52))
+      ..addOval(Rect.fromCenter(center: const Offset(0.62, -0.25), width: 0.42, height: 0.52)),
+    BitGlyph.sprinkle: Path()
+      ..addRRect(RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset.zero, width: 1.5, height: 0.42), const Radius.circular(0.21))),
+    BitGlyph.diamond: Path()
+      ..moveTo(0, -1)
+      ..lineTo(0.7, -0.2)
+      ..lineTo(0, 1)
+      ..lineTo(-0.7, -0.2)
+      ..close(),
+    BitGlyph.leaf: Path()
+      ..moveTo(-0.9, 0.6)
+      ..quadraticBezierTo(-0.7, -0.9, 0.95, -0.75)
+      ..quadraticBezierTo(0.7, 0.85, -0.9, 0.6)
+      ..close(),
+    BitGlyph.cube: Path()
+      ..addRRect(RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset.zero, width: 1.4, height: 1.4), const Radius.circular(0.4))),
+  };
 
   /// A twinkling 4-point sparkle that pops in, spins a little and fades.
   void star(Offset at, {double size = 0.22, Color color = const Color(0xFFFFFFFF), double delay = 0, double life = 0.45}) {
@@ -242,6 +326,11 @@ class Effects {
           p
             ..vy += gravity * dt
             ..vx *= 1 - 1.8 * dt;
+        case _Kind.bit:
+          // Floatier than confetti, so the shapes can be seen.
+          p
+            ..vy += gravity * 0.6 * dt
+            ..vx *= 1 - 2.2 * dt;
         case _Kind.puff:
           p
             ..vx *= 1 - 5 * dt
@@ -282,6 +371,24 @@ class Effects {
               _paint,
             );
           }
+          canvas.restore();
+        case _Kind.bit:
+          // Pops in, then fades out at the end.
+          final grow = t < 0.15 ? 0.4 + 0.6 * (t / 0.15) : 1.0;
+          final a = t < 0.65 ? 1.0 : 1 - (t - 0.65) / 0.35;
+          canvas.save();
+          canvas.translate(p.x, p.y);
+          canvas.rotate(p.angle);
+          canvas.scale(p.size * grow);
+          final path = _glyphPaths[p.glyph]!;
+          // A soft white edge so the bits read on every colour and theme.
+          _stroke
+            ..strokeWidth = 0.28
+            ..strokeJoin = StrokeJoin.round
+            ..color = Color.fromRGBO(255, 255, 255, 0.75 * a);
+          canvas.drawPath(path, _stroke);
+          _paint.color = p.color.withValues(alpha: a);
+          canvas.drawPath(path, _paint);
           canvas.restore();
         case _Kind.star:
           // Pops in big, settles, then shrinks away.

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../progress/cosmetics.dart';
+import 'effects.dart' show BitGlyph;
 
 /// How far past the ball radius a shaped piece's material is drawn, so the
 /// shading covers every outline (the farthest point is the star's top tip).
@@ -68,3 +69,18 @@ Path _flower(double r) {
   }
   return path;
 }
+
+/// What a piece bursts into when it pops, on top of the usual confetti:
+/// the plain ball has nothing extra, every other shape has its own bits.
+BitGlyph? popGlyph(PieceShape shape) => switch (shape) {
+      PieceShape.ball => null,
+      PieceShape.jelly => BitGlyph.cube,
+      PieceShape.heart => BitGlyph.heart,
+      PieceShape.star || PieceShape.planet || PieceShape.moon => BitGlyph.star,
+      PieceShape.flower => BitGlyph.petal,
+      PieceShape.kitty || PieceShape.bunny || PieceShape.bear => BitGlyph.paw,
+      PieceShape.frog || PieceShape.strawberry || PieceShape.apple => BitGlyph.leaf,
+      PieceShape.cherry => BitGlyph.heart,
+      PieceShape.donut || PieceShape.cupcake || PieceShape.macaron => BitGlyph.sprinkle,
+      PieceShape.gem => BitGlyph.diamond,
+    };

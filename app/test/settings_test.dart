@@ -50,8 +50,15 @@ void main() {
     expect(s.sound, isFalse);
   });
 
-  test('theme starts on Auto, which follows the phone', () {
-    expect(Settings.memory().theme, ThemeChoice.auto);
+  test('a fresh install starts light, without faces, with sound and music on', () {
+    final s = Settings.memory();
+    expect(s.theme, ThemeChoice.light);
+    expect(s.faces, isFalse);
+    expect(s.sound, isTrue);
+    expect(s.music, isTrue);
+  });
+
+  test('Auto follows the phone', () {
     expect(ThemeSwitch.isDark(ThemeChoice.auto, Brightness.dark), isTrue);
     expect(ThemeSwitch.isDark(ThemeChoice.auto, Brightness.light), isFalse);
     expect(ThemeSwitch.isDark(ThemeChoice.dark, Brightness.light), isTrue);

@@ -33,7 +33,7 @@ Tick items as you go (in VS Code: change `[ ]` to `[x]`). Details for each step 
 - [ ] Real-phone checks: sound, vibration, smoothness, best score after reopening, pause on a call [6]
 - [ ] Main store listing: replace the screenshots with the 6 new ones and paste the new description lines (1.2.0)
 - [x] Closed testing track live with 1.0.0, published 2026-10-27 [9B.5]
-- [ ] Closed testing update with `Bubblop 1.2.0 (upload this).aab` (build 4) sent for review [9B.5]
+- [ ] Closed testing update with `Bubblop 1.3.0 (upload this).aab` (build 6, built 2026-11-19; 1.2.0 was never uploaded) sent for review [9B.5]
 - [ ] 12+ testers opted in (list names here): …
 - [ ] Day 1 of 14: ____ · Day 14: ____
 - [ ] Apply for production access [9B.6]

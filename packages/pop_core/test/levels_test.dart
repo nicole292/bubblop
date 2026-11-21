@@ -1,6 +1,7 @@
 import 'package:pop_core/pop_core.dart';
 import 'package:test/test.dart';
 
+import 'generated_solutions.dart';
 import 'level_solutions.dart';
 
 void main() {
@@ -125,12 +126,14 @@ void main() {
   });
 
   group('Campaign', () {
-    test('40 levels, numbered in order, each with one or two goals', () {
-      expect(Campaign.count, 40);
+    test('560 levels (60 hand-made, 500 generated), numbered in order, each with one to three goals', () {
+      expect(Campaign.count, 560);
+      expect(Campaign.handmade.length, 60);
       for (var i = 0; i < Campaign.count; i++) {
         final level = Campaign.levels[i];
         expect(level.number, i + 1);
-        expect(level.goals.length, inInclusiveRange(1, 2));
+        // Only the hard chapters (41-60) ask for three things at once.
+        expect(level.goals.length, inInclusiveRange(1, level.number > 40 ? 3 : 2));
         expect(level.goals.every((g) => g.target > 0), isTrue);
       }
       expect(Campaign.level(7).number, 7);
@@ -190,9 +193,17 @@ void main() {
       expect(layouts, greaterThanOrEqualTo(25));
     });
 
+    test('generated levels are always the same: building one twice gives the same level', () {
+      for (var n = GeneratedLevels.first; n <= GeneratedLevels.last; n += 37) {
+        final a = GeneratedLevels.level(n), b = GeneratedLevels.level(n);
+        expect((a.seed, a.layout, a.setup, a.drops, a.still, [for (final g in a.goals) g.text].join(", ")),
+            (b.seed, b.layout, b.setup, b.drops, b.still, [for (final g in b.goals) g.text].join(", ")));
+      }
+    });
+
     test('every level can be won: a recorded winning line meets its goals', () {
       for (final level in Campaign.levels) {
-        final moves = levelSolutions[level.number];
+        final moves = levelSolutions[level.number] ?? generatedSolutions[level.number];
         expect(moves, isNotNull, reason: 'no solution for level ${level.number}');
         final game = level.newGame();
         final tracker = LevelTracker(level);

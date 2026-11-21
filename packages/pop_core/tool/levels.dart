@@ -26,6 +26,13 @@ const attempts = 80;
   final chain3 = level.goals.any((g) => g.kind == GoalKind.chain && g.target >= 3);
   final chain4 = level.goals.any((g) => g.kind == GoalKind.chain && g.target >= 4);
   if (n <= 3) return (0.9, 1.0);
+  // The hard chapters (41-60): the bot should usually lose.
+  if (n > 40) {
+    if (chain4) return (0.02, 0.4);
+    if (level.still) return (0.1, 0.6);
+    if (level.goals.any((g) => g.kind == GoalKind.blast)) return (0.08, 0.5);
+    return (0.1, 0.5);
+  }
   // Puzzles: a fixed board and a fixed number of drops.
   if (level.still) return (0.3, 0.9);
   // The bot never aims at bombs, so it sets them off only by chance.

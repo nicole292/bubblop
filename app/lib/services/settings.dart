@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Light or dark look: [auto] follows the phone.
+/// Light or dark look. [auto] (followed the phone) is no longer offered;
+/// it stays only so old saves can be read.
 enum ThemeChoice { auto, light, dark }
 
 /// Everything saved between launches: player preferences, best score and
@@ -43,9 +44,10 @@ class Settings extends ChangeNotifier {
   late int _bestLevel = _prefs?.getInt(_bestLevelKey) ?? 0;
   late bool _tutorialDone = _prefs?.getBool(_tutorialKey) ?? false;
   late int _gamesPlayed = _prefs?.getInt(_gamesKey) ?? 0;
-  late bool _faces = _prefs?.getBool(_facesKey) ?? true;
-  late ThemeChoice _theme =
-      ThemeChoice.values.where((t) => t.name == _prefs?.getString(_themeKey)).firstOrNull ?? ThemeChoice.auto;
+  late bool _faces = _prefs?.getBool(_facesKey) ?? false;
+  /// Light or Dark; a new player starts on Light. Auto is no longer offered,
+  /// so an old saved Auto counts as Light.
+  late ThemeChoice _theme = _prefs?.getString(_themeKey) == ThemeChoice.dark.name ? ThemeChoice.dark : ThemeChoice.light;
 
   bool get sound => _sound;
 

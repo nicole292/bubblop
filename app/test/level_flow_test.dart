@@ -107,7 +107,8 @@ void main() {
   });
 
   test('every campaign level plays its setup and limit, and its winning line wins in the app', () {
-    for (final level in Campaign.levels.where((l) => l.drops != null || l.setup != LevelSetup.normal)) {
+    // The hand-made levels; pop_core's tests replay all 560 without animation.
+    for (final level in Campaign.handmade.where((l) => l.drops != null || l.setup != LevelSetup.normal)) {
       final game = makeGame();
       game.restart(level: level);
       final want = level.setup.apply(const RulesConfig());

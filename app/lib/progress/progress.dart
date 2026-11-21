@@ -262,6 +262,17 @@ class Progress extends ChangeNotifier {
     CosmeticKind.sky => _sky,
   };
 
+  /// Pays [amount] coins (for boosters). Returns false, and pays nothing,
+  /// if the player can't afford it.
+  bool spend(int amount) {
+    if (amount < 0 || _coins < amount) return false;
+    if (amount == 0) return true;
+    _coins -= amount;
+    _save();
+    notifyListeners();
+    return true;
+  }
+
   /// Unlocks a coin cosmetic. Returns false if it isn't for sale, is
   /// already owned, or the player can't afford it.
   bool buy(Cosmetic c) {

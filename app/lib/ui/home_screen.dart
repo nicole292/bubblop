@@ -10,6 +10,7 @@ import '../render/orb_sprites.dart';
 import '../services/settings.dart';
 import 'buttons.dart';
 import 'glass.dart';
+import 'settings_sheet.dart';
 import 'orb_icon.dart';
 import 'swatches.dart';
 import 'type.dart';
@@ -52,10 +53,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  late final _clock = AnimationController(vsync: this, duration: const Duration(seconds: 6))..repeat();
+  late final _clock = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 6),
+  )..repeat();
 
   /// A slow minute-long loop for the drifting balls.
-  late final _drift = AnimationController(vsync: this, duration: const Duration(minutes: 1))..repeat();
+  late final _drift = AnimationController(
+    vsync: this,
+    duration: const Duration(minutes: 1),
+  )..repeat();
 
   @override
   void dispose() {
@@ -84,7 +91,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 gradient: RadialGradient(
                   center: const Alignment(0, -0.3),
                   radius: 0.75,
-                  colors: [Color(Palette.dark ? 0x26FFFFFF : 0x66FFFFFF), const Color(0x00FFFFFF)],
+                  colors: [
+                    Color(Palette.dark ? 0x26FFFFFF : 0x66FFFFFF),
+                    const Color(0x00FFFFFF),
+                  ],
                 ),
               ),
             ),
@@ -101,39 +111,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                     child: Row(
                       children: [
+                        // Money at the top; points (the best score) are in
+                        // the middle, under Classic, so they never mix up.
                         CoinChip(coins: widget.progress.coins),
-                        if (settings.best > 0 || settings.bestLevel > 0) ...[
-                          const SizedBox(width: 8),
-                          _BestChip(best: settings.best, bestLevel: settings.bestLevel),
-                        ],
                         const Spacer(),
+                        // Sound, music, vibration, faces and theme, all behind one button.
                         GlassIconButton(
-                          icon: settings.sound ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-                          tooltip: 'Sound',
-                          off: !settings.sound,
+                          icon: Icons.settings_rounded,
+                          tooltip: 'Settings',
                           onPressed: () {
-                            settings.sound = !settings.sound;
                             widget.onTap();
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        GlassIconButton(
-                          icon: settings.music ? Icons.music_note_rounded : Icons.music_off_rounded,
-                          tooltip: 'Music',
-                          off: !settings.music,
-                          onPressed: () {
-                            settings.music = !settings.music;
-                            widget.onTap();
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        GlassIconButton(
-                          icon: settings.haptics ? Icons.vibration_rounded : Icons.mobile_off_rounded,
-                          tooltip: 'Vibration',
-                          off: !settings.haptics,
-                          onPressed: () {
-                            settings.haptics = !settings.haptics;
-                            widget.onTap();
+                            showSettingsSheet(context, settings);
                           },
                         ),
                       ],
@@ -142,19 +130,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const Spacer(flex: 3),
                   _Logo(clock: _clock, sprites: widget.sprites),
                   const SizedBox(height: 14),
-                  Text('DROP  •  MATCH  •  CHAIN', style: PopType.of(14, 900, color: Colors.white, spacing: 2.5)),
+                  Text(
+                    'DROP  •  MATCH  •  CHAIN',
+                    style: PopType.of(
+                      14,
+                      900,
+                      color: Colors.white,
+                      spacing: 2.5,
+                    ),
+                  ),
                   const Spacer(flex: 3),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 44),
                     child: AnimatedBuilder(
                       animation: _clock,
                       // A gentle "breathing" invites the first tap.
-                      builder: (context, child) =>
-                          Transform.scale(scale: 1 + 0.025 * math.sin(_clock.value * math.pi * 2 * 3), child: child),
+                      builder: (context, child) => Transform.scale(
+                        scale:
+                            1 +
+                            0.025 * math.sin(_clock.value * math.pi * 2 * 3),
+                        child: child,
+                      ),
                       child: _ShinyButton(
                         clock: _clock,
                         child: BigButton(
-                          label: widget.progress.allCompleted ? 'LEVELS' : 'LEVEL ${widget.progress.currentLevel}',
+                          label: widget.progress.allCompleted
+                              ? 'LEVELS'
+                              : 'LEVEL ${widget.progress.currentLevel}',
                           icon: Icons.play_arrow_rounded,
                           height: 76,
                           onPressed: widget.onLevels,
@@ -173,64 +175,79 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       onPressed: widget.onClassic,
                     ),
                   ),
+                  if (settings.best > 0) ...[
+                    const SizedBox(height: 12),
+                    _BestLine(
+                      best: settings.best,
+                      bestLevel: settings.bestLevel,
+                    ),
+                  ],
                   const Spacer(flex: 2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 100,
-                        child: GlassIconButton(
-                          icon: Icons.map_rounded,
-                          picture: _ShapeFace(
-                              shape: PieceShape.star, color: PieceShape.star.signature, clock: _clock, seed: 1),
-                          tooltip: 'Levels',
-                          label: 'Levels',
-                          size: 52,
-                          onPressed: widget.onMap,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                        width: 100,
-                        child: GlassIconButton(
-                          icon: Icons.category_rounded,
-                          // The shape in use, in its own colour.
-                          picture: _ShapeFace(
-                            shape: widget.progress.shape.shape,
-                            color: widget.progress.shape.shape.signature,
-                            clock: _clock,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        SizedBox(
+                          width: 104,
+                          child: GlassIconButton(
+                            icon: Icons.map_rounded,
+                            picture: _ShapeFace(
+                              shape: PieceShape.star,
+                              color: PieceShape.star.signature,
+                              clock: _clock,
+                              seed: 1,
+                            ),
+                            tooltip: 'Levels',
+                            label: 'Levels',
+                            size: 52,
+                            onPressed: widget.onMap,
                           ),
-                          tooltip: 'Shapes',
-                          label: 'Shapes',
-                          size: 52,
-                          onPressed: widget.onStyle,
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                        width: 100,
-                        child: GlassIconButton(
-                          icon: Icons.lightbulb_rounded,
-                          picture: _ShapeFace(
-                            shape: PieceShape.jelly,
-                            color: PieceShape.jelly.signature,
-                            clock: _clock,
-                            seed: 5,
-                            badge: '?',
+                        SizedBox(
+                          width: 104,
+                          child: GlassIconButton(
+                            icon: Icons.category_rounded,
+                            // The shape in use, in its own colour.
+                            picture: _ShapeFace(
+                              shape: widget.progress.shape.shape,
+                              color: widget.progress.shape.shape.signature,
+                              clock: _clock,
+                            ),
+                            tooltip: 'Shapes',
+                            label: 'Shapes',
+                            size: 52,
+                            onPressed: widget.onStyle,
                           ),
-                          tooltip: 'How to play',
-                          label: 'How to play',
-                          size: 52,
-                          onPressed: () {
-                            widget.onTap();
-                            widget.onHowToPlay();
-                          },
                         ),
-                      ),
-                    ],
+                        SizedBox(
+                          width: 104,
+                          child: GlassIconButton(
+                            icon: Icons.lightbulb_rounded,
+                            picture: _ShapeFace(
+                              shape: PieceShape.jelly,
+                              color: PieceShape.jelly.signature,
+                              clock: _clock,
+                              seed: 5,
+                              badge: '?',
+                            ),
+                            tooltip: 'How to play',
+                            label: 'How to play',
+                            size: 52,
+                            onPressed: () {
+                              widget.onTap();
+                              widget.onHowToPlay();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const Spacer(),
-                  const Padding(padding: EdgeInsets.only(bottom: 14), child: _Signature()),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 14),
+                    child: _Signature(),
+                  ),
                 ],
               ),
             ),
@@ -241,47 +258,37 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-/// The best Classic score, with the best level reached under it, next to
-/// the coins.
-class _BestChip extends StatelessWidget {
-  const _BestChip({required this.best, required this.bestLevel});
+/// The best Classic score (points, with a trophy), shown in the middle
+/// under Classic, away from the coins at the top.
+class _BestLine extends StatelessWidget {
+  const _BestLine({required this.best, required this.bestLevel});
   final int best;
   final int bestLevel;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.fromLTRB(7, 0, 16, 0),
-      decoration: glass(22),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFFFD45C), Palette.gold],
-              ),
-            ),
-            child: const Icon(Icons.emoji_events_rounded, size: 18, color: Colors.white),
-          ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.emoji_events_rounded, size: 18, color: Colors.white),
+        const SizedBox(width: 6),
+        Text(
+          'Best $best points',
+          style: PopType.of(15, 900, color: Colors.white, numbers: true),
+        ),
+        if (bestLevel > 0) ...[
           const SizedBox(width: 8),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('$best', style: PopType.of(bestLevel > 0 ? 17 : 20, 900, color: Colors.white, numbers: true)),
-              if (bestLevel > 0)
-                Text('BEST LV $bestLevel', style: PopType.of(10, 900, color: const Color(0xD9FFFFFF), spacing: 0.8)),
-            ],
+          Text(
+            '· Lv $bestLevel',
+            style: PopType.of(
+              13,
+              900,
+              color: const Color(0xD9FFFFFF),
+              numbers: true,
+            ),
           ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -313,7 +320,11 @@ class _ShinyButton extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment(x - 0.5, -1),
                         end: Alignment(x + 0.5, 1),
-                        colors: const [Color(0x00FFFFFF), Color(0x66FFFFFF), Color(0x00FFFFFF)],
+                        colors: const [
+                          Color(0x00FFFFFF),
+                          Color(0x66FFFFFF),
+                          Color(0x00FFFFFF),
+                        ],
                       ),
                     ),
                   );
@@ -361,7 +372,14 @@ class _FloatingBalls extends StatelessWidget {
             return Stack(
               children: [
                 for (final (x, start, size, color, speed) in _balls)
-                  _ball(w, h, x, (start + clock.value * speed) % 1, size, color),
+                  _ball(
+                    w,
+                    h,
+                    x,
+                    (start + clock.value * speed) % 1,
+                    size,
+                    color,
+                  ),
               ],
             );
           },
@@ -394,7 +412,8 @@ class _Signature extends StatefulWidget {
   State<_Signature> createState() => _SignatureState();
 }
 
-class _SignatureState extends State<_Signature> with SingleTickerProviderStateMixin {
+class _SignatureState extends State<_Signature>
+    with SingleTickerProviderStateMixin {
   static const _word = 'elishakov';
   static const _total = 4400.0;
 
@@ -417,7 +436,9 @@ class _SignatureState extends State<_Signature> with SingleTickerProviderStateMi
         builder: (context, _) {
           final ms = _controller.value * _total;
           // Everything fades out together at the end.
-          final out = 1 - Curves.easeInOut.transform(((ms - 3000) / 1200).clamp(0.0, 1.0));
+          final out =
+              1 -
+              Curves.easeInOut.transform(((ms - 3000) / 1200).clamp(0.0, 1.0));
           if (out <= 0) return const SizedBox(height: 16);
           return Row(
             mainAxisSize: MainAxisSize.min,
@@ -426,8 +447,16 @@ class _SignatureState extends State<_Signature> with SingleTickerProviderStateMi
                 Opacity(
                   // From the first frame, letter by letter, 90 ms apart, each easing in
                   // over 600 ms.
-                  opacity: 0.28 * out * Curves.easeOut.transform(((ms - 100 - i * 90) / 600).clamp(0.0, 1.0)),
-                  child: Text(_word[i], style: PopType.of(12, 600, color: Colors.white, spacing: 3)),
+                  opacity:
+                      0.28 *
+                      out *
+                      Curves.easeOut.transform(
+                        ((ms - 100 - i * 90) / 600).clamp(0.0, 1.0),
+                      ),
+                  child: Text(
+                    _word[i],
+                    style: PopType.of(12, 600, color: Colors.white, spacing: 3),
+                  ),
                 ),
             ],
           );
@@ -480,10 +509,16 @@ class _Logo extends StatelessWidget {
                     children: [
                       for (var i = 0; i < _letters.length; i++)
                         Transform.translate(
-                          offset: Offset(0, -math.max(0, math.sin(t * 2 - i * 0.55)) * 10),
+                          offset: Offset(
+                            0,
+                            -math.max(0, math.sin(t * 2 - i * 0.55)) * 10,
+                          ),
                           child: Transform.rotate(
                             angle: (i.isEven ? -1 : 1) * 0.05,
-                            child: _Letter(_letters[i], Palette.balls[i % Palette.balls.length]),
+                            child: _Letter(
+                              _letters[i],
+                              Palette.balls[i % Palette.balls.length],
+                            ),
                           ),
                         ),
                     ],
@@ -511,7 +546,10 @@ class _Letter extends StatelessWidget {
         // Soft drop shadow, chunky white outline, then the coloured face.
         Transform.translate(
           offset: const Offset(0, 5),
-          child: Text(letter, style: PopType.of(size, 1000, color: const Color(0x403A2D9E))),
+          child: Text(
+            letter,
+            style: PopType.of(size, 1000, color: const Color(0x403A2D9E)),
+          ),
         ),
         Text(
           letter,
@@ -534,7 +572,13 @@ class _Letter extends StatelessWidget {
 /// A home-screen icon: a piece in [color] with a face that blinks now and
 /// then, and an optional [badge] ("?").
 class _ShapeFace extends StatelessWidget {
-  const _ShapeFace({required this.shape, required this.color, required this.clock, this.seed = 3, this.badge});
+  const _ShapeFace({
+    required this.shape,
+    required this.color,
+    required this.clock,
+    this.seed = 3,
+    this.badge,
+  });
   final PieceShape shape;
   final Color color;
   final Animation<double> clock;
@@ -572,7 +616,10 @@ class _ShapeFace extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: color, width: 1.5),
                 ),
-                child: Text(badge!, style: PopType.of(11, 1000, color: Palette.accent)),
+                child: Text(
+                  badge!,
+                  style: PopType.of(11, 1000, color: Palette.accent),
+                ),
               ),
             ),
         ],
@@ -589,9 +636,18 @@ class _FacePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    paintFace(canvas, size.center(Offset.zero), size.width / 2, Mood.idle, shape: shape, time: t * 6, seed: seed);
+    paintFace(
+      canvas,
+      size.center(Offset.zero),
+      size.width / 2,
+      Mood.idle,
+      shape: shape,
+      time: t * 6,
+      seed: seed,
+    );
   }
 
   @override
-  bool shouldRepaint(_FacePainter old) => old.t != t || old.shape != shape || old.seed != seed;
+  bool shouldRepaint(_FacePainter old) =>
+      old.t != t || old.shape != shape || old.seed != seed;
 }

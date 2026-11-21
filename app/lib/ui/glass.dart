@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../game/palette.dart';
@@ -133,28 +135,70 @@ class GlassPill extends StatelessWidget {
   }
 }
 
-/// A gold coin: a round gold disc with a soft rim and a white star.
+/// Money: two shiny gold coins, one tucked behind the other, each with a
+/// thick edge, a rim and a glint. No star: stars mean points in this game,
+/// and coins should never look like them.
 class CoinIcon extends StatelessWidget {
   const CoinIcon({super.key, this.size = 22});
   final double size;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFD45C), Palette.coin],
-        ),
-        border: Border.all(color: const Color(0xFFE89A0C), width: size * 0.07),
-      ),
-      child: Icon(Icons.star_rounded, size: size * 0.62, color: Colors.white),
+  Widget build(BuildContext context) =>
+      SizedBox.square(dimension: size, child: CustomPaint(painter: _CoinsPainter()));
+}
+
+class _CoinsPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.shortestSide;
+    // Back coin up and to the right, front coin down and to the left.
+    _coin(canvas, Offset(s * 0.64, s * 0.36), s * 0.3, back: true);
+    _coin(canvas, Offset(s * 0.42, s * 0.58), s * 0.38);
+  }
+
+  static void _coin(Canvas canvas, Offset c, double r, {bool back = false}) {
+    // Edge (the coin's thickness), showing below the face.
+    canvas.drawCircle(c.translate(0, r * 0.2), r, Paint()..color = const Color(0xFFB86A00));
+    final face = Rect.fromCircle(center: c, radius: r);
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: back
+              ? const [Color(0xFFFFD95A), Color(0xFFE89A00)]
+              : const [Color(0xFFFFEC8A), Color(0xFFFFC21A), Color(0xFFEE9B00)],
+        ).createShader(face),
+    );
+    // Outline, so the coin reads on white and on the sky.
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(0.8, r * 0.1)
+        ..color = const Color(0xFFC77700),
+    );
+    // Inner rim.
+    canvas.drawCircle(
+      c,
+      r * 0.62,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(0.7, r * 0.12)
+        ..color = const Color(0xFFE59400),
+    );
+    // Glint.
+    canvas.drawOval(
+      Rect.fromCenter(center: c.translate(-r * 0.32, -r * 0.4), width: r * 0.5, height: r * 0.26),
+      Paint()..color = const Color(0xD9FFFFFF),
     );
   }
+
+  @override
+  bool shouldRepaint(_CoinsPainter old) => false;
 }
 
 /// The coin balance on the sky (glass) or on a white card.
