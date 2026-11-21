@@ -340,7 +340,9 @@ class _BoardSlot extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             // The same layout the game draws the card with.
-            final layout = BoardLayout(constraints.biggest, columns: game.config.columns, rows: game.config.rows);
+            final layout = BoardLayout(constraints.biggest,
+                columns: game.config.columns, rows: game.config.rows, missions: hud.isLevel);
+            final missions = layout.missionRect;
             final next = _nextSpot(layout);
             return Stack(
               children: [
@@ -362,6 +364,11 @@ class _BoardSlot extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (missions != null)
+                  Positioned.fromRect(
+                    rect: missions,
+                    child: RepaintBoundary(child: MissionBar(goals: hud.goals, dropsLeft: hud.dropsLeft)),
+                  ),
                 // The next balls float just above the stack, where you are
                 // already looking, and rise with it.
                 AnimatedPositioned(

@@ -25,7 +25,7 @@ class BoardComponent extends Component {
   // layout (and light or dark mode), so a frame draws them with a single
   // image copy.
   Image? _static;
-  Rect? _staticFor;
+  (Rect, double)? _staticFor;
   bool? _staticDark;
   Rect _staticBounds = Rect.zero;
 
@@ -256,7 +256,7 @@ class BoardComponent extends Component {
   RRect _cardRRect(BoardLayout layout) => RRect.fromRectAndRadius(layout.cardRect, Radius.circular(layout.cell * 0.5));
 
   void _ensureStatic(BoardLayout layout) {
-    if (_static != null && _staticFor == layout.cardRect && _staticDark == Palette.dark) return;
+    if (_static != null && _staticFor == (layout.cardRect, layout.wellTop) && _staticDark == Palette.dark) return;
     final card = _cardRRect(layout);
     // Room for the shadow around the card.
     final bounds = card.outerRect.inflate(layout.cell * 0.6);
@@ -271,7 +271,7 @@ class BoardComponent extends Component {
     _static?.dispose();
     _static = picture.toImageSync((bounds.width * ratio).ceil(), (bounds.height * ratio).ceil());
     picture.dispose();
-    _staticFor = layout.cardRect;
+    _staticFor = (layout.cardRect, layout.wellTop);
     _staticDark = Palette.dark;
     _staticBounds = bounds;
   }

@@ -11,9 +11,12 @@ import 'dart:ui';
 /// with its toolbars) the card still fills the width and looks the same as
 /// everywhere else.
 class BoardLayout {
-  /// [offset] is where [area] starts on the game canvas.
-  factory BoardLayout(Size area, {required int columns, required int rows, Offset offset = Offset.zero}) {
-    final cells = rows + headerCells + headroomCells + trayCells;
+  /// [offset] is where [area] starts on the game canvas. [missions] makes
+  /// room under the header for a level's mission bar.
+  factory BoardLayout(Size area,
+      {required int columns, required int rows, Offset offset = Offset.zero, bool missions = false}) {
+    final bar = missions ? missionCells : 0.0;
+    final cells = rows + headerCells + bar + headroomCells + trayCells;
     final innerWidth = area.width - padding * 2;
     final cell = math.min(
       math.min(innerWidth / (columns + sideCells * 2), (area.height - padding * 2) / cells),
@@ -26,11 +29,17 @@ class BoardLayout {
     final spare = math.max(0.0, math.min(area.height - padding * 2 - cell * cells, cell * maxSpareCells));
     final cardHeight = cell * cells + spare;
     final cardTop = offset.dy + (area.height - cardHeight) / 2;
-    final origin = Offset(offset.dx + (area.width - width) / 2, cardTop + cell * (headerCells + headroomCells) + spare);
-    return BoardLayout._(columns, rows, cell, columnWidth, origin, cardTop);
+    final origin =
+        Offset(offset.dx + (area.width - width) / 2, cardTop + cell * (headerCells + bar + headroomCells) + spare);
+    return BoardLayout._(columns, rows, cell, columnWidth, origin, cardTop, bar);
   }
 
-  BoardLayout._(this.columns, this.rows, this.cell, this.columnWidth, this.origin, this.cardTop);
+  BoardLayout._(this.columns, this.rows, this.cell, this.columnWidth, this.origin, this.cardTop, this._bar);
+
+  /// Height, in rows, of the mission bar under the header in a level.
+  static const missionCells = 0.62;
+
+  final double _bar;
 
   static const padding = 8.0;
 
@@ -76,8 +85,13 @@ class BoardLayout {
 
   Rect get rect => origin & Size(columnWidth * columns, cell * rows);
 
-  /// Top of the well and its lanes: just under the header.
-  double get wellTop => headerRect.bottom + cell * 0.06;
+  /// Top of the well and its lanes: just under the header (and the mission
+  /// bar, in a level).
+  double get wellTop => headerRect.bottom + cell * (_bar + 0.06);
+
+  /// The mission bar under the header, or null outside a level.
+  Rect? get missionRect =>
+      _bar == 0 ? null : Rect.fromLTWH(cardRect.left, headerRect.bottom, cardRect.width, cell * _bar);
 
   /// One column's lane, from just under the header to the board's bottom.
   Rect lane(int column) =>

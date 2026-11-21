@@ -56,21 +56,17 @@ class HudBar extends StatelessWidget {
                   _PauseButton(onPressed: onPause),
                   const SizedBox(width: 8),
                   if (hud.isLevel) ...[
-                    // A level: the score with the level under it, and the
-                    // missions as round badges right beside it.
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 96),
-                          child: _Score(value: hud.score, gain: hud.gain, gainId: hud.gainId, small: true),
-                        ),
-                        Text('LEVEL ${hud.levelNumber}', style: PopType.level),
-                      ],
+                    // A level: the score and the level; the missions have
+                    // their own bar under the header (MissionBar).
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(child: _Score(value: hud.score, gain: hud.gain, gainId: hud.gainId)),
+                          const SizedBox(width: 8),
+                          Text('LEVEL ${hud.levelNumber}', style: PopType.of(13, 1000, color: Palette.accent, spacing: 1.1)),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(child: _GoalRings(goals: hud.goals, dropsLeft: hud.dropsLeft)),
                   ] else
                     Expanded(
                       child: Column(
@@ -370,8 +366,7 @@ class _PauseButton extends StatelessWidget {
 /// The score rolls up to its new value, gives a small bump when points land,
 /// and shows the gain beside it for a moment.
 class _Score extends StatefulWidget {
-  const _Score({required this.value, required this.gain, required this.gainId, this.small = false});
-  final bool small;
+  const _Score({required this.value, required this.gain, required this.gainId});
   final int value;
   final int gain;
   final int gainId;
@@ -416,7 +411,7 @@ class _ScoreState extends State<_Score> with SingleTickerProviderStateMixin {
                 tween: Tween(end: widget.value.toDouble()),
                 duration: const Duration(milliseconds: 450),
                 curve: Curves.easeOutCubic,
-                builder: (context, v, _) => Text('${v.round()}', style: widget.small ? PopType.of(26, 1000, numbers: true) : PopType.score),
+                builder: (context, v, _) => Text('${v.round()}', style: PopType.score),
               ),
             ),
           ),
@@ -487,15 +482,17 @@ class _SubLine extends StatelessWidget {
   }
 }
 
-//// Level mode: the missions as round badges beside the score. Each badge
-/// has the mission's icon in a ring that fills as you go, with the count
-/// under it; a finished one turns green with a tick and bounces. A level
-/// with a drop limit adds a badge with the drops left (red near the end).
-/// Tapping them shows the missions in full ("Pop 40 balls").
-class _GoalRings extends StatelessWidget {
-  const _GoalRings({required this.goals, this.dropsLeft});
+///// A level's missions, in their own bar under the header: each one in
+/// words ("Pop 23/110") with a thin bar that fills as you go, turning green
+/// with a tick when it is done; then the drops left on a level with a drop
+/// limit (red near the end). Tapping it shows the missions in full.
+/// Laid out at [designHeight] and scaled to fit, like the header.
+class MissionBar extends StatelessWidget {
+  const MissionBar({super.key, required this.goals, this.dropsLeft});
   final List<GoalView> goals;
   final int? dropsLeft;
+
+  static const designHeight = 40.0;
 
   @override
   Widget build(BuildContext context) {
@@ -503,33 +500,63 @@ class _GoalRings extends StatelessWidget {
       for (final g in goals) '${g.met ? '✓' : '•'} ${g.goal.text}',
       if (dropsLeft != null) '• $dropsLeft drops left',
     ].join('\n');
-    return Tooltip(
-      message: full,
-      triggerMode: TooltipTriggerMode.tap,
-      showDuration: const Duration(seconds: 3),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.centerRight,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final (i, g) in goals.indexed) ...[
-              if (i > 0) const SizedBox(width: 6),
-              _GoalRing(goal: g),
-            ],
-            if (dropsLeft case final drops?) ...[
-              const SizedBox(width: 6),
-              _DropsRing(drops: drops),
-            ],
-          ],
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = (constraints.maxHeight / designHeight).clamp(0.5, 1.25);
+        return Tooltip(
+          message: full,
+          triggerMode: TooltipTriggerMode.tap,
+          showDuration: const Duration(seconds: 3),
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: constraints.maxWidth / scale,
+              height: designHeight,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(14)),
+                  child: Row(
+                    children: [
+                      for (final (i, g) in goals.indexed) ...[
+                        if (i > 0) _divider(),
+                        Expanded(child: _Mission(goal: g)),
+                      ],
+                      if (dropsLeft case final drops?) ...[
+                        _divider(),
+                        _Drops(drops: drops),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
+
+  Widget _divider() => Container(
+        width: 1.5,
+        height: 20,
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        color: Palette.pipEmpty,
+      );
 }
 
-/// The colour of a mission's ring while it is still going.
-Color _goalTint(GoalKind kind) => switch (kind) {
+/// The word for a mission in the bar.
+String _missionWord(GoalKind kind) => switch (kind) {
+      GoalKind.score => 'Points',
+      GoalKind.pop => 'Pop',
+      GoalKind.chain => 'Chain',
+      GoalKind.crack => 'Shells',
+      GoalKind.blast => 'Bombs',
+    };
+
+/// The colour of a mission's bar while it is still going.
+Color _missionTint(GoalKind kind) => switch (kind) {
       GoalKind.score => Palette.gold,
       GoalKind.pop => const Color(0xFF3D8BFF),
       GoalKind.chain => Palette.accent,
@@ -537,116 +564,82 @@ Color _goalTint(GoalKind kind) => switch (kind) {
       GoalKind.blast => const Color(0xFFFF8A1A),
     };
 
-/// A round badge: [child] inside a ring filled to [fraction] in [tint], with
-/// [label] underneath.
-class _Ring extends StatelessWidget {
-  const _Ring({required this.fraction, required this.tint, required this.child, required this.label, this.done = false});
-  final double fraction;
-  final Color tint;
-  final Widget child;
-  final Widget label;
-  final bool done;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox.square(
-          dimension: 42,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: done ? Palette.success : Palette.well,
-                  boxShadow: done
-                      ? [BoxShadow(color: Palette.success.withValues(alpha: 0.45), blurRadius: 8)]
-                      : null,
-                ),
-              ),
-              if (!done)
-                SizedBox.square(
-                  dimension: 42,
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(end: fraction.clamp(0.0, 1.0)),
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, v, _) => CircularProgressIndicator(
-                      value: v,
-                      strokeWidth: 4,
-                      strokeCap: StrokeCap.round,
-                      color: tint,
-                      backgroundColor: Palette.pipEmpty,
-                    ),
-                  ),
-                ),
-              child,
-            ],
-          ),
-        ),
-        const SizedBox(height: 1),
-        label,
-      ],
-    );
-  }
-}
-
-class _GoalRing extends StatelessWidget {
-  const _GoalRing({required this.goal});
+class _Mission extends StatelessWidget {
+  const _Mission({required this.goal});
   final GoalView goal;
 
   @override
   Widget build(BuildContext context) {
     final g = goal;
-    final fraction = g.goal.target <= 0 ? 1.0 : g.progress / g.goal.target;
-    return TweenAnimationBuilder<double>(
-      // Bounces once when the mission is done.
-      key: ValueKey(g.met),
-      tween: Tween(begin: g.met ? 1.3 : 1, end: 1),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.elasticOut,
-      builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
-      child: _Ring(
-        fraction: fraction,
-        tint: _goalTint(g.goal.kind),
-        done: g.met,
-        label: Text(
-          g.met ? 'Done!' : goalCount(g.goal, g.progress),
-          style: PopType.of(11, 1000, color: g.met ? Palette.success : Palette.ink, numbers: true),
+    final fraction = g.goal.target <= 0 ? 1.0 : (g.progress / g.goal.target).clamp(0.0, 1.0);
+    final tint = g.met ? Palette.success : _missionTint(g.goal.kind);
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              g.met
+                  ? Icon(Icons.check_circle_rounded, size: 15, color: Palette.success)
+                  : GoalIcon(kind: g.goal.kind, size: 15),
+              const SizedBox(width: 4),
+              Text(_missionWord(g.goal.kind), style: PopType.of(12, 900, color: Palette.inkSoft)),
+              const SizedBox(width: 4),
+              Text(
+                g.met ? 'Done!' : goalCount(g.goal, g.progress),
+                style: PopType.of(13, 1000, color: g.met ? Palette.success : Palette.ink, numbers: true),
+              ),
+            ],
+          ),
         ),
-        child: g.met
-            ? const Icon(Icons.check_rounded, size: 24, color: Colors.white)
-            : GoalIcon(kind: g.goal.kind, size: 20),
-      ),
+        const SizedBox(height: 3),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(2),
+          child: SizedBox(
+            height: 4,
+            child: Stack(
+              children: [
+                Positioned.fill(child: ColoredBox(color: Palette.pipEmpty)),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(end: fraction),
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, v, _) => FractionallySizedBox(
+                    widthFactor: v,
+                    heightFactor: 1,
+                    child: ColoredBox(color: tint),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _DropsRing extends StatelessWidget {
-  const _DropsRing({required this.drops});
+class _Drops extends StatelessWidget {
+  const _Drops({required this.drops});
   final int drops;
 
   @override
   Widget build(BuildContext context) {
     final low = drops <= 5;
-    final color = low ? Palette.danger : Palette.ink;
-    return _Ring(
-      fraction: 1,
-      tint: low ? Palette.danger : Palette.inkSoft.withValues(alpha: 0.5),
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.water_drop_rounded, size: 11, color: low ? Palette.danger : Palette.inkSoft),
-          const SizedBox(width: 1),
-          Text('left', style: PopType.of(11, 1000, color: low ? Palette.danger : Palette.inkSoft)),
-        ],
-      ),
-      child: Text('$drops', style: PopType.of(drops >= 100 ? 13 : 16, 1000, color: color, numbers: true)),
+    final color = low ? Palette.danger : Palette.inkSoft;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.water_drop_rounded, size: 15, color: color),
+        const SizedBox(width: 3),
+        Text('$drops', style: PopType.of(14, 1000, color: low ? Palette.danger : Palette.ink, numbers: true)),
+        const SizedBox(width: 3),
+        Text('left', style: PopType.of(12, 900, color: color)),
+      ],
     );
   }
 }

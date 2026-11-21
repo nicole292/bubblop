@@ -270,8 +270,11 @@ class PopGame extends FlameGame {
       level = LevelDef(level.number, level.seed, level.goals,
           drops: drops + Booster.extraDrops, setup: level.setup, layout: level.layout, still: level.still);
     }
+    final missionsChanged = (this.level == null) != (level == null);
     this.level = level;
     _startCharged = boosters.contains(Booster.bomb);
+    // A level has a mission bar under the header; Classic doesn't.
+    if (missionsChanged) _relayout();
     final firstTime = !settings.tutorialDone;
     _startRound(tutorial: tutorial ?? (firstTime && (level == null || level.number == 1)));
   }
@@ -400,7 +403,8 @@ class PopGame extends FlameGame {
   void _relayout({bool force = false}) {
     final area = _boardArea;
     if (area == null || area.isEmpty) return;
-    final next = BoardLayout(area.size, columns: _config.columns, rows: _config.rows, offset: area.topLeft);
+    final next = BoardLayout(area.size,
+        columns: _config.columns, rows: _config.rows, offset: area.topLeft, missions: level != null);
     final radius = next.ballRadius;
     if (_programLoaded && (force || sprites == null || (sprites!.radius - radius).abs() > 0.5)) {
       sprites?.dispose();
