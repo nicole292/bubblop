@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'achievements.dart';
 import 'cosmetics.dart';
+import 'power_ups.dart';
 import 'rewards.dart';
 
 /// What finishing a level gave the player, for the victory card.
@@ -65,6 +66,12 @@ class Progress extends ChangeNotifier {
     _rewarded.addAll((prefs.getStringList(_rewardedKey) ?? const []).map(int.tryParse).whereType<int>());
     _unlocked = math.max(prefs.getInt(_unlockedKey) ?? 1, _derivedUnlocked);
     _coins = prefs.getInt(_coinsKey) ?? 0;
+    for (final entry in prefs.getStringList(_stockKey) ?? const <String>[]) {
+      final [name, count] = entry.split(':');
+      final p = PowerUp.values.where((p) => p.name == name).firstOrNull;
+      final n = int.tryParse(count);
+      if (p != null && n != null && n > 0) _stock[p] = n;
+    }
     for (final name in prefs.getStringList(_achievementsKey) ?? const <String>[]) {
       final id = AchievementId.values.where((a) => a.name == name).firstOrNull;
       if (id != null) _achievements.add(id);
@@ -91,6 +98,7 @@ class Progress extends ChangeNotifier {
   static const _rewardedKey = 'progress.rewarded';
   static const _unlockedKey = 'progress.unlocked';
   static const _coinsKey = 'progress.coins';
+  static const _stockKey = 'progress.stock';
   static const _achievementsKey = 'progress.achievements';
   static const _ownedKey = 'style.owned';
   static const _ballsKey = 'style.balls';
@@ -122,6 +130,7 @@ class Progress extends ChangeNotifier {
   final _rewarded = <int>{};
   int _unlocked = 1;
   int _coins = 0;
+  final _stock = <PowerUp, int>{};
   final _achievements = <AchievementId>{};
   final _owned = <String>{};
   Cosmetic _balls = Cosmetics.defaultBalls;
@@ -282,6 +291,42 @@ class Progress extends ChangeNotifier {
     return true;
   }
 
+  // --- Power-ups -------------------------------------------------------------
+
+  /// How many of [p] the player has.
+  int stock(PowerUp p) => _stock[p] ?? 0;
+
+  /// Buys [count] of [p]. Returns false, and pays nothing, if the coins
+  /// don't cover it or it would go over [PowerUp.maxStock].
+  bool buyPowerUp(PowerUp p, int count) {
+    if (count <= 0 || stock(p) + count > PowerUp.maxStock) return false;
+    final cost = p.price * count;
+    if (_coins < cost) return false;
+    _coins -= cost;
+    _stock[p] = stock(p) + count;
+    _save();
+    notifyListeners();
+    return true;
+  }
+
+  /// Uses one [p]. Returns false if there is none.
+  bool usePowerUp(PowerUp p) {
+    final have = stock(p);
+    if (have <= 0) return false;
+    _stock[p] = have - 1;
+    _save();
+    notifyListeners();
+    return true;
+  }
+
+  /// Gives [count] of [p] without paying. Developer screenshot runs only
+  /// (POP_STOCK), on an in-memory save.
+  void grantPowerUpsForScreenshots(PowerUp p, int count) {
+    if (_prefs != null) return;
+    _stock[p] = stock(p) + count;
+    notifyListeners();
+  }
+
   /// Unlocks a coin cosmetic. Returns false if it isn't for sale, is
   /// already owned, or the player can't afford it.
   bool buy(Cosmetic c) {
@@ -317,6 +362,7 @@ class Progress extends ChangeNotifier {
     prefs.setStringList(_rewardedKey, [for (final l in _rewarded) '$l']);
     prefs.setInt(_unlockedKey, _unlocked);
     prefs.setInt(_coinsKey, _coins);
+    prefs.setStringList(_stockKey, [for (final e in _stock.entries) '${e.key.name}:${e.value}']);
     prefs.setStringList(_achievementsKey, [for (final a in _achievements) a.name]);
     prefs.setStringList(_ownedKey, _owned.toList());
     prefs.setString(_ballsKey, _balls.id);

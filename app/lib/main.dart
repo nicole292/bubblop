@@ -5,6 +5,7 @@ import 'dev/shot_driver.dart';
 import 'game/dev_options.dart';
 import 'game/palette.dart';
 import 'progress/cosmetics.dart';
+import 'progress/power_ups.dart';
 import 'progress/progress.dart';
 import 'render/piece_art.dart';
 import 'services/age_signals.dart';
@@ -13,6 +14,7 @@ import 'services/settings.dart';
 import 'services/sfx.dart';
 import 'ui/game_screen.dart';
 import 'ui/theme_switch.dart';
+import 'ui/ui_scale.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +27,11 @@ Future<void> main() async {
       progress.completeLevel(level, score: 1000);
     }
     if (DevOptions.coins > 0) progress.grantCoinsForScreenshots(DevOptions.coins);
+    for (final entry in DevOptions.stock.split(',').where((e) => e.contains(':'))) {
+      final [name, count] = entry.split(':');
+      final p = PowerUp.values.where((p) => p.name == name).firstOrNull;
+      if (p != null) progress.grantPowerUpsForScreenshots(p, int.tryParse(count) ?? 0);
+    }
     settings.theme = ThemeChoice.values.where((t) => t.name == DevOptions.theme).firstOrNull ?? settings.theme;
     for (final id in DevOptions.style.split(',')) {
       final cosmetic = Cosmetics.byId(id);
@@ -67,6 +74,8 @@ class PopApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Palette.accent),
         ),
         home: GameScreen(settings: settings, progress: progress, sfx: sfx, haptics: haptics),
+        // Bigger on tablets and large windows (ui/ui_scale.dart).
+        builder: (context, child) => UiScale(child: child!),
       ),
     );
   }

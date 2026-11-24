@@ -51,7 +51,7 @@ bubble to break it open and free the ball inside, which can set off an even bigg
 ★ 560 levels that get harder as you go: pyramids, towers, shell vaults, bomb nests, stone cages and puzzles where the rows stand still
 ★ Boss levels with three goals at once, and easier breather levels in between
 ★ Pop balls to charge your bomb, then blast your way out of a tight spot
-★ Spend coins on boosters: start a level with the bomb ready, or get 5 extra drops
+★ A shop full of power-ups for your coins: bombs, Rainbow pop, Freeze and extra drops. Pick how many you want and use them whenever you like
 ★ Unlock 3D shapes with the coins you earn: kitties, bunnies, donuts, planets, gems, strawberries…
 ★ Every shape brings its own colours and sky, and pops into its own little hearts, paw prints, sprinkles or stars
 ★ Gift boxes and special rewards as you go
@@ -62,6 +62,7 @@ bubble to break it open and free the ball inside, which can set off an even bigg
 ★ One-thumb play: tap a column, or drag to aim and release to drop
 ★ Big, juicy chain reactions with sound and vibration
 ★ Relaxing background music (turn it off any time)
+★ Bigger and sharper on tablets and iPad
 ★ Plays offline · No account needed · No ads · No data collected
 
 ### Graphics (in docs/store/assets/)
@@ -92,7 +93,7 @@ Bubbles are your secret weapon. Rows of bubbles rise from below. Pop balls next 
 - 560 levels that get harder as you go: pyramids, towers, shell vaults, bomb nests, stone cages and puzzles where the rows stand still
 - Boss levels with three goals at once, and easier breather levels in between
 - Pop balls to charge your bomb, then blast your way out of a tight spot
-- Spend coins on boosters: start a level with the bomb ready, or get 5 extra drops
+- A shop full of power-ups for your coins: bombs, Rainbow pop, Freeze and extra drops. Pick how many you want and use them whenever you like
 - Unlock 3D shapes with the coins you earn: kitties, bunnies, donuts, planets, gems, strawberries and more
 - Every shape brings its own colours and sky, and pops into its own little hearts, paw prints, sprinkles or stars
 - Gift boxes and special rewards as you go
@@ -103,6 +104,7 @@ Bubbles are your secret weapon. Rows of bubbles rise from below. Pop balls next 
 - One-thumb play: tap a column, or drag to aim and release to drop
 - Big, juicy chain reactions with sound and vibration
 - Relaxing background music (turn it off any time)
+- Bigger and sharper on tablets and iPad
 - Plays offline, no account needed, no ads, no data collected
 ```
 
@@ -111,7 +113,8 @@ App Store Connect has no What's New box on an app's first release (Bubblop isn't
 ```
 - 560 levels! Levels 41-60 are hand-made and hard, then 500 more that keep getting harder, with boss levels that ask for three things at once
 - Every shape brings its own colours and sky, and pops into its own little hearts, paw prints, sprinkles, stars or leaves
-- Boosters: spend coins to start a level with the bomb ready, or to get 5 extra drops
+- A shop with power-ups: bombs, Rainbow pop (pops every ball of a colour), Freeze (no new rows for 5 drops) and +5 drops. Pick how many to buy and use them from the bar under the board
+- Bigger and sharper on iPad and other large screens
 - A clearer mission bar: every goal in words, with a bar that fills as you go
 - The bomb glows and says READY! when it can be used
 - Prettier gift boxes, and points and coins that never look alike
@@ -125,12 +128,12 @@ Bubblop has no hidden features, no remote switches and no content that changes a
 
 - Levels: tap "LEVEL 1" or "Levels" on the home screen. Each level unlocks the next; there are 560.
 - Bombs: in any round, popping 30 balls charges the bomb button (top right). Tap it, then a column.
-- Boosters: on a level's card before Play, spend coins earned by playing.
+- Power-ups and the shop: the bar under the board while playing (or tap the coins on the home screen). Bought with coins earned by playing; there are no real-money purchases.
 - 3D shapes: tap "Shapes" on the home screen. They cost coins earned by playing; some are gifts for finishing levels 10, 20, 30 and 40. Each shape changes the colours and sky.
 - Settings and dark mode: the gear on the home screen, or the pause button in a round.
 - Classic mode: on the home screen, under the level button.
 
-The app is made for iPhone (not iPad).
+The app runs on iPhone and iPad, in portrait.
 ```
 
 ### Keywords [100, comma-separated, no spaces needed]
@@ -143,8 +146,10 @@ The app is made for iPhone (not iPad).
 | iPhone 6.5" Display (1284×2778), if App Store Connect asks for 6.5" instead | `ios-6.5in-1.png` … `ios-6.5in-8.png` |
 | iPhone 6.1"/6.3" Display (1206×2622), if App Store Connect asks for that size | `ios-6.3in-1.png` … `ios-6.3in-8.png` |
 
-The app is iPhone-only, so no iPad screenshots are needed. If App Store Connect asks for
-a different iPhone size first, the guide explains how to remake them in one command.
+| iPad 13" Display (2064×2752, upload in this order) | `ipad-13in-1.png` … `ipad-13in-4.png` |
+
+The app runs on iPad too (since 1.4.0), so App Store Connect asks for iPad screenshots. If it
+asks for a different size first, the guide explains how to remake them.
 
 ### Copyright
 `2026 Elishakov Studio`

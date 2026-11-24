@@ -11,6 +11,7 @@ import '../services/settings.dart';
 import 'buttons.dart';
 import 'glass.dart';
 import 'settings_sheet.dart';
+import 'shop_sheet.dart';
 import 'orb_icon.dart';
 import 'swatches.dart';
 import 'type.dart';
@@ -113,7 +114,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       children: [
                         // Money at the top; points (the best score) are in
                         // the middle, under Classic, so they never mix up.
-                        CoinChip(coins: widget.progress.coins),
+                        // Tapping the coins opens the shop.
+                        GestureDetector(
+                          onTap: () {
+                            widget.onTap();
+                            showShop(context, progress: widget.progress);
+                          },
+                          child: CoinChip(coins: widget.progress.coins),
+                        ),
                         const Spacer(),
                         // Sound, music, vibration, faces and theme, all behind one button.
                         GlassIconButton(

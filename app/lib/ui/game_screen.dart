@@ -10,7 +10,6 @@ import '../dev/shot_driver.dart';
 import '../game/dev_options.dart';
 import '../game/hud_state.dart';
 import '../game/pop_game.dart';
-import '../progress/boosters.dart';
 import '../progress/progress.dart';
 import '../services/haptics.dart';
 import '../services/settings.dart';
@@ -25,6 +24,8 @@ import 'hud_bar.dart';
 import 'level_result_panel.dart';
 import 'level_select_screen.dart';
 import 'pause_menu.dart';
+import 'power_bar.dart';
+import 'shop_sheet.dart';
 import 'style_screen.dart';
 
 enum _Mode { home, levels, achievements, style, playing, paused }
@@ -76,14 +77,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       // Developer screenshot runs: once the game has loaded, open the level.
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (!mounted) return;
-        _play(
-          tutorial: false,
-          level: Campaign.level(DevOptions.startLevel),
-          boosters: {
-            for (final b in Booster.values)
-              if (DevOptions.boost.split(',').contains(b.name)) b,
-          },
-        );
+        _play(tutorial: false, level: Campaign.level(DevOptions.startLevel));
       });
     }
   }
@@ -111,9 +105,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   }
 
   /// Starts a round: Endless, or the campaign [level].
-  void _play({bool? tutorial, LevelDef? level, Set<Booster> boosters = const {}}) {
+  void _play({bool? tutorial, LevelDef? level}) {
     _tap();
-    game.restart(tutorial: tutorial, level: level, boosters: boosters);
+    game.restart(tutorial: tutorial, level: level);
     game.resumeEngine();
     setState(() => _mode = _Mode.playing);
   }
@@ -278,7 +272,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                       progress: widget.progress,
                       openLevel: _openLevel,
                       onBack: () => _show(_Mode.home),
-                      onPlay: (level, boosters) => _play(level: level, boosters: boosters),
+                      onPlay: (level) => _play(level: level),
                       onAwards: () => _show(_Mode.achievements),
                       onTap: _tap,
                       onDeny: _deny,
@@ -344,8 +338,9 @@ class _BoardSlot extends StatelessWidget {
           builder: (context, constraints) {
             // The same layout the game draws the card with.
             final layout = BoardLayout(constraints.biggest,
-                columns: game.config.columns, rows: game.config.rows, missions: hud.isLevel);
+                columns: game.config.columns, rows: game.config.rows, missions: hud.isLevel, tools: true);
             final missions = layout.missionRect;
+            final tools = layout.toolsRect;
             final next = _nextSpot(layout);
             return Stack(
               children: [
@@ -367,6 +362,33 @@ class _BoardSlot extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (tools != null)
+                  Positioned.fromRect(
+                    rect: tools,
+                    child: PowerBar(
+                      progress: game.progress,
+                      items: game.powerUpsHere,
+                      armedBomb: game.stockBombArmed,
+                      onUse: game.usePowerUp,
+                      onShop: (item) {
+                        game.sfx.tap();
+                        game.haptics.tap();
+                        showShop(
+                          context,
+                          progress: game.progress,
+                          highlight: item,
+                          onBought: () {
+                            game.sfx.newBest();
+                            game.haptics.big();
+                          },
+                          onDeny: () {
+                            game.sfx.deny();
+                            game.haptics.deny();
+                          },
+                        );
+                      },
+                    ),
+                  ),
                 if (missions != null)
                   Positioned.fromRect(
                     rect: missions,

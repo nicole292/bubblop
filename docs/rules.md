@@ -128,8 +128,11 @@ plays its own way, unlike Classic's endless rising rows:
   Complete 10 levels 60, Personal best (Classic) 30, All 560 levels 1000 coins.
 - After 40: 35 coins a level (41-60), then 40, 45, 50; gift boxes keep coming every third
   level, and every 50th level (and 60) is a special gift of 300+ coins.
-- Boosters on the level card, for one try: Bomb ready (40 coins), +5 drops (30, levels with
-  a drop limit only).
+- Power-ups, bought in the shop (any number, kept until used, `app/lib/progress/power_ups.dart`)
+  and used from the bar under the board: Bomb 50 (blast without charging), Rainbow pop 80
+  (pops every ball of the next colour, `Game.rainbowPop`), Freeze 40 (no new rows for 5
+  drops, `Game.freezeRows`), +5 drops 30 (levels with a drop limit, `Game.addDrops`). None
+  of them uses a drop. The shop opens from the bar, a level's card and the home coins.
 - Coins unlock Fruit (200), Ocean (300), Neon (400) and Galaxy (500) balls, the Jelly (150),
   Hearts (250), Stars (300) and Flowers (350) shapes, the 3D shapes (Animals: Kitties,
   Bunnies 400, Bears, Frogs 450; Treats: Donuts, Macarons 500, Cupcakes 550; Space: Moons

@@ -10,7 +10,7 @@ import 'package:pop_core/pop_core.dart';
 import '../render/background.dart';
 import '../render/effects.dart';
 import '../progress/achievements.dart';
-import '../progress/boosters.dart';
+import '../progress/power_ups.dart';
 import '../progress/cosmetics.dart' show PieceShape;
 import '../progress/progress.dart';
 import '../render/orb_sprites.dart';
@@ -94,8 +94,21 @@ class PopGame extends FlameGame {
   /// Balls popped (or blasted) this round towards the next bomb.
   int _charge = 0;
 
-  /// The round starts with the bomb charged (the Bomb ready booster).
-  bool _startCharged = false;
+  /// The armed bomb is a bought one (a power-up), not the charged one: it
+  /// leaves the charge alone and uses up one from the stock.
+  bool _stockBomb = false;
+
+  /// The armed bomb is a bought one.
+  bool get stockBombArmed => bombArmed && _stockBomb;
+
+  /// The power-ups that make sense in this round: Freeze needs rising rows,
+  /// +5 drops a drop limit.
+  List<PowerUp> get powerUpsHere => [
+        PowerUp.bomb,
+        PowerUp.rainbow,
+        if (rules.config.rowsRise) PowerUp.freeze,
+        if (rules.dropLimit != null) PowerUp.drops,
+      ];
 
   /// Balls to pop to charge the bomb at the top.
   static const popsPerBomb = 30;
@@ -255,24 +268,15 @@ class PopGame extends FlameGame {
   /// Starts a fresh round: Endless, or the campaign [level] when given. The
   /// first round on a new install is the tutorial (level 1 plays on the
   /// tutorial board then).
-  ///
-  /// [boosters] (already paid for) apply to this round only: a charged
-  /// bomb, or extra drops on a level with a drop limit.
-  void restart({RulesConfig? config, bool? tutorial, LevelDef? level, Set<Booster> boosters = const {}}) {
+  void restart({RulesConfig? config, bool? tutorial, LevelDef? level}) {
     if (config != null) {
       _config = config;
       _relayout(force: true);
     }
     phases.clear();
     effects.clear();
-    final drops = level?.drops;
-    if (level != null && drops != null && boosters.contains(Booster.drops)) {
-      level = LevelDef(level.number, level.seed, level.goals,
-          drops: drops + Booster.extraDrops, setup: level.setup, layout: level.layout, still: level.still);
-    }
     final missionsChanged = (this.level == null) != (level == null);
     this.level = level;
-    _startCharged = boosters.contains(Booster.bomb);
     // A level has a mission bar under the header; Classic doesn't.
     if (missionsChanged) _relayout();
     final firstTime = !settings.tutorialDone;
@@ -302,6 +306,11 @@ class PopGame extends FlameGame {
   /// supply and a round in play.
   void toggleBomb() {
     if (rules.isOver || _levelWon) return;
+    // Not charged yet, but a bought bomb is there: use that one.
+    if (!bombArmed && !bombReady && progress.stock(PowerUp.bomb) > 0) {
+      usePowerUp(PowerUp.bomb);
+      return;
+    }
     if (!bombArmed && !bombReady) {
       sfx.deny();
       haptics.deny();
@@ -309,6 +318,7 @@ class PopGame extends FlameGame {
       return;
     }
     bombArmed = !bombArmed;
+    if (!bombArmed) _stockBomb = false;
     sfx.tap();
     haptics.tap();
     _publishRulesState();
@@ -317,12 +327,17 @@ class PopGame extends FlameGame {
   void dropAt(int column) {
     if (_levelWon) return;
     if (!phases.isIdle) phases.speed = Timings.fastForward;
-    final bomb = bombArmed && bombReady;
+    final bomb = bombArmed && (bombReady || _stockBomb);
     final result = bomb ? rules.dropBomb(column) : rules.drop(column);
     final wasReady = bombReady;
     if (bomb && result.accepted) {
       bombArmed = false;
-      _charge = 0;
+      if (_stockBomb) {
+        _stockBomb = false;
+        progress.usePowerUp(PowerUp.bomb);
+      } else {
+        _charge = 0;
+      }
     }
     if (result.accepted) {
       // Every popped (or blasted) ball charges the bomb.
@@ -339,6 +354,12 @@ class PopGame extends FlameGame {
       }
       return;
     }
+    _playOut(result, charged: charged);
+  }
+
+  /// Records an accepted move (a drop, a bomb or a power-up), checks the
+  /// level's goals and queues its animation.
+  void _playOut(MoveResult result, {bool charged = false}) {
     stats.recordMove(result);
     final chain = result.events.whereType<ChainStep>().where((s) => s.groups.isNotEmpty).length;
     final chainAchievement = progress.recordChain(chain);
@@ -384,6 +405,76 @@ class PopGame extends FlameGame {
     _publishRulesState();
   }
 
+  /// Whether [p] can be used right now (the player still needs to have one).
+  bool canUse(PowerUp p) {
+    if (rules.isOver || _levelWon) return false;
+    return switch (p) {
+      PowerUp.bomb => true,
+      PowerUp.rainbow => true,
+      PowerUp.freeze => rules.config.rowsRise,
+      PowerUp.drops => rules.dropLimit != null,
+    };
+  }
+
+  /// Uses one bought [p] from the stock. Returns false (and uses nothing)
+  /// when there is none or it can't be used now.
+  bool usePowerUp(PowerUp p) {
+    if (progress.stock(p) <= 0 || !canUse(p)) {
+      sfx.deny();
+      haptics.deny();
+      return false;
+    }
+    switch (p) {
+      case PowerUp.bomb:
+        // Arms a bought bomb (tap it again, or the bomb button, to put it back).
+        if (bombArmed && _stockBomb) {
+          bombArmed = false;
+          _stockBomb = false;
+        } else {
+          bombArmed = true;
+          _stockBomb = true;
+          _banner('Tap a column!');
+        }
+        sfx.tap();
+        haptics.tap();
+        _publishRulesState();
+        return true;
+      case PowerUp.rainbow:
+        if (!phases.isIdle) phases.speed = Timings.fastForward;
+        final result = rules.rainbowPop();
+        if (!result.accepted) {
+          sfx.deny();
+          haptics.deny();
+          _banner('No balls of that colour!');
+          return false;
+        }
+        progress.usePowerUp(p);
+        sfx.praise();
+        haptics.big();
+        for (final step in result.events.whereType<ChainStep>()) {
+          _charge = math.min(popsPerBomb, _charge + step.orbsPopped + step.orbsBlasted);
+        }
+        _playOut(result);
+        return true;
+      case PowerUp.freeze:
+        if (!rules.freezeRows(PowerUp.freezeDrops)) return false;
+        progress.usePowerUp(p);
+        _banner('Rows frozen!');
+        sfx.praise();
+        haptics.big();
+        _publishRulesState();
+        return true;
+      case PowerUp.drops:
+        if (!rules.addDrops(PowerUp.extraDrops)) return false;
+        progress.usePowerUp(p);
+        _banner('+${PowerUp.extraDrops} drops!');
+        sfx.praise();
+        haptics.big();
+        _publishRulesState();
+        return true;
+    }
+  }
+
   /// Praise words for big moments, shown as the last chain step bursts.
   void _choosePraise(MoveResult result) {
     final steps = result.events.whereType<ChainStep>().where((s) => s.groups.isNotEmpty).toList();
@@ -404,7 +495,7 @@ class PopGame extends FlameGame {
     final area = _boardArea;
     if (area == null || area.isEmpty) return;
     final next = BoardLayout(area.size,
-        columns: _config.columns, rows: _config.rows, offset: area.topLeft, missions: level != null);
+        columns: _config.columns, rows: _config.rows, offset: area.topLeft, missions: level != null, tools: true);
     final radius = next.ballRadius;
     if (_programLoaded && (force || sprites == null || (sprites!.radius - radius).abs() > 0.5)) {
       sprites?.dispose();
@@ -455,7 +546,8 @@ class PopGame extends FlameGame {
       ..load(rules.board);
     aimColumn = null;
     bombArmed = false;
-    _charge = _startCharged ? popsPerBomb : 0;
+    _charge = 0;
+    _stockBomb = false;
     cheer = 0;
     sad = false;
     boardLight = 0;

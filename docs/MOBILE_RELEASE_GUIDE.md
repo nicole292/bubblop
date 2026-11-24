@@ -17,7 +17,7 @@ Written for a first release. Work through it with the checklist in
 | App identity | Name **Bubblop**, app ID **com.bubblop.game** (Android and iOS), app icon, launch screen. |
 | Android | Signed release bundle built: `app\build\app\outputs\bundle\release\app-release.aab`. Targets Android 16 (API 36), minimum Android 7 (API 24); 64-bit; native code 16 KB-page compatible; **no permissions** players see. |
 | Android signing | Upload key created at `C:\Users\User\pop-upload-key.jks`; password in `app\android\key.properties` (not in Git). **You must back these up**, section 7. |
-| iPhone | Project set up for iPhone only, portrait only, iOS 15+. Cloud build workflow ready in `codemagic.yaml` (no Mac needed). Not built yet: that needs your Apple account. |
+| iPhone | Project set up for iPhone and iPad (since 1.4.0), portrait only, iOS 15+. Cloud build workflow ready in `codemagic.yaml` (no Mac needed). Not built yet: that needs your Apple account. |
 | Store texts | `docs\store\listing.md`: titles, descriptions, keywords, categories and every questionnaire answer. |
 | Store images | `docs\store\assets\`: 6 iPhone screenshots (1320×2868), 6 Android screenshots (1080×1920), Play feature graphic (1024×500), Play icon (512×512). Made from the real game (levels, goal card, gift, style, home). |
 | Web pages | Support page `docs\index.html` and privacy policy `docs\privacy.html`, ready for free hosting on GitHub Pages (one switch, part A below). |
@@ -27,7 +27,7 @@ Written for a first release. Work through it with the checklist in
 | Change | Why |
 |---|---|
 | Version 0.1.0 → **1.0.0+1**, then **1.1.0+2**, **1.1.1+3** (`app\pubspec.yaml`) | First public version; 1.1.0 adds levels, gifts, achievements and styles; 1.1.1 makes the ball sets look clearly different and asks before spending coins. |
-| iOS: iPhone only, portrait only, full screen (`app\ios\Runner.xcodeproj\project.pbxproj`, `app\ios\Runner\Info.plist`) | The game is portrait-only. iPad support would need iPad screenshots and all four orientations. iPads can still run the iPhone version. |
+| iOS: iPhone and iPad, portrait only, full screen (`app\ios\Runner.xcodeproj\project.pbxproj`, `app\ios\Runner\Info.plist`) | The game is portrait-only; `UIRequiresFullScreen` lets an iPad app stay portrait. On tablets the whole UI is scaled up (`app\lib\ui\ui_scale.dart`). iPad screenshots: `ipad-13in-*.png`. |
 | iOS: `ITSAppUsesNonExemptEncryption = NO` (`Info.plist`) | The game uses no encryption, so App Store Connect stops asking the export-compliance question on every upload. |
 | `codemagic.yaml`: new **iOS release (TestFlight)** workflow | Builds, signs and uploads the iPhone version from the cloud, so you don't need a Mac. |
 | Android upload key and `key.properties` | Google Play only accepts signed bundles. |
@@ -300,7 +300,7 @@ Connect **Users and Access**), and the games can be transferred to your own acco
    `POP_PROGRESS=11` starts with levels 1–11 done (in memory only). `POP_STYLE=shape.hearts` buys
    and uses that shape for the run (ids are in `app\lib\progress\cosmetics.dart`); `POP_COINS=1000`
    gives the run coins to buy it with. `POP_LEVEL=3` opens a level straight away and
-   `POP_BOOST=bomb` starts it with a booster. The 1.4.0 shots use Strawberries (chain, gift,
+   `POP_STOCK=bomb:3,rainbow:2` gives the run power-ups. The 1.4.0 shots use Strawberries (chain, gift,
    level 3), Planets (bomb, level 45), Kitties (home, map, card, shapes) and Donuts (level 24). Shots land in
    `app\build\shots\`. Copy the ones you want into `app\build\store_raw\` with the names
    listed in `tools\make_store_assets.py` (`chain`, `map`, `level_card`, `gift`, `style`, `chain_hearts`,

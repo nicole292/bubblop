@@ -33,14 +33,16 @@ class Game {
     this.config = const RulesConfig(),
     Board? board,
     List<int> scriptedQueue = const [],
-    this.dropLimit,
+    int? dropLimit,
     String? layout,
   })  : _board = board?.copy() ?? Board(config.columns, config.rows),
         _bag = ColorBag(SeededRandom(seed)),
         // Rising rows use their own generator so they never shift which
         // colours the player is dealt.
         _rowRandom = SeededRandom(seed ^ 0x5BD1E995),
-        _script = List.of(scriptedQueue) {
+        _script = List.of(scriptedQueue),
+        // ignore: prefer_initializing_formals
+        _dropLimit = dropLimit {
     if (_board.columns != config.columns || _board.rows != config.rows) {
       throw ArgumentError('Board size does not match RulesConfig');
     }
@@ -114,8 +116,9 @@ class Game {
   final RulesConfig config;
 
   /// A level's number of drops; the round ends when they are used up.
-  /// Null: no limit (Endless).
-  final int? dropLimit;
+  /// Null: no limit (Endless). Grows with [addDrops].
+  int? get dropLimit => _dropLimit;
+  int? _dropLimit;
 
   final Board _board;
   final ColorBag _bag;
@@ -270,6 +273,72 @@ class Game {
 
     _score += points;
     return MoveResult(events, points);
+  }
+
+  // --- Power-ups (bought with coins). None of them uses a drop. ---------
+
+  /// Pops every ball of the current ball's colour at once, then everything
+  /// falls and chains as usual. The ball queue stays as it is. Rejected when
+  /// the round is over or no ball has that colour.
+  MoveResult rainbowPop() {
+    if (_isOver) return const MoveResult.rejected();
+    final color = currentColor;
+    final cells = <CellPos>[];
+    for (var col = 0; col < config.columns; col++) {
+      for (var row = 0; row < config.rows; row++) {
+        final cell = _board.at(col, row);
+        if (cell != null && cell.isOrb && cell.color == color) cells.add((col: col, row: row));
+      }
+    }
+    if (cells.isEmpty) return const MoveResult.rejected();
+    for (final p in cells) {
+      _board.set(p.col, p.row, null);
+    }
+    final falls = applyGravity(_board);
+    final steps = [
+      ChainStep(
+        step: 1,
+        groups: [PoppedGroup(color: color, cells: cells)],
+        cracked: const {},
+        falls: falls,
+        points: chainStepPoints(
+            groupSizes: [cells.length], distinctColors: 1, cracked: 0, step: 1, blasted: 0),
+      ),
+      ...resolveChains(_board, config, firstStep: 2),
+    ];
+    final events = <GameEvent>[];
+    var points = 0;
+    for (final step in steps) {
+      points += step.points;
+      _orbsCleared += step.orbsPopped + step.orbsBlasted;
+      events.add(step);
+    }
+    if (_board.isEmpty) {
+      final bonus = boardClearBonus(_level);
+      points += bonus;
+      events.add(BoardCleared(bonus));
+    }
+    final newLevel = 1 + _orbsCleared ~/ config.orbsPerLevel;
+    if (newLevel > _level) {
+      _level = newLevel;
+      events.add(LevelUp(_level));
+    }
+    _score += points;
+    return MoveResult(events, points);
+  }
+
+  /// Holds back the rising rows for [drops] more drops.
+  bool freezeRows(int drops) {
+    if (_isOver || !config.rowsRise || drops <= 0) return false;
+    _pressure += drops;
+    return true;
+  }
+
+  /// Gives a level with a drop limit [drops] more drops.
+  bool addDrops(int drops) {
+    if (_isOver || _dropLimit == null || drops <= 0) return false;
+    _dropLimit = _dropLimit! + drops;
+    return true;
   }
 
   int _nextColor() => _script.isNotEmpty

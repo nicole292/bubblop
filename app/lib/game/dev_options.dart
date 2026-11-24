@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:pop_core/pop_core.dart';
 
+import '../ui/ui_scale.dart';
+
 /// Developer-only launch options, set with --dart-define. None of these are
 /// reachable by players.
 ///
@@ -29,9 +31,11 @@ abstract final class DevOptions {
   static const _bakeScale = int.fromEnvironment('POP_SHOT_SCALE');
 
   /// Resolution for baked images: the screen's, or the screenshot scale.
+  /// On tablets the whole app is scaled up (UiScale), so images are baked
+  /// that much sharper.
   static double get pixelRatio => _bakeScale > 0
       ? _bakeScale.toDouble()
-      : WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
+      : WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio * UiScale.factor;
 
   /// POP_PROGRESS=n starts phone-frame screenshot runs with levels 1..n
   /// completed (in memory only; a player's saved progress is never used).
@@ -51,10 +55,12 @@ abstract final class DevOptions {
   /// POP_DEV=true shows the developer bar (4/3-match switch, session stats).
   static const showDevBar = bool.fromEnvironment('POP_DEV');
 
-  /// POP_LEVEL=n opens campaign level n straight away (screenshot runs);
-  /// POP_BOOST=bomb,drops starts it with those boosters (free).
+  /// POP_LEVEL=n opens campaign level n straight away (screenshot runs).
   static const startLevel = int.fromEnvironment('POP_LEVEL');
-  static const boost = String.fromEnvironment('POP_BOOST');
+
+  /// POP_STOCK=bomb:3,rainbow:2 gives phone-frame screenshot runs those
+  /// power-ups (in memory only).
+  static const stock = String.fromEnvironment('POP_STOCK');
 
   /// POP_SKIP=bg,board,fx,orbs,dock,hud : turns layers off to find what costs
   /// raster time (profiling only).

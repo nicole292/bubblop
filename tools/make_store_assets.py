@@ -25,7 +25,7 @@ SHOTS = [
     ('chain', 'Huge chain reactions!'),
     ('bomb', 'Charge the bomb and blast!'),
     ('map', '560 levels to beat'),
-    ('level_card', 'Boosters help you win'),
+    ('shop', 'Power-ups to help you win'),
     ('shapes', 'Unlock cute 3D shapes'),
     ('themes', 'Every shape brings its own colours'),
     ('gift', 'Win coins and gift boxes'),
@@ -90,6 +90,15 @@ def compose(shot, caption, w, h, name):
     bg.convert('RGB').save(OUT / f'{name}.png', optimize=True)
 
 
+# iPad (13", 2064x2752) screenshots, from raw shots in app/build/store_raw/ipad/.
+IPAD_SHOTS = [
+    ('play', 'Big, bright and made for iPad'),
+    ('shop', 'Power-ups to help you win'),
+    ('level_card', '560 levels to beat'),
+    ('home', 'Plays offline, no ads'),
+]
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for i, (shot, caption) in enumerate(SHOTS, 1):
@@ -97,6 +106,9 @@ def main():
         compose(shot, caption, 1284, 2778, f'ios-6.5in-{i}')       # App Store, 6.5" iPhone
         compose(shot, caption, 1206, 2622, f'ios-6.3in-{i}')       # App Store, 6.1"/6.3" iPhone
         compose(shot, caption, 1080, 1920, f'android-phone-{i}')   # Google Play phone
+
+    for i, (shot, caption) in enumerate(IPAD_SHOTS, 1):
+        compose('ipad/' + shot, caption, 2064, 2752, f'ipad-13in-{i}')   # App Store, 13" iPad
 
     # Google Play feature graphic: the home screen's logo, cropped to 1024x500.
     home = Image.open(RAW / 'home.png').convert('RGB')

@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:pop_core/pop_core.dart';
 
 import '../game/palette.dart';
-import '../progress/boosters.dart';
+import '../progress/power_ups.dart';
 import '../progress/progress.dart';
 import '../progress/rewards.dart';
-import 'bomb_icon.dart';
 import 'buttons.dart';
 import 'glass.dart';
 import 'goal_icon.dart';
+import 'shop_sheet.dart';
 import 'type.dart';
 
 /// The level map: 30 numbered bubbles in three groups of ten. Completed
@@ -32,8 +32,7 @@ class LevelSelectScreen extends StatefulWidget {
   final Progress progress;
   final VoidCallback onBack;
 
-  /// Starts a level with the boosters bought for it.
-  final void Function(LevelDef level, Set<Booster> boosters) onPlay;
+  final ValueChanged<LevelDef> onPlay;
 
   /// Opens the awards (achievements).
   final VoidCallback onAwards;
@@ -186,8 +185,7 @@ class LevelSelectScreenState extends State<LevelSelectScreen>
             LevelIntro(
               level: Campaign.level(_open!),
               progress: progress,
-              onPlay: (boosters) =>
-                  widget.onPlay(Campaign.level(_open!), boosters),
+              onPlay: () => widget.onPlay(Campaign.level(_open!)),
               onClose: () {
                 widget.onTap();
                 setState(() => _open = null);
@@ -470,8 +468,7 @@ class LevelIntro extends StatefulWidget {
   final LevelDef level;
   final Progress progress;
 
-  /// Starts the level with the boosters chosen (already paid for).
-  final ValueChanged<Set<Booster>> onPlay;
+  final VoidCallback onPlay;
   final VoidCallback onClose;
 
   @override
@@ -479,29 +476,6 @@ class LevelIntro extends StatefulWidget {
 }
 
 class _LevelIntroState extends State<LevelIntro> {
-  final _chosen = <Booster>{};
-
-  List<Booster> get _offered => [
-    Booster.bomb,
-    if (widget.level.drops != null) Booster.drops,
-  ];
-
-  int get _cost => _chosen.fold(0, (sum, b) => sum + b.price);
-
-  void _toggle(Booster b) {
-    setState(() {
-      if (!_chosen.remove(b)) {
-        // Only if the coins cover it together with what is already chosen.
-        if (_cost + b.price <= widget.progress.coins) _chosen.add(b);
-      }
-    });
-  }
-
-  void _play() {
-    final chosen = widget.progress.spend(_cost) ? {..._chosen} : <Booster>{};
-    widget.onPlay(chosen);
-  }
-
   @override
   Widget build(BuildContext context) {
     final level = widget.level;
@@ -589,17 +563,12 @@ class _LevelIntroState extends State<LevelIntro> {
                           best: progress.bestScore(level.number),
                         ),
                         const SizedBox(height: 14),
-                        _BoosterRow(
-                          offered: _offered,
-                          chosen: _chosen,
-                          coins: progress.coins - _cost,
-                          onToggle: _toggle,
-                        ),
+                        _PowerRow(progress: progress),
                         const SizedBox(height: 14),
                         BigButton(
                           label: completed ? 'Play again' : 'Play',
                           icon: Icons.play_arrow_rounded,
-                          onPressed: _play,
+                          onPressed: widget.onPlay,
                         ),
                       ],
                     ),
@@ -614,140 +583,108 @@ class _LevelIntroState extends State<LevelIntro> {
   }
 }
 
-/// Boosters to take into the level, each with its price; the coins left
-/// after the chosen ones are shown beside the title.
-class _BoosterRow extends StatelessWidget {
-  const _BoosterRow({
-    required this.offered,
-    required this.chosen,
-    required this.coins,
-    required this.onToggle,
-  });
-  final List<Booster> offered;
-  final Set<Booster> chosen;
-
-  /// Coins left after paying for [chosen].
-  final int coins;
-  final ValueChanged<Booster> onToggle;
+//// The power-ups you have, small, with a button into the shop, so you can
+/// stock up before a hard level.
+class _PowerRow extends StatelessWidget {
+  const _PowerRow({required this.progress});
+  final Progress progress;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('BOOSTERS', style: PopType.label),
-            const SizedBox(width: 10),
-            const CoinIcon(size: 16),
-            const SizedBox(width: 3),
-            Text(
-              '$coins',
-              style: PopType.of(13, 900, color: Palette.inkSoft, numbers: true),
-            ),
-          ],
+    return ListenableBuilder(
+      listenable: progress,
+      builder: (context, _) => Container(
+        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        decoration: BoxDecoration(
+          color: Palette.well,
+          borderRadius: BorderRadius.circular(20),
         ),
-        const SizedBox(height: 8),
-        Row(
+        child: Row(
           children: [
-            for (final (i, b) in offered.indexed) ...[
-              if (i > 0) const SizedBox(width: 8),
-              Expanded(
-                child: _BoosterChip(
-                  booster: b,
-                  on: chosen.contains(b),
-                  affordable: chosen.contains(b) || coins >= b.price,
-                  onTap: () => onToggle(b),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _BoosterChip extends StatelessWidget {
-  const _BoosterChip({
-    required this.booster,
-    required this.on,
-    required this.affordable,
-    required this.onTap,
-  });
-  final Booster booster;
-  final bool on;
-  final bool affordable;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    const fire = Color(0xFFFF8A1A);
-    final tint = booster == Booster.bomb ? fire : Palette.balls[3];
-    return Opacity(
-      opacity: affordable ? 1 : 0.45,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: affordable ? onTap : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              color: on ? tint.withValues(alpha: 0.16) : Palette.well,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: on ? tint : Palette.edge,
-                width: on ? 2.5 : 1.2,
-              ),
-            ),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 28,
-                  child: Center(
-                    child: booster == Booster.bomb
-                        ? const BombIcon(size: 26)
-                        : Icon(Icons.water_drop_rounded, size: 24, color: tint),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(booster.label, style: PopType.of(13, 900)),
-                ),
-                const SizedBox(height: 3),
-                on
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    for (final p in PowerUp.values) ...[
+                      Stack(
+                        clipBehavior: Clip.none,
                         children: [
-                          Icon(
-                            Icons.check_circle_rounded,
-                            size: 15,
-                            color: tint,
+                          PowerUpBadge(
+                            item: p,
+                            size: 32,
+                            dim: progress.stock(p) == 0,
                           ),
-                          const SizedBox(width: 3),
-                          Text(
-                            'Added',
-                            style: PopType.of(12, 900, color: tint),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const CoinIcon(size: 15),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${booster.price}',
-                            style: PopType.of(13, 900, numbers: true),
+                          Positioned(
+                            right: -5,
+                            top: -5,
+                            child: Container(
+                              constraints: const BoxConstraints(minWidth: 17),
+                              height: 17,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 3,
+                              ),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: progress.stock(p) > 0
+                                    ? Palette.danger
+                                    : Palette.inkSoft,
+                                borderRadius: BorderRadius.circular(9),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Text(
+                                '${progress.stock(p)}',
+                                style: PopType.of(
+                                  10,
+                                  1000,
+                                  color: Colors.white,
+                                  numbers: true,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
-              ],
+                      const SizedBox(width: 10),
+                    ],
+                  ],
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 6),
+            GestureDetector(
+              onTap: () => showShop(context, progress: progress),
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFC23D), Color(0xFFFF8A1A)],
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.storefront_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Shop',
+                      style: PopType.of(14, 1000, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
