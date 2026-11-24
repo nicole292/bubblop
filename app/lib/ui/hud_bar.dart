@@ -61,9 +61,23 @@ class HudBar extends StatelessWidget {
                     Expanded(
                       child: Row(
                         children: [
-                          Flexible(child: _Score(value: hud.score, gain: hud.gain, gainId: hud.gainId)),
+                          Flexible(
+                            child: _Score(
+                              value: hud.score,
+                              gain: hud.gain,
+                              gainId: hud.gainId,
+                            ),
+                          ),
                           const SizedBox(width: 8),
-                          Text('LEVEL ${hud.levelNumber}', style: PopType.of(13, 1000, color: Palette.accent, spacing: 1.1)),
+                          Text(
+                            'LEVEL ${hud.levelNumber}',
+                            style: PopType.of(
+                              13,
+                              1000,
+                              color: Palette.accent,
+                              spacing: 1.1,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -73,15 +87,27 @@ class HudBar extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _Score(value: hud.score, gain: hud.gain, gainId: hud.gainId),
-                          _SubLine(best: hud.best, level: hud.level, bestLevel: hud.bestLevel),
+                          _Score(
+                            value: hud.score,
+                            gain: hud.gain,
+                            gainId: hud.gainId,
+                          ),
+                          _SubLine(
+                            best: hud.best,
+                            level: hud.level,
+                            bestLevel: hud.bestLevel,
+                          ),
                         ],
                       ),
                     ),
                   if (onBomb != null) ...[
                     // Room for the ready bomb's glow and badge.
                     const SizedBox(width: 12),
-                    _BombButton(charge: hud.bombCharge, armed: hud.bombArmed, onPressed: onBomb!),
+                    _BombButton(
+                      charge: hud.bombCharge,
+                      armed: hud.bombArmed,
+                      onPressed: onBomb!,
+                    ),
                     const SizedBox(width: 6),
                   ],
                   if (showNext) NextBalls(sprites: sprites, queue: hud.queue),
@@ -100,7 +126,11 @@ class HudBar extends StatelessWidget {
 /// badge sits under it. Tap it, then a column, to drop it (tap again to put
 /// it back). It starts filling again after every bomb.
 class _BombButton extends StatefulWidget {
-  const _BombButton({required this.charge, required this.armed, required this.onPressed});
+  const _BombButton({
+    required this.charge,
+    required this.armed,
+    required this.onPressed,
+  });
   final double charge;
   final bool armed;
   final VoidCallback onPressed;
@@ -109,12 +139,19 @@ class _BombButton extends StatefulWidget {
   State<_BombButton> createState() => _BombButtonState();
 }
 
-class _BombButtonState extends State<_BombButton> with TickerProviderStateMixin {
+class _BombButtonState extends State<_BombButton>
+    with TickerProviderStateMixin {
   /// Runs while the bomb is ready: drives the hop, rays and fuse spark.
-  late final _loop = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400));
+  late final _loop = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  );
 
   /// A one-off pop the moment the bomb becomes ready.
-  late final _burst = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+  late final _burst = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
 
   bool get _ready => widget.charge >= 1;
 
@@ -149,8 +186,8 @@ class _BombButtonState extends State<_BombButton> with TickerProviderStateMixin 
       message: widget.armed
           ? 'Bomb ready: tap a column'
           : _ready
-              ? 'Use the bomb'
-              : 'Pop balls to charge the bomb',
+          ? 'Use the bomb'
+          : 'Pop balls to charge the bomb',
       child: GestureDetector(
         onTap: widget.onPressed,
         behavior: HitTestBehavior.opaque,
@@ -162,9 +199,15 @@ class _BombButtonState extends State<_BombButton> with TickerProviderStateMixin 
             builder: (context, _) {
               final t = _loop.value;
               // Two quick hops in the first half of each loop, then a rest.
-              final hop = _ready && !widget.armed && t < 0.5 ? math.max(0.0, math.sin(t * math.pi * 4)) : 0.0;
-              final burst = _burst.isAnimating ? Curves.easeOut.transform(_burst.value) : null;
-              final pop = burst == null ? 1.0 : 1 + 0.35 * math.sin(burst * math.pi);
+              final hop = _ready && !widget.armed && t < 0.5
+                  ? math.max(0.0, math.sin(t * math.pi * 4))
+                  : 0.0;
+              final burst = _burst.isAnimating
+                  ? Curves.easeOut.transform(_burst.value)
+                  : null;
+              final pop = burst == null
+                  ? 1.0
+                  : 1 + 0.35 * math.sin(burst * math.pi);
               return Stack(
                 alignment: Alignment.center,
                 clipBehavior: Clip.none,
@@ -175,7 +218,11 @@ class _BombButtonState extends State<_BombButton> with TickerProviderStateMixin 
                       top: -18,
                       right: -18,
                       bottom: -18,
-                      child: IgnorePointer(child: CustomPaint(painter: _RaysPainter(spin: t, burst: burst))),
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: _RaysPainter(spin: t, burst: burst),
+                        ),
+                      ),
                     ),
                   Transform.translate(
                     offset: Offset(0, -4 * hop),
@@ -192,13 +239,22 @@ class _BombButtonState extends State<_BombButton> with TickerProviderStateMixin 
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: lit
-                                  ? const RadialGradient(colors: [Color(0xFFFFF3C4), Color(0xFFFFC85C)])
+                                  ? const RadialGradient(
+                                      colors: [
+                                        Color(0xFFFFF3C4),
+                                        Color(0xFFFFC85C),
+                                      ],
+                                    )
                                   : null,
                               color: lit ? null : Palette.well,
                               boxShadow: lit
                                   ? [
                                       BoxShadow(
-                                        color: fire.withValues(alpha: 0.55 + 0.25 * math.sin(t * math.pi * 4)),
+                                        color: fire.withValues(
+                                          alpha:
+                                              0.55 +
+                                              0.25 * math.sin(t * math.pi * 4),
+                                        ),
                                         blurRadius: 16,
                                         spreadRadius: 2,
                                       ),
@@ -214,23 +270,30 @@ class _BombButtonState extends State<_BombButton> with TickerProviderStateMixin 
                               tween: Tween(end: widget.charge.clamp(0.0, 1.0)),
                               duration: const Duration(milliseconds: 400),
                               curve: Curves.easeOut,
-                              builder: (context, value, _) => CircularProgressIndicator(
-                                value: value,
-                                strokeWidth: 4,
-                                strokeCap: StrokeCap.round,
-                                color: lit ? const Color(0xFFFF6A00) : fire,
-                                backgroundColor: Palette.pipEmpty,
-                              ),
+                              builder: (context, value, _) =>
+                                  CircularProgressIndicator(
+                                    value: value,
+                                    strokeWidth: 4,
+                                    strokeCap: StrokeCap.round,
+                                    color: lit ? const Color(0xFFFF6A00) : fire,
+                                    backgroundColor: Palette.pipEmpty,
+                                  ),
                             ),
                           ),
-                          Opacity(opacity: lit ? 1 : 0.45, child: BombIcon(size: lit ? 32 : 28)),
+                          Opacity(
+                            opacity: lit ? 1 : 0.45,
+                            child: BombIcon(size: lit ? 32 : 28),
+                          ),
                           // The fuse sparks.
                           if (lit)
                             Positioned(
                               right: 6,
                               top: 2,
                               child: IgnorePointer(
-                                child: CustomPaint(size: const Size(14, 14), painter: _SparkPainter(t)),
+                                child: CustomPaint(
+                                  size: const Size(14, 14),
+                                  painter: _SparkPainter(t),
+                                ),
                               ),
                             ),
                         ],
@@ -244,18 +307,35 @@ class _BombButtonState extends State<_BombButton> with TickerProviderStateMixin 
                         child: Transform.scale(
                           scale: 1 + 0.08 * math.sin(t * math.pi * 8),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 1.5,
+                            ),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: [Color(0xFFFF9A2E), Color(0xFFFF4F6D)]),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF9A2E), Color(0xFFFF4F6D)],
+                              ),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.white, width: 1.5),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
                               boxShadow: const [
-                                BoxShadow(color: Color(0x55FF4F6D), blurRadius: 6, offset: Offset(0, 2)),
+                                BoxShadow(
+                                  color: Color(0x55FF4F6D),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
                               ],
                             ),
                             child: Text(
                               widget.armed ? 'AIM!' : 'READY!',
-                              style: PopType.of(9, 1000, color: Colors.white, spacing: 0.6),
+                              style: PopType.of(
+                                9,
+                                1000,
+                                color: Colors.white,
+                                spacing: 0.6,
+                              ),
                             ),
                           ),
                         ),
@@ -283,8 +363,9 @@ class _RaysPainter extends CustomPainter {
     final c = size.center(Offset.zero);
     final r = size.shortestSide / 2;
     final paint = Paint()
-      ..shader = const RadialGradient(colors: [Color(0x99FFD54A), Color(0x00FFD54A)])
-          .createShader(Rect.fromCircle(center: c, radius: r));
+      ..shader = const RadialGradient(
+        colors: [Color(0x99FFD54A), Color(0x00FFD54A)],
+      ).createShader(Rect.fromCircle(center: c, radius: r));
     canvas.save();
     canvas.translate(c.dx, c.dy);
     canvas.rotate(spin * math.pi * 2 / 3);
@@ -313,7 +394,8 @@ class _RaysPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RaysPainter old) => old.spin != spin || old.burst != burst;
+  bool shouldRepaint(_RaysPainter old) =>
+      old.spin != spin || old.burst != burst;
 }
 
 /// A flickering spark on the bomb's fuse.
@@ -325,7 +407,11 @@ class _SparkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
     final flicker = 0.75 + 0.25 * math.sin(t * math.pi * 26);
-    canvas.drawCircle(c, 5.5 * flicker, Paint()..color = const Color(0x88FFD54A));
+    canvas.drawCircle(
+      c,
+      5.5 * flicker,
+      Paint()..color = const Color(0x88FFD54A),
+    );
     final star = Path();
     for (var i = 0; i < 8; i++) {
       final a = t * math.pi * 6 + i * math.pi / 4;
@@ -356,7 +442,11 @@ class _PauseButton extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onPressed,
-          child: SizedBox(width: 44, height: 44, child: Icon(Icons.pause_rounded, size: 24, color: Palette.inkSoft)),
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(Icons.pause_rounded, size: 24, color: Palette.inkSoft),
+          ),
         ),
       ),
     );
@@ -376,7 +466,10 @@ class _Score extends StatefulWidget {
 }
 
 class _ScoreState extends State<_Score> with SingleTickerProviderStateMixin {
-  late final _bump = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+  late final _bump = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
 
   @override
   void didUpdateWidget(_Score old) {
@@ -404,14 +497,21 @@ class _ScoreState extends State<_Score> with SingleTickerProviderStateMixin {
               builder: (context, child) {
                 final t = _bump.value;
                 // A quick swell over the first third, then settle.
-                final s = _bump.isAnimating && t < 0.3 ? 1 + 0.1 * math.sin(math.pi * t / 0.3) : 1.0;
-                return Transform.scale(scale: s, alignment: Alignment.centerLeft, child: child);
+                final s = _bump.isAnimating && t < 0.3
+                    ? 1 + 0.1 * math.sin(math.pi * t / 0.3)
+                    : 1.0;
+                return Transform.scale(
+                  scale: s,
+                  alignment: Alignment.centerLeft,
+                  child: child,
+                );
               },
               child: TweenAnimationBuilder<double>(
                 tween: Tween(end: widget.value.toDouble()),
                 duration: const Duration(milliseconds: 450),
                 curve: Curves.easeOutCubic,
-                builder: (context, v, _) => Text('${v.round()}', style: PopType.score),
+                builder: (context, v, _) =>
+                    Text('${v.round()}', style: PopType.score),
               ),
             ),
           ),
@@ -421,8 +521,12 @@ class _ScoreState extends State<_Score> with SingleTickerProviderStateMixin {
           animation: _bump,
           builder: (context, _) {
             final t = _bump.value;
-            if (!_bump.isAnimating || t <= 0 || t >= 1 || widget.gain <= 0) return const SizedBox.shrink();
-            final appear = Curves.easeOutBack.transform((t / 0.2).clamp(0.0, 1.0));
+            if (!_bump.isAnimating || t <= 0 || t >= 1 || widget.gain <= 0) {
+              return const SizedBox.shrink();
+            }
+            final appear = Curves.easeOutBack.transform(
+              (t / 0.2).clamp(0.0, 1.0),
+            );
             final fade = t < 0.7 ? 1.0 : 1 - (t - 0.7) / 0.3;
             return Opacity(
               opacity: fade,
@@ -431,8 +535,14 @@ class _ScoreState extends State<_Score> with SingleTickerProviderStateMixin {
                 child: Transform.scale(
                   scale: 0.6 + 0.4 * appear,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: Palette.gold, borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Palette.gold,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     child: Text('+${widget.gain}', style: PopType.gain),
                   ),
                 ),
@@ -446,7 +556,11 @@ class _ScoreState extends State<_Score> with SingleTickerProviderStateMixin {
 }
 
 class _SubLine extends StatelessWidget {
-  const _SubLine({required this.best, required this.level, required this.bestLevel});
+  const _SubLine({
+    required this.best,
+    required this.level,
+    required this.bestLevel,
+  });
   final int best;
   final int level;
   final int bestLevel;
@@ -457,7 +571,10 @@ class _SubLine extends StatelessWidget {
       width: 3,
       height: 3,
       margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(color: Palette.pipEmpty, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: Palette.pipEmpty,
+        shape: BoxShape.circle,
+      ),
     );
     // Shrinks rather than overflowing on narrow headers.
     return FittedBox(
@@ -474,7 +591,10 @@ class _SubLine extends StatelessWidget {
           // Once this round passes the best level, the current level is the best.
           if (bestLevel > level) ...[
             dot,
-            Text('BEST LV $bestLevel', style: PopType.of(11, 900, color: Palette.inkSoft, spacing: 1.1)),
+            Text(
+              'BEST LV $bestLevel',
+              style: PopType.of(11, 900, color: Palette.inkSoft, spacing: 1.1),
+            ),
           ],
         ],
       ),
@@ -516,7 +636,10 @@ class MissionBar extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(color: Palette.well, borderRadius: BorderRadius.circular(14)),
+                  decoration: BoxDecoration(
+                    color: Palette.well,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   child: Row(
                     children: [
                       for (final (i, g) in goals.indexed) ...[
@@ -539,30 +662,31 @@ class MissionBar extends StatelessWidget {
   }
 
   Widget _divider() => Container(
-        width: 1.5,
-        height: 20,
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        color: Palette.pipEmpty,
-      );
+    width: 1.5,
+    height: 20,
+    margin: const EdgeInsets.symmetric(horizontal: 8),
+    color: Palette.pipEmpty,
+  );
 }
 
 /// The word for a mission in the bar.
 String _missionWord(GoalKind kind) => switch (kind) {
-      GoalKind.score => 'Points',
-      GoalKind.pop => 'Pop',
-      GoalKind.chain => 'Chain',
-      GoalKind.crack => 'Shells',
-      GoalKind.blast => 'Bombs',
-    };
+  GoalKind.score => 'Points',
+  GoalKind.pop => 'Pop',
+  GoalKind.chain => 'Chain',
+  GoalKind.crack => 'Shells',
+  GoalKind.blast => 'Bombs',
+};
 
 /// The colour of a mission's bar while it is still going.
 Color _missionTint(GoalKind kind) => switch (kind) {
-      GoalKind.score => Palette.gold,
-      GoalKind.pop => const Color(0xFF3D8BFF),
-      GoalKind.chain => Palette.accent,
-      GoalKind.crack => const Color(0xFF22B573),
-      GoalKind.blast => const Color(0xFFFF8A1A),
-    };
+  GoalKind.score => Palette.gold,
+  // Any colour counts, so not a ball colour.
+  GoalKind.pop => const Color(0xFFFF5C8A),
+  GoalKind.chain => Palette.accent,
+  GoalKind.crack => const Color(0xFF8A93C8),
+  GoalKind.blast => const Color(0xFFFF8A1A),
+};
 
 class _Mission extends StatelessWidget {
   const _Mission({required this.goal});
@@ -571,51 +695,69 @@ class _Mission extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final g = goal;
-    final fraction = g.goal.target <= 0 ? 1.0 : (g.progress / g.goal.target).clamp(0.0, 1.0);
+    final fraction = g.goal.target <= 0
+        ? 1.0
+        : (g.progress / g.goal.target).clamp(0.0, 1.0);
     final tint = g.met ? Palette.success : _missionTint(g.goal.kind);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    // A big round badge with the mission's icon, then its word and count
+    // over a bar that fills as you go.
+    return Row(
       children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+        GoalBadge(kind: g.goal.kind, size: 28, done: g.met),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              g.met
-                  ? Icon(Icons.check_circle_rounded, size: 15, color: Palette.success)
-                  : GoalIcon(kind: g.goal.kind, size: 15),
-              const SizedBox(width: 4),
-              Text(_missionWord(g.goal.kind), style: PopType.of(12, 900, color: Palette.inkSoft)),
-              const SizedBox(width: 4),
-              Text(
-                g.met ? 'Done!' : goalCount(g.goal, g.progress),
-                style: PopType.of(13, 1000, color: g.met ? Palette.success : Palette.ink, numbers: true),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _missionWord(g.goal.kind),
+                      style: PopType.of(12, 900, color: Palette.inkSoft),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      g.met ? 'Done!' : goalCount(g.goal, g.progress),
+                      style: PopType.of(
+                        13,
+                        1000,
+                        color: g.met ? Palette.success : Palette.ink,
+                        numbers: true,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 3),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(2),
-          child: SizedBox(
-            height: 4,
-            child: Stack(
-              children: [
-                Positioned.fill(child: ColoredBox(color: Palette.pipEmpty)),
-                TweenAnimationBuilder<double>(
-                  tween: Tween(end: fraction),
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, v, _) => FractionallySizedBox(
-                    widthFactor: v,
-                    heightFactor: 1,
-                    child: ColoredBox(color: tint),
+              const SizedBox(height: 3),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: SizedBox(
+                  height: 4,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: ColoredBox(color: Palette.pipEmpty),
+                      ),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(end: fraction),
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, v, _) => FractionallySizedBox(
+                          widthFactor: v,
+                          heightFactor: 1,
+                          child: ColoredBox(color: tint),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
@@ -636,7 +778,15 @@ class _Drops extends StatelessWidget {
       children: [
         Icon(Icons.water_drop_rounded, size: 15, color: color),
         const SizedBox(width: 3),
-        Text('$drops', style: PopType.of(14, 1000, color: low ? Palette.danger : Palette.ink, numbers: true)),
+        Text(
+          '$drops',
+          style: PopType.of(
+            14,
+            1000,
+            color: low ? Palette.danger : Palette.ink,
+            numbers: true,
+          ),
+        ),
         const SizedBox(width: 3),
         Text('left', style: PopType.of(12, 900, color: color)),
       ],
@@ -647,7 +797,12 @@ class _Drops extends StatelessWidget {
 // The ball you are about to drop, big in a white ring so it is easy to
 /// see at a glance, then the two after it, smaller and lighter.
 class NextBalls extends StatelessWidget {
-  const NextBalls({super.key, required this.sprites, required this.queue, this.floating = false});
+  const NextBalls({
+    super.key,
+    required this.sprites,
+    required this.queue,
+    this.floating = false,
+  });
   final OrbSprites? sprites;
   final List<int> queue;
 
@@ -664,7 +819,15 @@ class NextBalls extends StatelessWidget {
       decoration: BoxDecoration(
         color: floating ? Palette.card.withValues(alpha: 0.92) : Palette.well,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: floating ? [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: Offset(0, 5))] : null,
+        boxShadow: floating
+            ? [
+                BoxShadow(
+                  color: Palette.panelShadow,
+                  blurRadius: 14,
+                  offset: Offset(0, 5),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -676,15 +839,27 @@ class NextBalls extends StatelessWidget {
             decoration: BoxDecoration(
               color: floating ? Palette.well : Palette.card,
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 6, offset: Offset(0, 2))],
+              boxShadow: [
+                BoxShadow(
+                  color: Palette.panelShadow,
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
-            child: queue.isEmpty ? null : _Ball(sprites: sprites, color: queue[0], size: 40),
+            child: queue.isEmpty
+                ? null
+                : _Ball(sprites: sprites, color: queue[0], size: 40),
           ),
           for (var i = 1; i < queue.length; i++) ...[
             SizedBox(width: i == 1 ? 10 : 6),
             Opacity(
               opacity: i == 1 ? 1 : 0.65,
-              child: _Ball(sprites: sprites, color: queue[i], size: i == 1 ? 26 : 21),
+              child: _Ball(
+                sprites: sprites,
+                color: queue[i],
+                size: i == 1 ? 26 : 21,
+              ),
             ),
           ],
         ],
@@ -706,8 +881,14 @@ class _Ball extends StatelessWidget {
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         switchInCurve: Curves.easeOutBack,
-        transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-        child: OrbIcon(key: ValueKey('$color-$size'), sprites: sprites, color: color, size: size),
+        transitionBuilder: (child, animation) =>
+            ScaleTransition(scale: animation, child: child),
+        child: OrbIcon(
+          key: ValueKey('$color-$size'),
+          sprites: sprites,
+          color: color,
+          size: size,
+        ),
       ),
     );
   }

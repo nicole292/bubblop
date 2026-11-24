@@ -38,7 +38,7 @@ class LevelGoal {
   /// Short, plain wording for the goal card ("Pop 40 balls").
   String get text => switch (kind) {
         GoalKind.score => 'Score $target points',
-        GoalKind.pop => 'Pop $target balls',
+        GoalKind.pop => 'Pop $target balls of any colour',
         GoalKind.chain => 'Make a ×$target chain',
         GoalKind.crack => 'Crack $target shells',
         GoalKind.blast => 'Blast $target bombs',
@@ -107,6 +107,17 @@ class LevelDef {
 
   /// A puzzle: rows never rise, the board changes only by what is dropped.
   final bool still;
+
+  /// The twist as the player meets it, for the level card: a hand-built
+  /// [layout] replaces the starting wall of shells or bombs, so then a shell
+  /// wall is no twist at all and a bomb wall only means a bomb in every
+  /// rising row. Null when there is nothing to tell.
+  (String label, String about)? get twist => switch (setup) {
+        LevelSetup.normal => null,
+        LevelSetup.wall when layout != null => null,
+        LevelSetup.bombWall when layout != null => ('Bomb rows', 'A bomb rises in every row'),
+        _ => (setup.label, setup.about),
+      };
 
   /// A fresh round of this level on top of [base] (the usual rules).
   Game newGame({RulesConfig base = const RulesConfig()}) {

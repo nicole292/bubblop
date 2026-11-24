@@ -551,7 +551,7 @@ class _LevelIntroState extends State<LevelIntro> {
                           const SizedBox(height: 8),
                         ],
                         if (level.drops != null ||
-                            level.setup != LevelSetup.normal ||
+                            level.twist != null ||
                             level.still) ...[
                           _Twists(level: level),
                           const SizedBox(height: 8),
@@ -822,8 +822,9 @@ class _Twists extends StatelessWidget {
         if (level.still)
           _tag(Icons.extension_rounded, 'Puzzle: rows stay still'),
         if (drops != null) _tag(Icons.water_drop_rounded, 'In $drops drops'),
-        if (level.setup != LevelSetup.normal)
-          _tag(_setupIcon(level.setup), level.setup.about),
+        // What the twist really does here (see LevelDef.twist).
+        if (level.twist case (_, final about))
+          _tag(_setupIcon(level.setup), about),
       ],
     );
   }

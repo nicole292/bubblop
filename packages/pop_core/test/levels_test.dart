@@ -59,7 +59,7 @@ void main() {
 
     test('goal wording', () {
       expect(const LevelGoal.score(600).text, 'Score 600 points');
-      expect(const LevelGoal.pop(40).text, 'Pop 40 balls');
+      expect(const LevelGoal.pop(40).text, 'Pop 40 balls of any colour');
       expect(const LevelGoal.chain(3).text, 'Make a ×3 chain');
       expect(const LevelGoal.crack(12).text, 'Crack 12 shells');
       expect(const LevelGoal.blast(3).text, 'Blast 3 bombs');
@@ -198,6 +198,28 @@ void main() {
         final a = GeneratedLevels.level(n), b = GeneratedLevels.level(n);
         expect((a.seed, a.layout, a.setup, a.drops, a.still, [for (final g in a.goals) g.text].join(", ")),
             (b.seed, b.layout, b.setup, b.drops, b.still, [for (final g in b.goals) g.text].join(", ")));
+      }
+    });
+
+    test('every level card tells the truth: twists happen, goals have what they need', () {
+      for (final l in Campaign.levels) {
+        final game = l.newGame();
+        final pic = game.board.toPicture();
+        final why = 'level ${l.number}';
+        final twist = l.twist;
+        if (twist != null && l.layout != null) {
+          expect(twist.$2.startsWith('Starts'), isFalse, reason: '$why: the layout replaces the start');
+        }
+        final kinds = l.goals.map((g) => g.kind).toList();
+        expect(kinds.toSet().length, kinds.length, reason: '$why: a goal twice');
+        if (kinds.contains(GoalKind.crack)) {
+          final shellsRise = game.config.rowsRise && game.config.risingRowKind == RisingRowKind.shells;
+          expect(pic.contains(RegExp('[a-z]')) || shellsRise, isTrue, reason: '$why: no shells to crack');
+        }
+        if (kinds.contains(GoalKind.blast)) {
+          expect(pic.contains('*') || (game.config.bombEvery > 0 && game.config.rowsRise), isTrue,
+              reason: '$why: no bombs to blast');
+        }
       }
     });
 
