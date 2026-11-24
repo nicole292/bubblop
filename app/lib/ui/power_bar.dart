@@ -8,11 +8,10 @@ import '../progress/progress.dart';
 import 'shop_sheet.dart';
 import 'type.dart';
 
-/// The power-up column beside the board while playing: each power-up that
-/// can be used in this round, on a glossy badge with how many you have (a
-/// "+" when you have none, which opens the shop), stacked in a slim pill on
-/// the right, with a round shop button at the bottom, near the thumb. Laid
-/// out at [designWidth] and scaled to fit, like the header.
+/// The power-up bar above the board while playing: each power-up that can
+/// be used in this round, on a glossy badge with how many you have (a "+"
+/// when you have none, which opens the shop), then a Shop button. Laid out
+/// at [designHeight] and scaled to fit, like the header.
 class PowerBar extends StatelessWidget {
   const PowerBar({
     super.key,
@@ -35,53 +34,45 @@ class PowerBar extends StatelessWidget {
   /// A bought bomb is armed: its badge glows.
   final bool armedBomb;
 
-  static const designWidth = 62.0;
+  static const designHeight = 64.0;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final scale = (constraints.maxWidth / designWidth).clamp(0.5, 1.6);
+        final scale = (constraints.maxHeight / designHeight).clamp(0.5, 1.6);
         return FittedBox(
           fit: BoxFit.contain,
-          alignment: Alignment.bottomCenter,
           child: SizedBox(
-            width: designWidth,
-            height: constraints.maxHeight / scale,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              // Taps between the buttons must not drop a ball.
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {},
-                onPanStart: (_) {},
-                child: Container(
-                  width: designWidth,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Palette.card.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(31),
-                    boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: const Offset(0, 5))],
-                  ),
-                  child: ListenableBuilder(
-                    listenable: progress,
-                    builder: (context, _) => Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final p in items)
-                          SizedBox(
-                            height: 60,
-                            child: _PowerButton(
-                              item: p,
-                              count: progress.stock(p),
-                              armed: p == PowerUp.bomb && armedBomb,
-                              onTap: () => progress.stock(p) > 0 ? onUse(p) : onShop(p),
-                            ),
+            width: constraints.maxWidth / scale,
+            height: designHeight,
+            // Taps between the buttons must not drop a ball.
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {},
+              onPanStart: (_) {},
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Palette.card.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [BoxShadow(color: Palette.panelShadow, blurRadius: 14, offset: const Offset(0, 5))],
+                ),
+                child: ListenableBuilder(
+                  listenable: progress,
+                  builder: (context, _) => Row(
+                    children: [
+                      for (final p in items)
+                        Expanded(
+                          child: _PowerButton(
+                            item: p,
+                            count: progress.stock(p),
+                            armed: p == PowerUp.bomb && armedBomb,
+                            onTap: () => progress.stock(p) > 0 ? onUse(p) : onShop(p),
                           ),
-                        const SizedBox(height: 4),
-                        _ShopButton(onTap: () => onShop(null)),
-                      ],
-                    ),
+                        ),
+                      _ShopButton(onTap: () => onShop(null)),
+                    ],
                   ),
                 ),
               ),
@@ -208,7 +199,7 @@ class _PowerButtonState extends State<_PowerButton> with TickerProviderStateMixi
   }
 }
 
-/// The way into the shop: a round golden button with a shop icon.
+/// The way into the shop: a golden button with a little shine.
 class _ShopButton extends StatelessWidget {
   const _ShopButton({required this.onTap});
   final VoidCallback onTap;
@@ -220,27 +211,24 @@ class _ShopButton extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFFFC23D), Color(0xFFFF8A1A)],
-                ),
-                border: Border.all(color: Colors.white, width: 2.5),
-                boxShadow: const [BoxShadow(color: Color(0x55FF8A1A), blurRadius: 10, offset: Offset(0, 4))],
-              ),
-              child: const Icon(Icons.storefront_rounded, color: Colors.white, size: 24),
-            ),
-            const SizedBox(height: 2),
-            Text('Shop', style: PopType.of(11, 1000, color: const Color(0xFFFF8A1A))),
-          ],
+        child: Container(
+          margin: const EdgeInsets.only(left: 6),
+          padding: const EdgeInsets.fromLTRB(10, 0, 14, 0),
+          height: 46,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFFFFC23D), Color(0xFFFF8A1A)]),
+            borderRadius: BorderRadius.circular(23),
+            border: Border.all(color: Colors.white, width: 2.5),
+            boxShadow: const [BoxShadow(color: Color(0x55FF8A1A), blurRadius: 10, offset: Offset(0, 4))],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.storefront_rounded, color: Colors.white, size: 24),
+              const SizedBox(width: 5),
+              Text('Shop', style: PopType.of(15, 1000, color: Colors.white)),
+            ],
+          ),
         ),
       ),
     );

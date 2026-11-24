@@ -612,7 +612,7 @@ class MissionBar extends StatelessWidget {
   final List<GoalView> goals;
   final int? dropsLeft;
 
-  static const designHeight = 40.0;
+  static const designHeight = 44.0;
 
   @override
   Widget build(BuildContext context) {
@@ -703,7 +703,7 @@ class _Mission extends StatelessWidget {
     // over a bar that fills as you go.
     return Row(
       children: [
-        GoalBadge(kind: g.goal.kind, size: 28, done: g.met),
+        GoalBadge(kind: g.goal.kind, size: 32, done: g.met),
         const SizedBox(width: 6),
         Expanded(
           child: Column(
@@ -718,14 +718,12 @@ class _Mission extends StatelessWidget {
                   children: [
                     Text(
                       _missionWord(g.goal.kind),
-                      style: PopType.of(12, 900, color: Palette.inkSoft),
+                      style: PopType.of(14, 900, color: Palette.inkSoft),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       g.met ? 'Done!' : goalCount(g.goal, g.progress),
-                      style: PopType.of(
-                        13,
-                        1000,
+                      style: PopType.of(16, 1000,
                         color: g.met ? Palette.success : Palette.ink,
                         numbers: true,
                       ),
@@ -776,19 +774,19 @@ class _Drops extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.water_drop_rounded, size: 15, color: color),
+        Icon(Icons.water_drop_rounded, size: 18, color: color),
         const SizedBox(width: 3),
         Text(
           '$drops',
           style: PopType.of(
-            14,
+            17,
             1000,
             color: low ? Palette.danger : Palette.ink,
             numbers: true,
           ),
         ),
         const SizedBox(width: 3),
-        Text('left', style: PopType.of(12, 900, color: color)),
+        Text('left', style: PopType.of(14, 900, color: color)),
       ],
     );
   }
