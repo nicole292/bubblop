@@ -45,7 +45,7 @@ class AchievementsScreen extends StatelessWidget {
             Expanded(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 460),
+                  constraints: const BoxConstraints(maxWidth: 680),
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
                     children: [
