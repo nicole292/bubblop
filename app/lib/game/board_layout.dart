@@ -13,7 +13,7 @@ import 'dart:ui';
 class BoardLayout {
   /// [offset] is where [area] starts on the game canvas. [missions] makes
   /// room under the header for a level's mission bar; [tools] makes room
-  /// under the card for the power-up bar.
+  /// beside the card, on the right, for the power-up column.
   factory BoardLayout(Size area,
       {required int columns,
       required int rows,
@@ -21,38 +21,41 @@ class BoardLayout {
       bool missions = false,
       bool tools = false}) {
     final bar = missions ? missionCells : 0.0;
-    final below = tools ? toolCells : 0.0;
+    final side = tools ? toolCells : 0.0;
     final cardCells = rows + headerCells + bar + headroomCells + trayCells;
-    final cells = cardCells + below;
+    final cells = cardCells;
     final innerWidth = area.width - padding * 2;
     final cell = math.min(
-      math.min(innerWidth / (columns + sideCells * 2), (area.height - padding * 2) / cells),
+      math.min(innerWidth / (columns + sideCells * 2 + side), (area.height - padding * 2) / cells),
       maxCell,
     );
-    final columnWidth = math.min((innerWidth - cell * sideCells * 2) / columns, cell * maxStretch);
+    final columnWidth =
+        math.min((innerWidth - cell * (sideCells * 2 + side)) / columns, cell * maxStretch);
     final width = columnWidth * columns;
     // The card takes the height it is given (up to some spare, which goes
     // to the headroom), so it covers most of the screen.
     final spare = math.max(0.0, math.min(area.height - padding * 2 - cell * cells, cell * maxSpareCells));
     final cardHeight = cell * cardCells + spare;
-    final cardTop = offset.dy + (area.height - cardHeight - cell * below) / 2;
-    final origin =
-        Offset(offset.dx + (area.width - width) / 2, cardTop + cell * (headerCells + bar + headroomCells) + spare);
-    return BoardLayout._(columns, rows, cell, columnWidth, origin, cardTop, bar, below);
+    final cardTop = offset.dy + (area.height - cardHeight) / 2;
+    // The card and the power-up column beside it are centred together.
+    final origin = Offset(offset.dx + (area.width - width - cell * side) / 2,
+        cardTop + cell * (headerCells + bar + headroomCells) + spare);
+    return BoardLayout._(columns, rows, cell, columnWidth, origin, cardTop, bar, side);
   }
 
   BoardLayout._(this.columns, this.rows, this.cell, this.columnWidth, this.origin, this.cardTop, this._bar,
       this._tools);
 
-  /// Height, in rows, of the power-up bar under the card (with its gap).
-  static const toolCells = 1.25;
+  /// Width, in rows, of the power-up column beside the card (with its gap).
+  static const toolCells = 1.2;
 
   final double _tools;
 
-  /// The power-up bar under the card, or null when there is none.
+  /// The power-up column on the right of the card, as tall as the board's
+  /// lanes, or null when there is none.
   Rect? get toolsRect => _tools == 0
       ? null
-      : Rect.fromLTWH(cardRect.left, cardBottom + cell * 0.15, cardRect.width, cell * (_tools - 0.15));
+      : Rect.fromLTRB(cardRect.right + cell * 0.15, wellTop, cardRect.right + cell * _tools, cardBottom);
 
   /// Height, in rows, of the mission bar under the header in a level.
   static const missionCells = 0.62;
