@@ -151,10 +151,10 @@ class LevelSelectScreenState extends State<LevelSelectScreen>
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       // Nearly full width on a tablet, a little short of the edges.
-                      final width = math.min(constraints.maxWidth, 530.0);
+                      final width = math.min(constraints.maxWidth, 490.0);
                       // Five per row inside a group card: page padding 2×16,
                       // card padding 2×14 and its border, four gaps, and slack.
-                      final node = ((width - 32 - 28 - 4 * _gap - 8) / 5).clamp(44.0, 88.0);
+                      final node = ((width - 32 - 28 - 4 * _gap - 8) / 5).clamp(44.0, 78.0);
                       return SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
                         child: Center(

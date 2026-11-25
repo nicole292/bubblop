@@ -57,7 +57,7 @@ class StyleScreen extends StatelessWidget {
             Expanded(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 530),
+                  constraints: const BoxConstraints(maxWidth: 490),
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     children: [
