@@ -222,13 +222,21 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     _Mode.levels,
                     openLevel: widget.progress.allCompleted ? null : widget.progress.currentLevel,
                   ),
+                  undoCost: game.canUndo ? game.undoCost : null,
+                  onUndo: game.undo,
                   onGiftOpen: () {
                     widget.sfx.newBest();
                     widget.haptics.big();
                   },
                 );
               }
-              return GameOverPanel(hud: hud, onPlayAgain: () => _play(tutorial: false), onHome: _home);
+              return GameOverPanel(
+                hud: hud,
+                onPlayAgain: () => _play(tutorial: false),
+                onHome: _home,
+                undoCost: game.canUndo ? game.undoCost : null,
+                onUndo: game.undo,
+              );
             },
           ),
           if (_mode == _Mode.paused)
@@ -369,6 +377,8 @@ class _BoardSlot extends StatelessWidget {
                       progress: game.progress,
                       items: game.powerUpsHere,
                       armedBomb: game.stockBombArmed,
+                      undoCost: game.canUndo ? game.undoCost : null,
+                      onUndo: game.undo,
                       onUse: game.usePowerUp,
                       onShop: (item) {
                         game.sfx.tap();

@@ -328,7 +328,9 @@ class PopGame extends FlameGame {
     if (_levelWon) return;
     if (!phases.isIdle) phases.speed = Timings.fastForward;
     final bomb = bombArmed && (bombReady || _stockBomb);
+    final before = _capture(usedPowerUp: bomb && _stockBomb ? PowerUp.bomb : null);
     final result = bomb ? rules.dropBomb(column) : rules.drop(column);
+    if (result.accepted) _remember(before);
     final wasReady = bombReady;
     if (bomb && result.accepted) {
       bombArmed = false;
@@ -405,6 +407,95 @@ class PopGame extends FlameGame {
     _publishRulesState();
   }
 
+  // --- Undo ------------------------------------------------------------------
+
+  /// Coins for an undo after the round's free one.
+  static const undoPrice = 25;
+
+  /// The most moves that can be taken back in a row.
+  static const maxUndo = 30;
+
+  /// The round before each move, newest last.
+  final _history = <_Saved>[];
+
+  /// The round's first undo costs nothing.
+  bool _freeUndo = true;
+
+  /// Something can be taken back: a move was made and the level isn't won.
+  bool get canUndo => _history.isNotEmpty && !_levelWon;
+
+  /// What the next undo costs: 0 for the round's free one.
+  int get undoCost => _freeUndo ? 0 : undoPrice;
+
+  _Saved _capture({PowerUp? usedPowerUp}) {
+    final t = _tracker;
+    return _Saved(
+      rules.snapshot(),
+      charge: _charge,
+      tracker: t == null ? null : (t.score, t.popped, t.bestChain, t.cracked, t.blasted),
+      usedPowerUp: usedPowerUp,
+    );
+  }
+
+  void _remember(_Saved before) {
+    _history.add(before);
+    if (_history.length > maxUndo) _history.removeAt(0);
+  }
+
+  /// Takes back the last move: the board, score, goals, drops and the
+  /// balls to come go back to just before it, and a power-up it used is
+  /// given back. The round's first undo is free, then each costs
+  /// [undoPrice] coins. Also works right after losing. Returns false (and
+  /// changes nothing) when there is nothing to undo or not enough coins.
+  bool undo() {
+    if (!canUndo) {
+      sfx.deny();
+      haptics.deny();
+      return false;
+    }
+    if (!_freeUndo && !progress.spend(undoPrice)) {
+      sfx.deny();
+      haptics.deny();
+      _banner('Need $undoPrice coins');
+      return false;
+    }
+    _freeUndo = false;
+    final saved = _history.removeLast();
+    phases.clear();
+    effects.clear();
+    rules.restore(saved.game);
+    _charge = saved.charge;
+    bombArmed = false;
+    _stockBomb = false;
+    final t = _tracker;
+    final tracked = saved.tracker;
+    if (t != null && tracked != null) {
+      t
+        ..score = tracked.$1
+        ..popped = tracked.$2
+        ..bestChain = tracked.$3
+        ..cracked = tracked.$4
+        ..blasted = tracked.$5;
+    }
+    final refund = saved.usedPowerUp;
+    if (refund != null) progress.grantPowerUp(refund);
+    sad = false;
+    cheer = 0;
+    aimColumn = null;
+    scene.load(rules.board);
+    hud.value = hud.value.copyWith(
+      score: rules.score,
+      isOver: false,
+      goals: _goalViews(),
+      bombCharge: _charge / popsPerBomb,
+    );
+    _publishRulesState();
+    _banner('Undone!');
+    sfx.tap();
+    haptics.tap();
+    return true;
+  }
+
   /// Whether [p] can be used right now (the player still needs to have one).
   bool canUse(PowerUp p) {
     if (rules.isOver || _levelWon) return false;
@@ -441,7 +532,9 @@ class PopGame extends FlameGame {
         return true;
       case PowerUp.rainbow:
         if (!phases.isIdle) phases.speed = Timings.fastForward;
+        final before = _capture(usedPowerUp: PowerUp.rainbow);
         final result = rules.rainbowPop();
+        if (result.accepted) _remember(before);
         if (!result.accepted) {
           sfx.deny();
           haptics.deny();
@@ -524,6 +617,8 @@ class PopGame extends FlameGame {
                   ));
     _tracker = level == null ? null : LevelTracker(level);
     _levelWon = false;
+    _history.clear();
+    _freeUndo = true;
     _roundAchievements.clear();
     scene = BoardScene(_config.columns, _config.rows)
       ..onPoints = (points) {
@@ -901,4 +996,15 @@ class PopGame extends FlameGame {
     final column = choice >= 0 ? choice : lowest;
     if (column >= 0) dropAt(column);
   }
+}
+
+/// The round as it was before one move, for undo.
+class _Saved {
+  _Saved(this.game, {required this.charge, required this.tracker, this.usedPowerUp});
+  final GameSnapshot game;
+  final int charge;
+  final (int, int, int, int, int)? tracker;
+
+  /// A bought power-up the move used up, given back by undo.
+  final PowerUp? usedPowerUp;
 }

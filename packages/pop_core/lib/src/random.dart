@@ -30,4 +30,9 @@ class SeededRandom {
 
   /// A value in `0 <= value < max`.
   int nextInt(int max) => nextUint32() % max;
+
+  /// The generator's position, to save and later go back to ([Game.snapshot]).
+  // ignore: unnecessary_getters_setters
+  int get state => _state;
+  set state(int value) => _state = value;
 }

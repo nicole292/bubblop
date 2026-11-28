@@ -11,6 +11,7 @@ import 'gift_box.dart';
 import 'glass.dart';
 import 'goal_icon.dart';
 import 'type.dart';
+import 'undo_button.dart';
 
 /// The end of a level round. A win shows the goals ticked, the coins earned,
 /// the gift to open (if any) and Next level; a loss shows how close each
@@ -23,7 +24,14 @@ class LevelResultPanel extends StatelessWidget {
     required this.onReplay,
     required this.onLevels,
     required this.onGiftOpen,
+    this.undoCost,
+    this.onUndo,
   });
+
+  /// What taking back the losing move costs (0 = free), or null when it
+  /// can't be undone.
+  final int? undoCost;
+  final VoidCallback? onUndo;
 
   final HudState hud;
   final VoidCallback onNext;
@@ -153,6 +161,10 @@ class LevelResultPanel extends StatelessWidget {
           AchievementChips(achievements: hud.achievements),
         ],
         const SizedBox(height: 16),
+        if (undoCost case final cost? when onUndo != null) ...[
+          UndoPill(cost: cost, onPressed: onUndo!),
+          const SizedBox(height: 10),
+        ],
         BigButton(label: 'Try again', icon: Icons.replay_rounded, onPressed: onReplay),
         const SizedBox(height: 10),
         SoftButton(label: 'Levels', icon: Icons.grid_view_rounded, onPressed: onLevels),

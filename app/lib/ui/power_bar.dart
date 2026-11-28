@@ -6,6 +6,7 @@ import '../game/palette.dart';
 import '../progress/power_ups.dart';
 import '../progress/progress.dart';
 import 'shop_sheet.dart';
+import 'undo_button.dart';
 import 'type.dart';
 
 /// The power-up bar above the board while playing: each power-up that can
@@ -20,7 +21,14 @@ class PowerBar extends StatelessWidget {
     required this.onUse,
     required this.onShop,
     this.armedBomb = false,
+    required this.undoCost,
+    required this.onUndo,
   });
+
+  /// What an undo costs now (0 = the round's free one), or null when there
+  /// is nothing to undo.
+  final int? undoCost;
+  final VoidCallback onUndo;
 
   final Progress progress;
 
@@ -62,6 +70,7 @@ class PowerBar extends StatelessWidget {
                   listenable: progress,
                   builder: (context, _) => Row(
                     children: [
+                      Expanded(child: UndoBadgeButton(cost: undoCost, onPressed: onUndo)),
                       for (final p in items)
                         Expanded(
                           child: _PowerButton(

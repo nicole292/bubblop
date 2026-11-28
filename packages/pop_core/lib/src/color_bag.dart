@@ -11,6 +11,16 @@ class ColorBag {
   final List<int> _bag = [];
 
   /// Next colour. [colorCount] only takes effect when the bag is refilled.
+  /// What is left in the bag and the generator's position, to save and
+  /// later go back to ([Game.snapshot]).
+  (List<int>, int) get state => (List.of(_bag), _random.state);
+  set state((List<int>, int) value) {
+    _bag
+      ..clear()
+      ..addAll(value.$1);
+    _random.state = value.$2;
+  }
+
   int next(int colorCount) {
     if (_bag.isEmpty) _refill(colorCount);
     return _bag.removeLast();

@@ -54,6 +54,7 @@ bubble to break it open and free the ball inside, which can set off an even bigg
 ★ A shop full of power-ups for your coins: bombs, Rainbow pop, Freeze and extra drops. Pick how many you want and use them whenever you like
 ★ Unlock 3D shapes with the coins you earn: kitties, bunnies, donuts, planets, gems, strawberries…
 ★ Every shape brings its own colours and sky, and pops into its own little hearts, paw prints, sprinkles or stars
+★ Undo button: take back a move, the first one each round is free
 ★ Gift boxes and special rewards as you go
 ★ Turn on cute faces that cheer, gasp and nap
 ★ Light or starry dark mode
@@ -96,6 +97,7 @@ Bubbles are your secret weapon. Rows of bubbles rise from below. Pop balls next 
 - A shop full of power-ups for your coins: bombs, Rainbow pop, Freeze and extra drops. Pick how many you want and use them whenever you like
 - Unlock 3D shapes with the coins you earn: kitties, bunnies, donuts, planets, gems, strawberries and more
 - Every shape brings its own colours and sky, and pops into its own little hearts, paw prints, sprinkles or stars
+- Undo button: take back a move, the first one each round is free
 - Gift boxes and special rewards as you go
 - Turn on cute faces that cheer, gasp and nap
 - Light or starry dark mode
@@ -115,6 +117,7 @@ App Store Connect has no What's New box on an app's first release (Bubblop isn't
 - Every shape brings its own colours and sky, and pops into its own little hearts, paw prints, sprinkles, stars or leaves
 - A shop with power-ups: bombs, Rainbow pop (pops every ball of a colour), Freeze (no new rows for 5 drops) and +5 drops. Pick how many to buy and use them from the bar under the board
 - Bigger and sharper on iPad and other large screens
+- Undo: take back your last move (the first one each round is free, then 25 coins)
 - A clearer mission bar: every goal in words, with a bar that fills as you go
 - The bomb glows and says READY! when it can be used
 - Prettier gift boxes, and points and coins that never look alike

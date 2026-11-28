@@ -5,10 +5,23 @@ import '../game/palette.dart';
 import 'buttons.dart';
 import 'level_result_panel.dart';
 import 'type.dart';
+import 'undo_button.dart';
 
 /// Round result on a white card that bounces in, with a big Play again.
 class GameOverPanel extends StatelessWidget {
-  const GameOverPanel({super.key, required this.hud, required this.onPlayAgain, required this.onHome});
+  const GameOverPanel({
+    super.key,
+    required this.hud,
+    required this.onPlayAgain,
+    required this.onHome,
+    this.undoCost,
+    this.onUndo,
+  });
+
+  /// What taking back the last move costs (0 = free), or null when it
+  /// can't be undone.
+  final int? undoCost;
+  final VoidCallback? onUndo;
 
   final HudState hud;
   final VoidCallback onPlayAgain;
@@ -89,6 +102,10 @@ class GameOverPanel extends StatelessWidget {
               AchievementChips(achievements: hud.achievements),
             ],
             const SizedBox(height: 22),
+            if (undoCost case final cost? when onUndo != null) ...[
+              UndoPill(cost: cost, onPressed: onUndo!),
+              const SizedBox(height: 10),
+            ],
             BigButton(label: 'Play again', icon: Icons.replay_rounded, onPressed: onPlayAgain),
             const SizedBox(height: 10),
             SoftButton(label: 'Home', icon: Icons.home_rounded, onPressed: onHome),

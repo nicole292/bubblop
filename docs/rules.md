@@ -133,6 +133,10 @@ plays its own way, unlike Classic's endless rising rows:
   (pops every ball of the next colour, `Game.rainbowPop`), Freeze 40 (no new rows for 5
   drops, `Game.freezeRows`), +5 drops 30 (levels with a drop limit, `Game.addDrops`). None
   of them uses a drop. The shop opens from the bar, a level's card and the home coins.
+- Undo (the first button in the power-up bar, and on the lost-round cards): takes back the
+  last move exactly (`Game.snapshot` / `Game.restore`), up to 30 in a row, and gives back a
+  power-up the move used. The first undo of each round is free, then 25 coins each. Not after
+  a level is won.
 - Coins unlock Fruit (200), Ocean (300), Neon (400) and Galaxy (500) balls, the Jelly (150),
   Hearts (250), Stars (300) and Flowers (350) shapes, the 3D shapes (Animals: Kitties,
   Bunnies 400, Bears, Frogs 450; Treats: Donuts, Macarons 500, Cupcakes 550; Space: Moons

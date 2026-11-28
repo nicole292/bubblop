@@ -319,6 +319,13 @@ class Progress extends ChangeNotifier {
     return true;
   }
 
+  /// Gives one [p] back (an undone move had used it).
+  void grantPowerUp(PowerUp p) {
+    _stock[p] = (stock(p) + 1).clamp(0, PowerUp.maxStock);
+    _save();
+    notifyListeners();
+  }
+
   /// Gives [count] of [p] without paying. Developer screenshot runs only
   /// (POP_STOCK), on an in-memory save.
   void grantPowerUpsForScreenshots(PowerUp p, int count) {

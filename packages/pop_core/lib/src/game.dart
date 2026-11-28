@@ -275,6 +275,54 @@ class Game {
     return MoveResult(events, points);
   }
 
+  // --- Undo ------------------------------------------------------------------
+
+  /// Everything about the round right now, to go back to with [restore]
+  /// (the undo button). Taking one changes nothing.
+  GameSnapshot snapshot() => GameSnapshot._(
+        board: _board.copy(),
+        bag: _bag.state,
+        rowRandom: _rowRandom.state,
+        script: List.of(_script),
+        queue: List.of(_queue),
+        score: _score,
+        level: _level,
+        orbsCleared: _orbsCleared,
+        moves: _moves,
+        pressure: _pressure,
+        nextRow: List.of(_nextRow),
+        isOver: _isOver,
+        dropLimit: _dropLimit,
+        rowsMade: _rowsMade,
+      );
+
+  /// Puts the round back exactly as it was when [s] was taken: the same
+  /// board, score and drops, and the same balls and rows to come.
+  void restore(GameSnapshot s) {
+    for (var row = 0; row < config.rows; row++) {
+      for (var col = 0; col < config.columns; col++) {
+        _board.set(col, row, s.board.at(col, row));
+      }
+    }
+    _bag.state = s.bag;
+    _rowRandom.state = s.rowRandom;
+    _script
+      ..clear()
+      ..addAll(s.script);
+    _queue
+      ..clear()
+      ..addAll(s.queue);
+    _score = s.score;
+    _level = s.level;
+    _orbsCleared = s.orbsCleared;
+    _moves = s.moves;
+    _pressure = s.pressure;
+    _nextRow = List.of(s.nextRow);
+    _isOver = s.isOver;
+    _dropLimit = s.dropLimit;
+    _rowsMade = s.rowsMade;
+  }
+
   // --- Power-ups (bought with coins). None of them uses a drop. ---------
 
   /// Pops every ball of the current ball's colour at once, then everything
@@ -385,4 +433,39 @@ class Game {
     }
     return newRow;
   }
+}
+
+/// A saved moment of a [Game], for undo ([Game.snapshot], [Game.restore]).
+class GameSnapshot {
+  GameSnapshot._({
+    required this.board,
+    required this.bag,
+    required this.rowRandom,
+    required this.script,
+    required this.queue,
+    required this.score,
+    required this.level,
+    required this.orbsCleared,
+    required this.moves,
+    required this.pressure,
+    required this.nextRow,
+    required this.isOver,
+    required this.dropLimit,
+    required this.rowsMade,
+  });
+
+  final Board board;
+  final (List<int>, int) bag;
+  final int rowRandom;
+  final List<int> script;
+  final List<int> queue;
+  final int score;
+  final int level;
+  final int orbsCleared;
+  final int moves;
+  final int pressure;
+  final List<Cell> nextRow;
+  final bool isOver;
+  final int? dropLimit;
+  final int rowsMade;
 }
